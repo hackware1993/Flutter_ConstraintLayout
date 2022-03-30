@@ -66,7 +66,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   @override
   void updateRenderObject(
-      BuildContext context, covariant RenderObject renderObject) {
+    BuildContext context,
+    covariant RenderObject renderObject,
+  ) {
     (renderObject as _ConstraintRenderBox)
       ..debugShowGuideline = debugShowGuideline
       ..debugShowPreview = debugShowPreview
@@ -81,9 +83,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
 class CL {
   // size constraint
-  static const double matchConstraint = 0;
-  static const double matchParent = -1;
-  static const double wrapContent = -2;
+  static const double matchConstraint = -3.1415926;
+  static const double matchParent = -2.7182818;
+  static const double wrapContent = -0.6180339;
 
   // visibility
   static const CLVisibility visible = CLVisibility.visible;
@@ -91,7 +93,7 @@ class CL {
   static const CLVisibility invisible = CLVisibility.invisible;
 
   // anchor
-  static const String parent = 'parent';
+  static const String parent = 'ZG9uJ3QgZnVjayBtb3VudGFpbiE=';
 }
 
 enum CLVisibility {
@@ -179,30 +181,30 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   // TODO consider flow
   // group is pointless
 
-  const Constrained(
-      {Key? key,
-      required Widget child,
-      required this.width,
-      required this.height,
-      this.id,
-      this.leftToLeft,
-      this.leftToRight,
-      this.rightToLeft,
-      this.rightToRight,
-      this.topToTop,
-      this.topToBottom,
-      this.bottomToTop,
-      this.bottomToBottom,
-      this.clickPadding,
-      this.visibility,
-      this.margin,
-      this.goneMargin,
-      this.center,
-      this.centerHorizontal,
-      this.centerVertical,
-      this.horizontalBias,
-      this.verticalBias})
-      : super(key: key, child: child);
+  const Constrained({
+    Key? key,
+    required Widget child,
+    required this.width,
+    required this.height,
+    this.id,
+    this.leftToLeft,
+    this.leftToRight,
+    this.rightToLeft,
+    this.rightToRight,
+    this.topToTop,
+    this.topToBottom,
+    this.bottomToTop,
+    this.bottomToBottom,
+    this.clickPadding,
+    this.visibility,
+    this.margin,
+    this.goneMargin,
+    this.center,
+    this.centerHorizontal,
+    this.centerVertical,
+    this.horizontalBias,
+    this.verticalBias,
+  }) : super(key: key, child: child);
 
   bool checkSize(double size) {
     if (size == CL.matchParent ||
@@ -592,6 +594,19 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
+  void _debugEnsureNullDependency(
+    _NodeDependency node,
+    _NodeDependency? dependency,
+    String direction,
+  ) {
+    if (_debugCheckDependencies == true && kDebugMode) {
+      if (dependency != null) {
+        debugPrint(
+            'Warning: The child element with id ${node.nodeId} has a duplicate $direction dependency.');
+      }
+    }
+  }
+
   bool _isInternalBox(RenderBox renderBox) {
     if (renderBox is _GuidelineRenderBox) {
       return true;
@@ -602,7 +617,10 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   // child and id will not be null at the same time
-  _NodeDependency _getNodeDependencyForChild(RenderBox? child, String? id) {
+  _NodeDependency _getNodeDependencyForChild(
+    RenderBox? child,
+    String? id,
+  ) {
     _NodeDependency? node;
     if (child != null) {
       node = _nodeDependencies[child];
@@ -654,41 +672,57 @@ class _ConstraintRenderBox extends RenderBox
       currentNode.visibility = childParentData.visibility;
 
       if (childParentData.leftToLeft != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.leftDependency, 'left');
         currentNode.leftDependency =
             _getNodeDependencyForChild(null, childParentData.leftToLeft);
         currentNode.leftDependencyType = 0;
       }
       if (childParentData.leftToRight != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.leftDependency, 'left');
         currentNode.leftDependency =
             _getNodeDependencyForChild(null, childParentData.leftToRight);
         currentNode.leftDependencyType = 1;
       }
       if (childParentData.rightToLeft != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.rightDependency, 'right');
         currentNode.rightDependency =
             _getNodeDependencyForChild(null, childParentData.rightToLeft);
         currentNode.rightDependencyType = 0;
       }
       if (childParentData.rightToRight != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.rightDependency, 'right');
         currentNode.rightDependency =
             _getNodeDependencyForChild(null, childParentData.rightToRight);
         currentNode.rightDependencyType = 1;
       }
       if (childParentData.topToTop != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.topDependency, 'top');
         currentNode.topDependency =
             _getNodeDependencyForChild(null, childParentData.topToTop);
         currentNode.topDependencyType = 0;
       }
       if (childParentData.topToBottom != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.topDependency, 'top');
         currentNode.topDependency =
             _getNodeDependencyForChild(null, childParentData.topToBottom);
         currentNode.topDependencyType = 1;
       }
       if (childParentData.bottomToTop != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.bottomDependency, 'bottom');
         currentNode.bottomDependency =
             _getNodeDependencyForChild(null, childParentData.bottomToTop);
         currentNode.bottomDependencyType = 0;
       }
       if (childParentData.bottomToBottom != null) {
+        _debugEnsureNullDependency(
+            currentNode, currentNode.bottomDependency, 'bottom');
         currentNode.bottomDependency =
             _getNodeDependencyForChild(null, childParentData.bottomToBottom);
         currentNode.bottomDependencyType = 1;
@@ -1030,7 +1064,10 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+  bool hitTestChildren(
+    BoxHitTestResult result, {
+    required Offset position,
+  }) {
     RenderBox? child = lastChild;
     while (child != null) {
       _ConstraintBoxData childParentData =
@@ -1074,7 +1111,10 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   @override
-  void paint(PaintingContext context, Offset offset) {
+  void paint(
+    PaintingContext context,
+    Offset offset,
+  ) {
     RenderBox? child = firstChild;
     while (child != null) {
       _ConstraintBoxData childParentData =
