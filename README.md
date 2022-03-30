@@ -3,7 +3,7 @@
 Build flexible layouts with constraints, Similar to Android ConstraintLayout.
 
 No matter how complex the layout is and how deep the dependencies are, each child element of
-ConstraintLayout will only be measured once This results in extremely high layout performance.
+ConstraintLayout will only be measured once, This results in extremely high layout performance.
 
 # Feature
 
