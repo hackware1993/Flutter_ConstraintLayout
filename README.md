@@ -125,7 +125,7 @@ If it helps you, consider sponsoring me a cup of milk tea
 ```
 MIT License
 
-Copyright (c) 2016 hackware1993
+Copyright (c) 2022 hackware1993
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
