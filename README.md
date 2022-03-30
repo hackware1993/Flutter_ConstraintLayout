@@ -2,6 +2,18 @@
 
 Build flexible layouts with constraints, Similar to Android ConstraintLayout.
 
+# Feature
+
+1. build flexible layouts with constraints
+2. margin and goneMargin
+3. clickPadding(expand the click area of child elements without changing their actual size)
+4. visibility control
+5. constraint integrity hint
+6. bias
+
+Coming soon:
+1.guideline 2.barrier 3.constraints visualization 4.chain 5.more...
+
 # Example
 
 ```dart
@@ -113,12 +125,12 @@ void main() {
 } 
 ```
 
-![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.webp)
+![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.webp?raw=true)
 
 # Support me
 
-If it helps you, consider sponsoring me a cup of milk tea
-![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp)
+If it helps you, consider sponsoring me a cup of milk tea.
+![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
 
 # License
 
