@@ -2,6 +2,9 @@
 
 Build flexible layouts with constraints, Similar to Android ConstraintLayout.
 
+No matter how complex the layout is and how deep the dependencies are, each child element of
+ConstraintLayout will only be measured once This results in extremely high layout performance.
+
 # Feature
 
 1. build flexible layouts with constraints
@@ -12,7 +15,21 @@ Build flexible layouts with constraints, Similar to Android ConstraintLayout.
 6. bias
 
 Coming soon:
-1.guideline 2.barrier 3.constraints visualization 4.chain 5.more...
+
+1. guideline
+2. barrier
+3. constraints visualization
+4. chain
+5. more...
+
+Support platform:
+
+1. Android
+2. iOS
+3. Mac
+4. Windows
+5. Linux
+6. Web
 
 # Example
 
