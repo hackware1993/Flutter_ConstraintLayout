@@ -14,10 +14,11 @@ import 'package:flutter/rendering.dart';
 /// features:
 ///   1. build flexible layouts with constraints
 ///   2. margin and goneMargin
-///   3. clickPadding(expand the click area of child elements without changing their actual size)
+///   3. clickPadding (quickly expand the click area of child elements without changing their actual size)
 ///   4. visibility control
 ///   5. constraint integrity hint
 ///   6. bias
+///   7. z-index
 ///
 ///  not implement
 ///   . guideline
@@ -29,8 +30,11 @@ import 'package:flutter/rendering.dart';
 /// home page: https://github.com/hackware1993
 /// email: cfb1993@163.com
 class ConstraintLayout extends MultiChildRenderObjectWidget {
+  // TODO implement debug function
   final bool debugShowGuideline;
   final bool debugShowPreview;
+
+  // already supported
   final bool debugShowClickArea;
   final bool debugPrintDependencies;
   final bool debugPrintLayoutTime;
@@ -51,7 +55,10 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.releasePrintLayoutTime = false,
     this.debugName,
     this.debugShowZIndex = false,
-  }) : super(key: key, children: children);
+  }) : super(
+          key: key,
+          children: children,
+        );
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -137,6 +144,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   EdgeInsets? goneMargin;
   double? horizontalBias;
   double? verticalBias;
+  int? zIndex;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -174,6 +182,8 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final bool? centerHorizontal;
   final bool? centerVertical;
 
+  final int? zIndex;
+
   // TODO support chain
   // final ChainStyle? chainStyle;
   // TODO support circle positioned
@@ -208,7 +218,11 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.centerVertical,
     this.horizontalBias,
     this.verticalBias,
-  }) : super(key: key, child: child);
+    this.zIndex,
+  }) : super(
+          key: key,
+          child: child,
+        );
 
   bool checkSize(double size) {
     if (size == CL.matchParent ||
@@ -293,6 +307,8 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     _ConstraintBoxData parentData =
         renderObject.parentData! as _ConstraintBoxData;
     bool needsLayout = false;
+    bool needsPaint = false;
+    bool needsReorderChildren = false;
 
     if (parentData.width != width) {
       parentData.width = width;
@@ -376,10 +392,29 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       needsLayout = true;
     }
 
+    if (parentData.zIndex != zIndex) {
+      parentData.zIndex = zIndex;
+      needsPaint = true;
+      needsReorderChildren = true;
+    }
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
         targetParent.markNeedsLayout();
+      }
+    } else {
+      if (needsReorderChildren) {
+        AbstractNode? targetParent = renderObject.parent;
+        if (targetParent is _ConstraintRenderBox) {
+          targetParent.needsReorderChildren = true;
+        }
+      }
+      if (needsPaint) {
+        AbstractNode? targetParent = renderObject.parent;
+        if (targetParent is RenderObject) {
+          targetParent.markNeedsPaint();
+        }
       }
     }
   }
@@ -394,7 +429,6 @@ class _ConstraintRenderBox extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ConstraintBoxData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ConstraintBoxData> {
-  // TODO implement debug function
   bool? _debugShowGuideline;
   bool? _debugShowPreview;
   bool? _debugShowClickArea;
@@ -404,9 +438,11 @@ class _ConstraintRenderBox extends RenderBox
   bool? _releasePrintLayoutTime;
   String? _debugName;
   bool? _debugShowZIndex;
+  bool? _needsReorderChildren;
 
   final Map<RenderBox, _NodeDependency> _nodeDependencies = HashMap();
   final Map<String, _NodeDependency> _tempNodeDependencies = HashMap();
+  late List<_NodeDependency> _paintingOrderList;
 
   set debugShowGuideline(bool value) {
     if (_debugShowGuideline != value) {
@@ -467,6 +503,13 @@ class _ConstraintRenderBox extends RenderBox
   set debugShowZIndex(bool value) {
     if (_debugShowZIndex != value) {
       _debugShowZIndex = value;
+      markNeedsPaint();
+    }
+  }
+
+  set needsReorderChildren(bool value) {
+    if (_needsReorderChildren != value) {
+      _needsReorderChildren = value;
       markNeedsPaint();
     }
   }
@@ -579,7 +622,7 @@ class _ConstraintRenderBox extends RenderBox
   void _debugCheckDependencyIntegrity() {
     for (final element in _nodeDependencies.values) {
       // check constraint integrity in the horizontal direction
-      if (element.width == CL.wrapContent || element.width! > 0) {
+      if (element.width == CL.wrapContent || element.width > 0) {
         if (element.leftDependency == null && element.rightDependency == null) {
           throw Exception(
               'Need to set a left or right dependency in the horizontal direction for ${element.nodeId}.');
@@ -592,7 +635,7 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       // check constraint integrity in the vertical direction
-      if (element.height == CL.wrapContent || element.height! > 0) {
+      if (element.height == CL.wrapContent || element.height > 0) {
         if (element.topDependency == null && element.bottomDependency == null) {
           throw Exception(
               'Need to set a top or bottom dependency in the vertical direction for ${element.nodeId}.');
@@ -631,25 +674,21 @@ class _ConstraintRenderBox extends RenderBox
   // child and id will not be null at the same time
   _NodeDependency _getNodeDependencyForChild(
     RenderBox? child,
-    String? id,
+    String id,
   ) {
     _NodeDependency? node;
     if (child != null) {
       node = _nodeDependencies[child];
     }
+    node ??= _tempNodeDependencies[id];
     if (node == null) {
-      if (id != null) {
-        node = _tempNodeDependencies[id];
-      }
+      node = _NodeDependency();
+      node.nodeId = id;
+      _tempNodeDependencies[id] = node;
     }
-    node ??= _NodeDependency();
     if (child != null && node.renderBox == null) {
       node.renderBox = child;
       _nodeDependencies[child] = node;
-    }
-    if (id != null && node.nodeId == null) {
-      node.nodeId = id;
-      _tempNodeDependencies[id] = node;
     }
     return node;
   }
@@ -684,8 +723,8 @@ class _ConstraintRenderBox extends RenderBox
 
       _NodeDependency currentNode = _getNodeDependencyForChild(
           child, childParentData.id ?? 'child[$childIndex]@${child.hashCode}');
-      currentNode.width = childParentData.width;
-      currentNode.height = childParentData.height;
+      currentNode.parentData = childParentData;
+      currentNode.index = childIndex;
 
       if (childParentData.leftToLeft != null) {
         assert(() {
@@ -694,7 +733,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.leftDependency =
-            _getNodeDependencyForChild(null, childParentData.leftToLeft);
+            _getNodeDependencyForChild(null, childParentData.leftToLeft!);
         currentNode.leftDependencyType = 0;
       }
       if (childParentData.leftToRight != null) {
@@ -704,7 +743,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.leftDependency =
-            _getNodeDependencyForChild(null, childParentData.leftToRight);
+            _getNodeDependencyForChild(null, childParentData.leftToRight!);
         currentNode.leftDependencyType = 1;
       }
       if (childParentData.rightToLeft != null) {
@@ -714,7 +753,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.rightDependency =
-            _getNodeDependencyForChild(null, childParentData.rightToLeft);
+            _getNodeDependencyForChild(null, childParentData.rightToLeft!);
         currentNode.rightDependencyType = 0;
       }
       if (childParentData.rightToRight != null) {
@@ -724,7 +763,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.rightDependency =
-            _getNodeDependencyForChild(null, childParentData.rightToRight);
+            _getNodeDependencyForChild(null, childParentData.rightToRight!);
         currentNode.rightDependencyType = 1;
       }
       if (childParentData.topToTop != null) {
@@ -734,7 +773,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.topDependency =
-            _getNodeDependencyForChild(null, childParentData.topToTop);
+            _getNodeDependencyForChild(null, childParentData.topToTop!);
         currentNode.topDependencyType = 0;
       }
       if (childParentData.topToBottom != null) {
@@ -744,7 +783,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.topDependency =
-            _getNodeDependencyForChild(null, childParentData.topToBottom);
+            _getNodeDependencyForChild(null, childParentData.topToBottom!);
         currentNode.topDependencyType = 1;
       }
       if (childParentData.bottomToTop != null) {
@@ -754,7 +793,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.bottomDependency =
-            _getNodeDependencyForChild(null, childParentData.bottomToTop);
+            _getNodeDependencyForChild(null, childParentData.bottomToTop!);
         currentNode.bottomDependencyType = 0;
       }
       if (childParentData.bottomToBottom != null) {
@@ -764,7 +803,7 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
         currentNode.bottomDependency =
-            _getNodeDependencyForChild(null, childParentData.bottomToBottom);
+            _getNodeDependencyForChild(null, childParentData.bottomToBottom!);
         currentNode.bottomDependencyType = 1;
       }
 
@@ -777,7 +816,6 @@ class _ConstraintRenderBox extends RenderBox
   @override
   void performLayout() {
     int startTime = 0;
-
     if (_releasePrintLayoutTime == true && kReleaseMode) {
       startTime = DateTime.now().millisecondsSinceEpoch;
     }
@@ -814,6 +852,16 @@ class _ConstraintRenderBox extends RenderBox
     nodeDependencies.sort((left, right) {
       return left.getDepth() - right.getDepth();
     });
+
+    _paintingOrderList = _nodeDependencies.values.toList();
+    _paintingOrderList.sort((left, right) {
+      int result = left.zIndex - right.zIndex;
+      if (result == 0) {
+        result = left.index - right.index;
+      }
+      return result;
+    });
+    _needsReorderChildren = null;
 
     assert(() {
       // print dependencies
@@ -877,24 +925,21 @@ class _ConstraintRenderBox extends RenderBox
 
   void _layoutByDependency(List<_NodeDependency> nodeDependencies) {
     for (final element in nodeDependencies) {
-      _ConstraintBoxData childParentData =
-          element.renderBox!.parentData as _ConstraintBoxData;
-
-      EdgeInsets? margin = childParentData.margin;
-      EdgeInsets? goneMargin = childParentData.goneMargin;
+      EdgeInsets? margin = element.margin;
+      EdgeInsets? goneMargin = element.goneMargin;
 
       // calculate child width
       double minWidth = 0;
       double maxWidth = double.infinity;
       double minHeight = 0;
       double maxHeight = double.infinity;
-      if (childParentData.visibility == CL.gone) {
+      if (element.visibility == CL.gone) {
         minWidth = 0;
         maxWidth = 0;
         minWidth = 0;
         maxHeight = 0;
       } else {
-        double width = childParentData.width!;
+        double width = element.width;
         if (width == CL.wrapContent) {
           maxWidth = size.width;
         } else if (width == CL.matchParent) {
@@ -949,7 +994,7 @@ class _ConstraintRenderBox extends RenderBox
         }
 
         // calculate child height
-        double height = childParentData.height!;
+        double height = element.height;
         if (height == CL.wrapContent) {
           maxHeight = size.height;
         } else if (height == CL.matchParent) {
@@ -1056,9 +1101,9 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           right -= _getRightInsets(margin);
         }
-        double horizontalBias = childParentData.horizontalBias ?? 0.5;
-        offsetX =
-            left + (right - left - element.getWidth(size)) * horizontalBias;
+        double horizontalBias = element.horizontalBias ?? 0.5;
+        offsetX = left +
+            (right - left - element.getMeasuredWidth(size)) * horizontalBias;
       } else if (element.leftDependency != null) {
         double left;
         if (element.leftDependencyType == 0) {
@@ -1084,7 +1129,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           right -= _getRightInsets(margin);
         }
-        offsetX = right - element.getWidth(size);
+        offsetX = right - element.getMeasuredWidth(size);
       } else {
         // it is not possible to execute this branch
       }
@@ -1114,8 +1159,9 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           bottom -= _getBottomInsets(margin);
         }
-        double verticalBias = childParentData.verticalBias ?? 0.5;
-        offsetY = top + (bottom - top - element.getHeight(size)) * verticalBias;
+        double verticalBias = element.verticalBias ?? 0.5;
+        offsetY = top +
+            (bottom - top - element.getMeasuredHeight(size)) * verticalBias;
       } else if (element.topDependency != null) {
         double top;
         if (element.topDependencyType == 0) {
@@ -1141,12 +1187,12 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           bottom -= _getBottomInsets(margin);
         }
-        offsetY = bottom - element.getHeight(size);
+        offsetY = bottom - element.getMeasuredHeight(size);
       } else {
         // it is not possible to execute this branch
       }
 
-      childParentData.offset = Offset(offsetX, offsetY);
+      element.offset = Offset(offsetX, offsetY);
     }
   }
 
@@ -1155,50 +1201,45 @@ class _ConstraintRenderBox extends RenderBox
     BoxHitTestResult result, {
     required Offset position,
   }) {
-    RenderBox? child = lastChild;
-    while (child != null) {
-      _ConstraintBoxData childParentData =
-          child.parentData as _ConstraintBoxData;
-
-      if (_nodeDependencies[child]!.isNotLaidOut()) {
-        child = childParentData.previousSibling;
+    for (final element in _paintingOrderList.reversed) {
+      if (element.shouldNotPaint()) {
         continue;
       }
-
       // expand the click area without changing the actual size
       Offset offsetPos = Offset(position.dx, position.dy);
-      EdgeInsets? clickPadding = childParentData.clickPadding;
+      EdgeInsets? clickPadding = element.clickPadding;
       if (clickPadding != null) {
-        Size size = child.size;
-        double clickPaddingLeft = childParentData.offset.dx - clickPadding.left;
-        double clickPaddingTop = childParentData.offset.dy - clickPadding.top;
-        double clickPaddingRight =
-            childParentData.offset.dx + size.width + clickPadding.right;
-        double clickPaddingBottom =
-            childParentData.offset.dy + size.height + clickPadding.bottom;
+        double clickPaddingLeft = element.getX() - clickPadding.left;
+        double clickPaddingTop = element.getY() - clickPadding.top;
+        double clickPaddingRight = element.getX() +
+            element.getMeasuredWidth(size) +
+            clickPadding.right;
+        double clickPaddingBottom = element.getY() +
+            element.getMeasuredHeight(size) +
+            clickPadding.bottom;
         double xClickPercent = (offsetPos.dx - clickPaddingLeft) /
             (clickPaddingRight - clickPaddingLeft);
         double yClickPercent = (offsetPos.dy - clickPaddingTop) /
             (clickPaddingBottom - clickPaddingTop);
         double realClickX =
-            childParentData.offset.dx + xClickPercent * size.width;
+            element.getX() + xClickPercent * element.getMeasuredWidth(size);
         double realClickY =
-            childParentData.offset.dy + yClickPercent * size.height;
+            element.getY() + yClickPercent * element.getMeasuredHeight(size);
         offsetPos = Offset(realClickX, realClickY);
       }
 
       bool isHit = result.addWithPaintOffset(
-        offset: childParentData.offset,
+        offset: element.offset,
         position: offsetPos,
         hitTest: (BoxHitTestResult result, Offset transformed) {
-          return child!.hitTest(result, position: transformed);
+          return element.renderBox!.hitTest(result, position: transformed);
         },
       );
       if (isHit) {
         return true;
       }
-      child = childParentData.previousSibling;
     }
+
     return false;
   }
 
@@ -1207,34 +1248,47 @@ class _ConstraintRenderBox extends RenderBox
     PaintingContext context,
     Offset offset,
   ) {
-    RenderBox? child = firstChild;
-    int childIndex = -1;
-    while (child != null) {
-      childIndex++;
-      _ConstraintBoxData childParentData =
-          child.parentData as _ConstraintBoxData;
-      if (childParentData.visibility == CL.gone ||
-          childParentData.visibility == CL.invisible ||
-          _nodeDependencies[child]!.isNotLaidOut()) {
-        child = childParentData.nextSibling;
+    int startTime = 0;
+    if (_releasePrintLayoutTime == true && kReleaseMode) {
+      startTime = DateTime.now().millisecondsSinceEpoch;
+    }
+    assert(() {
+      if (_debugPrintLayoutTime == true) {
+        startTime = DateTime.now().millisecondsSinceEpoch;
+      }
+      return true;
+    }());
+
+    if (_needsReorderChildren == true) {
+      _paintingOrderList.sort((left, right) {
+        int result = left.zIndex - right.zIndex;
+        if (result == 0) {
+          result = left.index - right.index;
+        }
+        return result;
+      });
+      _needsReorderChildren = null;
+    }
+
+    for (final element in _paintingOrderList) {
+      if (element.shouldNotPaint()) {
         continue;
       }
-      context.paintChild(child, childParentData.offset + offset);
-
+      context.paintChild(element.renderBox!, element.offset + offset);
       // draw child's click area
       assert(() {
         if (_debugShowClickArea == true) {
           Paint paint = Paint();
           paint.color = Colors.yellow.withAlpha(192);
-          EdgeInsets? clickPadding = childParentData.clickPadding;
+          EdgeInsets? clickPadding = element.clickPadding;
           Rect rect = Rect.fromLTRB(
-              childParentData.offset.dx - _getLeftInsets(clickPadding),
-              childParentData.offset.dy - _getTopInsets(clickPadding),
-              childParentData.offset.dx +
-                  child!.size.width +
+              element.getX() - _getLeftInsets(clickPadding),
+              element.getY() - _getTopInsets(clickPadding),
+              element.getX() +
+                  element.getMeasuredWidth(size) +
                   _getRightInsets(clickPadding),
-              childParentData.offset.dy +
-                  child.size.height +
+              element.getY() +
+                  element.getMeasuredHeight(size) +
                   _getBottomInsets(clickPadding));
           context.canvas.drawRect(rect.shift(offset), paint);
           ui.ParagraphBuilder paragraphBuilder =
@@ -1245,12 +1299,15 @@ class _ConstraintRenderBox extends RenderBox
           paragraphBuilder.addText("CLICK AREA");
           ui.Paragraph paragraph = paragraphBuilder.build();
           paragraph.layout(ui.ParagraphConstraints(
-            width: child.size.width,
+            width: element.getMeasuredWidth(size),
           ));
           context.canvas.drawParagraph(
               paragraph,
-              (childParentData.offset + offset) +
-                  Offset(0, (child.size.height - paragraph.height) / 2));
+              (element.offset + offset) +
+                  Offset(
+                      0,
+                      (element.getMeasuredHeight(size) - paragraph.height) /
+                          2));
         }
         return true;
       }());
@@ -1263,26 +1320,33 @@ class _ConstraintRenderBox extends RenderBox
             textAlign: TextAlign.center,
             fontSize: 10,
           ));
-          paragraphBuilder.addText("z-index $childIndex");
+          paragraphBuilder.addText("z-index ${element.zIndex}");
           ui.Paragraph paragraph = paragraphBuilder.build();
           paragraph.layout(ui.ParagraphConstraints(
-            width: child!.size.width,
+            width: element.getMeasuredWidth(size),
           ));
-          context.canvas
-              .drawParagraph(paragraph, (childParentData.offset + offset));
+          context.canvas.drawParagraph(paragraph, (element.offset + offset));
         }
         return true;
       }());
-
-      child = childParentData.nextSibling;
     }
+
+    if (_releasePrintLayoutTime == true && kReleaseMode) {
+      print(
+          'ConstraintLayout@${_debugName ?? hashCode} paint time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is release mode).');
+    }
+    assert(() {
+      if (_debugPrintLayoutTime == true) {
+        debugPrint(
+            'ConstraintLayout@${_debugName ?? hashCode} paint time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is debug mode, release mode may take less time).');
+      }
+      return true;
+    }());
   }
 }
 
 class _NodeDependency {
-  String? nodeId;
-  double? width;
-  double? height;
+  late String nodeId;
   RenderBox? renderBox;
   _NodeDependency? leftDependency;
   _NodeDependency? topDependency;
@@ -1293,10 +1357,42 @@ class _NodeDependency {
   int? rightDependencyType; // 0 toLeft，1 toRight
   int? bottomDependencyType; // toTop，1 toBottom
   int depth = -1;
-  bool? laidOut;
+  late bool laidOut;
+  late _ConstraintBoxData parentData;
+  late int index;
+
+  double get width => parentData.width!;
+
+  double get height => parentData.height!;
+
+  int get zIndex => parentData.zIndex ?? index;
+
+  Offset get offset => parentData.offset;
+
+  EdgeInsets? get margin => parentData.margin;
+
+  EdgeInsets? get goneMargin => parentData.goneMargin;
+
+  CLVisibility? get visibility => parentData.visibility;
+
+  double? get horizontalBias => parentData.horizontalBias;
+
+  double? get verticalBias => parentData.verticalBias;
+
+  EdgeInsets? get clickPadding => parentData.clickPadding;
+
+  set offset(Offset value) {
+    parentData.offset = value;
+  }
 
   bool isParent() {
     return nodeId == CL.parent;
+  }
+
+  bool shouldNotPaint() {
+    return visibility == CL.gone ||
+        visibility == CL.invisible ||
+        isNotLaidOut();
   }
 
   bool isNotLaidOut() {
@@ -1310,31 +1406,31 @@ class _NodeDependency {
     if (isParent()) {
       return 0;
     }
-    return (renderBox!.parentData as _ConstraintBoxData).offset.dx;
+    return offset.dx;
   }
 
   double getY() {
     if (isParent()) {
       return 0;
     }
-    return (renderBox!.parentData as _ConstraintBoxData).offset.dy;
+    return offset.dy;
   }
 
   double getRight(Size size) {
     if (isParent()) {
       return size.width;
     }
-    return getX() + getWidth(size);
+    return getX() + getMeasuredWidth(size);
   }
 
   double getBottom(Size size) {
     if (isParent()) {
       return size.height;
     }
-    return getY() + getHeight(size);
+    return getY() + getMeasuredHeight(size);
   }
 
-  double getWidth(Size size) {
+  double getMeasuredWidth(Size size) {
     if (isParent()) {
       return size.width;
     }
@@ -1344,7 +1440,7 @@ class _NodeDependency {
     return renderBox!.size.width;
   }
 
-  double getHeight(Size size) {
+  double getMeasuredHeight(Size size) {
     if (isParent()) {
       return size.height;
     }
