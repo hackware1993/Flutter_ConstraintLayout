@@ -1149,6 +1149,7 @@ class _ConstraintRenderBox extends RenderBox
           child.parentData as _ConstraintBoxData;
 
       if (_nodeDependencies[child]!.isNotLaidOut()) {
+        child = childParentData.previousSibling;
         continue;
       }
 
