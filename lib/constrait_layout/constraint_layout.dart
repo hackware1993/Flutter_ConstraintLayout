@@ -145,6 +145,8 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? horizontalBias;
   double? verticalBias;
   int? zIndex;
+  Offset? translate;
+  bool? translateDependency;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -183,6 +185,8 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final bool? centerVertical;
 
   final int? zIndex;
+  final Offset? translate;
+  final bool? translateDependency;
 
   // TODO support chain
   // final ChainStyle? chainStyle;
@@ -219,6 +223,8 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.horizontalBias,
     this.verticalBias,
     this.zIndex,
+    this.translate,
+    this.translateDependency,
   }) : super(
           key: key,
           child: child,
@@ -396,6 +402,19 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       parentData.zIndex = zIndex;
       needsPaint = true;
       needsReorderChildren = true;
+    }
+
+    if (parentData.translateDependency != translateDependency) {
+      parentData.translateDependency = translateDependency;
+      needsLayout = true;
+    }
+
+    if (parentData.translate != translate) {
+      parentData.translate = translate;
+      if (parentData.translateDependency == true) {
+        needsLayout = true;
+      }
+      needsPaint = true;
     }
 
     if (needsLayout) {
@@ -1205,31 +1224,39 @@ class _ConstraintRenderBox extends RenderBox
       if (element.shouldNotPaint()) {
         continue;
       }
+
+      Offset clickShift = const Offset(0, 0);
+      if (element.translateDependency != true) {
+        if (element.translate != null) {
+          clickShift = element.translate!;
+        }
+      }
+
       // expand the click area without changing the actual size
       Offset offsetPos = Offset(position.dx, position.dy);
       EdgeInsets? clickPadding = element.clickPadding;
       if (clickPadding != null) {
-        double clickPaddingLeft = element.getX() - clickPadding.left;
-        double clickPaddingTop = element.getY() - clickPadding.top;
-        double clickPaddingRight = element.getX() +
-            element.getMeasuredWidth(size) +
-            clickPadding.right;
-        double clickPaddingBottom = element.getY() +
-            element.getMeasuredHeight(size) +
-            clickPadding.bottom;
+        double x = element.getX();
+        x += clickShift.dx;
+        double y = element.getY();
+        y += clickShift.dy;
+        double clickPaddingLeft = x - clickPadding.left;
+        double clickPaddingTop = y - clickPadding.top;
+        double clickPaddingRight =
+            x + element.getMeasuredWidth(size) + clickPadding.right;
+        double clickPaddingBottom =
+            y + element.getMeasuredHeight(size) + clickPadding.bottom;
         double xClickPercent = (offsetPos.dx - clickPaddingLeft) /
             (clickPaddingRight - clickPaddingLeft);
         double yClickPercent = (offsetPos.dy - clickPaddingTop) /
             (clickPaddingBottom - clickPaddingTop);
-        double realClickX =
-            element.getX() + xClickPercent * element.getMeasuredWidth(size);
-        double realClickY =
-            element.getY() + yClickPercent * element.getMeasuredHeight(size);
+        double realClickX = x + xClickPercent * element.getMeasuredWidth(size);
+        double realClickY = y + yClickPercent * element.getMeasuredHeight(size);
         offsetPos = Offset(realClickX, realClickY);
       }
 
       bool isHit = result.addWithPaintOffset(
-        offset: element.offset,
+        offset: element.offset + clickShift,
         position: offsetPos,
         hitTest: (BoxHitTestResult result, Offset transformed) {
           return element.renderBox!.hitTest(result, position: transformed);
@@ -1274,7 +1301,15 @@ class _ConstraintRenderBox extends RenderBox
       if (element.shouldNotPaint()) {
         continue;
       }
-      context.paintChild(element.renderBox!, element.offset + offset);
+
+      Offset paintShift = const Offset(0, 0);
+      if (element.translateDependency != true) {
+        if (element.translate != null) {
+          paintShift = element.translate!;
+        }
+      }
+      context.paintChild(
+          element.renderBox!, element.offset + offset + paintShift);
       // draw child's click area
       assert(() {
         if (_debugShowClickArea == true) {
@@ -1290,7 +1325,8 @@ class _ConstraintRenderBox extends RenderBox
               element.getY() +
                   element.getMeasuredHeight(size) +
                   _getBottomInsets(clickPadding));
-          context.canvas.drawRect(rect.shift(offset), paint);
+          rect = rect.shift(offset).shift(paintShift);
+          context.canvas.drawRect(rect, paint);
           ui.ParagraphBuilder paragraphBuilder =
               ui.ParagraphBuilder(ui.ParagraphStyle(
             textAlign: TextAlign.center,
@@ -1299,15 +1335,10 @@ class _ConstraintRenderBox extends RenderBox
           paragraphBuilder.addText("CLICK AREA");
           ui.Paragraph paragraph = paragraphBuilder.build();
           paragraph.layout(ui.ParagraphConstraints(
-            width: element.getMeasuredWidth(size),
+            width: rect.width,
           ));
           context.canvas.drawParagraph(
-              paragraph,
-              (element.offset + offset) +
-                  Offset(
-                      0,
-                      (element.getMeasuredHeight(size) - paragraph.height) /
-                          2));
+              paragraph, rect.centerLeft + Offset(0, -paragraph.height / 2));
         }
         return true;
       }());
@@ -1325,7 +1356,8 @@ class _ConstraintRenderBox extends RenderBox
           paragraph.layout(ui.ParagraphConstraints(
             width: element.getMeasuredWidth(size),
           ));
-          context.canvas.drawParagraph(paragraph, (element.offset + offset));
+          context.canvas
+              .drawParagraph(paragraph, element.offset + offset + paintShift);
         }
         return true;
       }());
@@ -1367,7 +1399,21 @@ class _NodeDependency {
 
   int get zIndex => parentData.zIndex ?? index;
 
-  Offset get offset => parentData.offset;
+  Offset get offset {
+    if (translate == null) {
+      return parentData.offset;
+    } else {
+      if (translateDependency == true) {
+        return parentData.offset + translate!;
+      } else {
+        return parentData.offset;
+      }
+    }
+  }
+
+  Offset? get translate => parentData.translate;
+
+  bool? get translateDependency => parentData.translateDependency;
 
   EdgeInsets? get margin => parentData.margin;
 

@@ -14,6 +14,7 @@ ConstraintLayout will only be measured once, This results in extremely high layo
 5. constraint integrity hint
 6. bias
 7. z-index
+8. translate
 
 Coming soon:
 
@@ -42,7 +43,7 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.1-alpha3'
+      ref: 'v0.1-alpha4'
 ```
 
 # Example
