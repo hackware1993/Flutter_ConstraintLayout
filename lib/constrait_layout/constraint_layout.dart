@@ -599,7 +599,7 @@ class _ConstraintRenderBox extends RenderBox
     _NodeDependency? dependency,
     String direction,
   ) {
-    if (_debugCheckDependencies == true && kDebugMode) {
+    if (_debugCheckDependencies == true) {
       if (dependency != null) {
         debugPrint(
             'Warning: The child element with id ${node.nodeId} has a duplicate $direction dependency.');
@@ -652,77 +652,104 @@ class _ConstraintRenderBox extends RenderBox
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
 
-      if (_debugCheckDependencies == true && kDebugMode) {
-        if (childParentData.width == null) {
-          if (!_isInternalBox(child)) {
-            throw Exception('Child elements must be wrapped with Constrained.');
-          }
-        } else {
-          if (_isInternalBox(child)) {
-            throw Exception(
-                'Guideline, Barrier can not be wrapped with Constrained.');
+      assert(() {
+        if (_debugCheckDependencies == true) {
+          if (childParentData.width == null) {
+            if (!_isInternalBox(child!)) {
+              throw Exception(
+                  'Child elements must be wrapped with Constrained.');
+            }
+          } else {
+            if (_isInternalBox(child!)) {
+              throw Exception(
+                  'Guideline, Barrier can not be wrapped with Constrained.');
+            }
           }
         }
-      }
+        return true;
+      }());
 
       _NodeDependency currentNode = _getNodeDependencyForChild(
           child, childParentData.id ?? 'child[$childIndex]@${child.hashCode}');
       currentNode.width = childParentData.width;
       currentNode.height = childParentData.height;
-      currentNode.visibility = childParentData.visibility;
 
       if (childParentData.leftToLeft != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.leftDependency, 'left');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.leftDependency, 'left');
+          return true;
+        }());
         currentNode.leftDependency =
             _getNodeDependencyForChild(null, childParentData.leftToLeft);
         currentNode.leftDependencyType = 0;
       }
       if (childParentData.leftToRight != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.leftDependency, 'left');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.leftDependency, 'left');
+          return true;
+        }());
         currentNode.leftDependency =
             _getNodeDependencyForChild(null, childParentData.leftToRight);
         currentNode.leftDependencyType = 1;
       }
       if (childParentData.rightToLeft != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.rightDependency, 'right');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.rightDependency, 'right');
+          return true;
+        }());
         currentNode.rightDependency =
             _getNodeDependencyForChild(null, childParentData.rightToLeft);
         currentNode.rightDependencyType = 0;
       }
       if (childParentData.rightToRight != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.rightDependency, 'right');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.rightDependency, 'right');
+          return true;
+        }());
         currentNode.rightDependency =
             _getNodeDependencyForChild(null, childParentData.rightToRight);
         currentNode.rightDependencyType = 1;
       }
       if (childParentData.topToTop != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.topDependency, 'top');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.topDependency, 'top');
+          return true;
+        }());
         currentNode.topDependency =
             _getNodeDependencyForChild(null, childParentData.topToTop);
         currentNode.topDependencyType = 0;
       }
       if (childParentData.topToBottom != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.topDependency, 'top');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.topDependency, 'top');
+          return true;
+        }());
         currentNode.topDependency =
             _getNodeDependencyForChild(null, childParentData.topToBottom);
         currentNode.topDependencyType = 1;
       }
       if (childParentData.bottomToTop != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.bottomDependency, 'bottom');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.bottomDependency, 'bottom');
+          return true;
+        }());
         currentNode.bottomDependency =
             _getNodeDependencyForChild(null, childParentData.bottomToTop);
         currentNode.bottomDependencyType = 0;
       }
       if (childParentData.bottomToBottom != null) {
-        _debugEnsureNullDependency(
-            currentNode, currentNode.bottomDependency, 'bottom');
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.bottomDependency, 'bottom');
+          return true;
+        }());
         currentNode.bottomDependency =
             _getNodeDependencyForChild(null, childParentData.bottomToBottom);
         currentNode.bottomDependencyType = 1;
@@ -742,24 +769,33 @@ class _ConstraintRenderBox extends RenderBox
     if (_releasePrintLayoutTime == true && kReleaseMode) {
       startTime = DateTime.now().millisecondsSinceEpoch;
     }
-    if (_debugPrintLayoutTime == true && kDebugMode) {
-      startTime = DateTime.now().millisecondsSinceEpoch;
-    }
+    assert(() {
+      if (_debugPrintLayoutTime == true) {
+        startTime = DateTime.now().millisecondsSinceEpoch;
+      }
+      return true;
+    }());
 
     // always fill the parent layout
     size = constraints.constrain(const Size(double.infinity, double.infinity));
 
-    if (_debugCheckDependencies == true && kDebugMode) {
-      _debugCheckIds();
-    }
+    assert(() {
+      if (_debugCheckDependencies == true) {
+        _debugCheckIds();
+      }
+      return true;
+    }());
 
     // traverse once to build a directed acyclic graph
     _buildDependencyGraph();
 
-    if (_debugCheckDependencies == true && kDebugMode) {
-      _debugCheckDependencyIntegrity();
-      _debugCheckCircularDependency();
-    }
+    assert(() {
+      if (_debugCheckDependencies == true) {
+        _debugCheckDependencyIntegrity();
+        _debugCheckCircularDependency();
+      }
+      return true;
+    }());
 
     // sort by the depth of dependency from shallow to deep, the lowest depth is 0, representing parent
     List<_NodeDependency> nodeDependencies = _nodeDependencies.values.toList();
@@ -767,11 +803,14 @@ class _ConstraintRenderBox extends RenderBox
       return left.getDepth() - right.getDepth();
     });
 
-    // print dependencies
-    if (_debugPrintDependencies == true && kDebugMode) {
-      debugPrint('ConstraintLayout@${_debugName ?? hashCode} dependencies: ' +
-          jsonEncode(nodeDependencies.map((e) => e.toJson()).toList()));
-    }
+    assert(() {
+      // print dependencies
+      if (_debugPrintDependencies == true) {
+        debugPrint('ConstraintLayout@${_debugName ?? hashCode} dependencies: ' +
+            jsonEncode(nodeDependencies.map((e) => e.toJson()).toList()));
+      }
+      return true;
+    }());
 
     _layoutByDependency(nodeDependencies);
 
@@ -779,10 +818,13 @@ class _ConstraintRenderBox extends RenderBox
       print(
           'ConstraintLayout@${_debugName ?? hashCode} layout time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is release mode).');
     }
-    if (_debugPrintLayoutTime == true && kDebugMode) {
-      debugPrint(
-          'ConstraintLayout@${_debugName ?? hashCode} layout time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is debug mode, release mode may take less time).');
-    }
+    assert(() {
+      if (_debugPrintLayoutTime == true) {
+        debugPrint(
+            'ConstraintLayout@${_debugName ?? hashCode} layout time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is debug mode, release mode may take less time).');
+      }
+      return true;
+    }());
   }
 
   static double _getLeftInsets(EdgeInsets? insets) {
@@ -830,109 +872,141 @@ class _ConstraintRenderBox extends RenderBox
       EdgeInsets? goneMargin = childParentData.goneMargin;
 
       // calculate child width
-      double width = childParentData.width!;
       double minWidth = 0;
       double maxWidth = double.infinity;
-      if (width == CL.wrapContent) {
-        maxWidth = size.width;
-      } else if (width == CL.matchParent) {
-        minWidth = size.width - _getHorizontalInsets(margin);
-        maxWidth = minWidth;
-      } else if (width == CL.matchConstraint) {
-        double left;
-        if (element.leftDependencyType == 0) {
-          left = element.leftDependency!.getX();
-        } else {
-          left = element.leftDependency!.getRight(size);
-        }
-        if (element.leftDependency!.visibility == CL.gone) {
-          left += _getLeftInsets(goneMargin ?? margin);
-        } else {
-          left += _getLeftInsets(margin);
-        }
-        double right;
-        if (element.rightDependencyType == 0) {
-          right = element.rightDependency!.getX();
-        } else {
-          right = element.rightDependency!.getRight(size);
-        }
-        if (element.rightDependency!.visibility == CL.gone) {
-          right -= _getRightInsets(goneMargin ?? margin);
-        } else {
-          right -= _getRightInsets(margin);
-        }
-        minWidth = right - left;
-        if (_debugCheckDependencies == true && kDebugMode) {
-          if (minWidth < 0) {
-            debugPrint(
-                'Warning: The child element with id ${element.nodeId} has a negative width');
-          }
-        }
-        maxWidth = minWidth;
-      } else {
-        minWidth = width;
-        maxWidth = width;
-      }
-
-      // calculate child height
-      double height = childParentData.height!;
       double minHeight = 0;
       double maxHeight = double.infinity;
-      if (height == CL.wrapContent) {
-        maxHeight = size.height;
-      } else if (height == CL.matchParent) {
-        minHeight = size.height - _getVerticalInsets(margin);
-        maxHeight = minHeight;
-      } else if (height == CL.matchConstraint) {
-        double top;
-        if (element.topDependencyType == 0) {
-          top = element.topDependency!.getY();
-        } else {
-          top = element.topDependency!.getBottom(size);
-        }
-        if (element.topDependency!.visibility == CL.gone) {
-          top += _getTopInsets(goneMargin ?? margin);
-        } else {
-          top += _getTopInsets(margin);
-        }
-        double bottom;
-        if (element.bottomDependencyType == 0) {
-          bottom = element.bottomDependency!.getY();
-        } else {
-          bottom = element.bottomDependency!.getBottom(size);
-        }
-        if (element.bottomDependency!.visibility == CL.gone) {
-          bottom -= _getBottomInsets(goneMargin ?? margin);
-        } else {
-          bottom -= _getBottomInsets(margin);
-        }
-        minHeight = bottom - top;
-        if (_debugCheckDependencies == true && kDebugMode) {
-          if (minHeight < 0) {
-            debugPrint(
-                'Warning: The child element with id ${element.nodeId} has a negative height');
-          }
-        }
-        maxHeight = minHeight;
+      if (childParentData.visibility == CL.gone) {
+        minWidth = 0;
+        maxWidth = 0;
+        minWidth = 0;
+        maxHeight = 0;
       } else {
-        minHeight = height;
-        maxHeight = height;
+        double width = childParentData.width!;
+        if (width == CL.wrapContent) {
+          maxWidth = size.width;
+        } else if (width == CL.matchParent) {
+          minWidth = size.width - _getHorizontalInsets(margin);
+          assert(() {
+            if (_debugCheckDependencies == true) {
+              if (minWidth < 0) {
+                debugPrint(
+                    'Warning: The child element with id ${element.nodeId} has a negative width');
+              }
+            }
+            return true;
+          }());
+          maxWidth = minWidth;
+        } else if (width == CL.matchConstraint) {
+          double left;
+          if (element.leftDependencyType == 0) {
+            left = element.leftDependency!.getX();
+          } else {
+            left = element.leftDependency!.getRight(size);
+          }
+          if (element.leftDependency!.isNotLaidOut()) {
+            left += _getLeftInsets(goneMargin ?? margin);
+          } else {
+            left += _getLeftInsets(margin);
+          }
+          double right;
+          if (element.rightDependencyType == 0) {
+            right = element.rightDependency!.getX();
+          } else {
+            right = element.rightDependency!.getRight(size);
+          }
+          if (element.rightDependency!.isNotLaidOut()) {
+            right -= _getRightInsets(goneMargin ?? margin);
+          } else {
+            right -= _getRightInsets(margin);
+          }
+          minWidth = right - left;
+          assert(() {
+            if (_debugCheckDependencies == true) {
+              if (minWidth < 0) {
+                debugPrint(
+                    'Warning: The child element with id ${element.nodeId} has a negative width');
+              }
+            }
+            return true;
+          }());
+          maxWidth = minWidth;
+        } else {
+          minWidth = width;
+          maxWidth = width;
+        }
+
+        // calculate child height
+        double height = childParentData.height!;
+        if (height == CL.wrapContent) {
+          maxHeight = size.height;
+        } else if (height == CL.matchParent) {
+          minHeight = size.height - _getVerticalInsets(margin);
+          assert(() {
+            if (_debugCheckDependencies == true) {
+              if (minHeight < 0) {
+                debugPrint(
+                    'Warning: The child element with id ${element.nodeId} has a negative height');
+              }
+            }
+            return true;
+          }());
+          maxHeight = minHeight;
+        } else if (height == CL.matchConstraint) {
+          double top;
+          if (element.topDependencyType == 0) {
+            top = element.topDependency!.getY();
+          } else {
+            top = element.topDependency!.getBottom(size);
+          }
+          if (element.topDependency!.isNotLaidOut()) {
+            top += _getTopInsets(goneMargin ?? margin);
+          } else {
+            top += _getTopInsets(margin);
+          }
+          double bottom;
+          if (element.bottomDependencyType == 0) {
+            bottom = element.bottomDependency!.getY();
+          } else {
+            bottom = element.bottomDependency!.getBottom(size);
+          }
+          if (element.bottomDependency!.isNotLaidOut()) {
+            bottom -= _getBottomInsets(goneMargin ?? margin);
+          } else {
+            bottom -= _getBottomInsets(margin);
+          }
+          minHeight = bottom - top;
+          assert(() {
+            if (_debugCheckDependencies == true) {
+              if (minHeight < 0) {
+                debugPrint(
+                    'Warning: The child element with id ${element.nodeId} has a negative height');
+              }
+            }
+            return true;
+          }());
+          maxHeight = minHeight;
+        } else {
+          minHeight = height;
+          maxHeight = height;
+        }
       }
 
-      if (childParentData.visibility != CL.gone) {
-        // measure
-        if (minWidth < 0) {
-          minWidth = 0;
-        }
-        if (maxWidth < 0) {
-          maxWidth = 0;
-        }
-        if (minHeight < 0) {
-          minHeight = 0;
-        }
-        if (maxHeight < 0) {
-          maxHeight = 0;
-        }
+      // measure
+      if (maxWidth <= 0 || maxHeight <= 0) {
+        element.renderBox!.layout(
+          const BoxConstraints.tightFor(width: 0, height: 0),
+          parentUsesSize: false,
+        );
+        element.laidOut = false;
+        assert(() {
+          if (_debugCheckDependencies == true) {
+            debugPrint(
+                'Warning: The child element with id ${element.nodeId} has a negative size, will not be laid out and paint.');
+          }
+          return true;
+        }());
+      } else {
         element.renderBox!.layout(
           BoxConstraints(
             minWidth: minWidth,
@@ -942,6 +1016,7 @@ class _ConstraintRenderBox extends RenderBox
           ),
           parentUsesSize: true,
         );
+        element.laidOut = true;
       }
 
       // calculate child x offset
@@ -953,7 +1028,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           left = element.leftDependency!.getRight(size);
         }
-        if (element.leftDependency!.visibility == CL.gone) {
+        if (element.leftDependency!.isNotLaidOut()) {
           left += _getLeftInsets(goneMargin ?? margin);
         } else {
           left += _getLeftInsets(margin);
@@ -964,7 +1039,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           right = element.rightDependency!.getRight(size);
         }
-        if (element.rightDependency!.visibility == CL.gone) {
+        if (element.rightDependency!.isNotLaidOut()) {
           right -= _getRightInsets(goneMargin ?? margin);
         } else {
           right -= _getRightInsets(margin);
@@ -979,7 +1054,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           left = element.leftDependency!.getRight(size);
         }
-        if (element.leftDependency!.visibility == CL.gone) {
+        if (element.leftDependency!.isNotLaidOut()) {
           left += _getLeftInsets(goneMargin ?? margin);
         } else {
           left += _getLeftInsets(margin);
@@ -992,7 +1067,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           right = element.rightDependency!.getRight(size);
         }
-        if (element.rightDependency!.visibility == CL.gone) {
+        if (element.rightDependency!.isNotLaidOut()) {
           right -= _getRightInsets(goneMargin ?? margin);
         } else {
           right -= _getRightInsets(margin);
@@ -1011,7 +1086,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           top = element.topDependency!.getBottom(size);
         }
-        if (element.topDependency!.visibility == CL.gone) {
+        if (element.topDependency!.isNotLaidOut()) {
           top += _getTopInsets(goneMargin ?? margin);
         } else {
           top += _getTopInsets(margin);
@@ -1022,7 +1097,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           bottom = element.bottomDependency!.getBottom(size);
         }
-        if (element.bottomDependency!.visibility == CL.gone) {
+        if (element.bottomDependency!.isNotLaidOut()) {
           bottom -= _getBottomInsets(goneMargin ?? margin);
         } else {
           bottom -= _getBottomInsets(margin);
@@ -1036,7 +1111,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           top = element.topDependency!.getBottom(size);
         }
-        if (element.topDependency!.visibility == CL.gone) {
+        if (element.topDependency!.isNotLaidOut()) {
           top += _getTopInsets(goneMargin ?? margin);
         } else {
           top += _getTopInsets(margin);
@@ -1049,7 +1124,7 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           bottom = element.bottomDependency!.getBottom(size);
         }
-        if (element.bottomDependency!.visibility == CL.gone) {
+        if (element.bottomDependency!.isNotLaidOut()) {
           bottom -= _getBottomInsets(goneMargin ?? margin);
         } else {
           bottom -= _getBottomInsets(margin);
@@ -1072,6 +1147,10 @@ class _ConstraintRenderBox extends RenderBox
     while (child != null) {
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
+
+      if (_nodeDependencies[child]!.isNotLaidOut()) {
+        continue;
+      }
 
       // expand the click area without changing the actual size
       Offset offsetPos = Offset(position.dx, position.dy);
@@ -1120,42 +1199,46 @@ class _ConstraintRenderBox extends RenderBox
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
       if (childParentData.visibility == CL.gone ||
-          childParentData.visibility == CL.invisible) {
+          childParentData.visibility == CL.invisible ||
+          _nodeDependencies[child]!.isNotLaidOut()) {
         child = childParentData.nextSibling;
         continue;
       }
       context.paintChild(child, childParentData.offset + offset);
 
       // draw child's click area
-      if (_debugShowClickArea == true && kDebugMode) {
-        Paint paint = Paint();
-        paint.color = Colors.yellow.withAlpha(192);
-        EdgeInsets? clickPadding = childParentData.clickPadding;
-        Rect rect = Rect.fromLTRB(
-            childParentData.offset.dx - _getLeftInsets(clickPadding),
-            childParentData.offset.dy - _getTopInsets(clickPadding),
-            childParentData.offset.dx +
-                child.size.width +
-                _getRightInsets(clickPadding),
-            childParentData.offset.dy +
-                child.size.height +
-                _getBottomInsets(clickPadding));
-        context.canvas.drawRect(rect.shift(offset), paint);
-        ui.ParagraphBuilder paragraphBuilder =
-            ui.ParagraphBuilder(ui.ParagraphStyle(
-          textAlign: TextAlign.center,
-          fontSize: 12,
-        ));
-        paragraphBuilder.addText("CLICK AREA");
-        ui.Paragraph paragraph = paragraphBuilder.build();
-        paragraph.layout(ui.ParagraphConstraints(
-          width: child.size.width,
-        ));
-        context.canvas.drawParagraph(
-            paragraph,
-            (childParentData.offset + offset) +
-                Offset(0, (child.size.height - paragraph.height) / 2));
-      }
+      assert(() {
+        if (_debugShowClickArea == true) {
+          Paint paint = Paint();
+          paint.color = Colors.yellow.withAlpha(192);
+          EdgeInsets? clickPadding = childParentData.clickPadding;
+          Rect rect = Rect.fromLTRB(
+              childParentData.offset.dx - _getLeftInsets(clickPadding),
+              childParentData.offset.dy - _getTopInsets(clickPadding),
+              childParentData.offset.dx +
+                  child!.size.width +
+                  _getRightInsets(clickPadding),
+              childParentData.offset.dy +
+                  child.size.height +
+                  _getBottomInsets(clickPadding));
+          context.canvas.drawRect(rect.shift(offset), paint);
+          ui.ParagraphBuilder paragraphBuilder =
+              ui.ParagraphBuilder(ui.ParagraphStyle(
+            textAlign: TextAlign.center,
+            fontSize: 12,
+          ));
+          paragraphBuilder.addText("CLICK AREA");
+          ui.Paragraph paragraph = paragraphBuilder.build();
+          paragraph.layout(ui.ParagraphConstraints(
+            width: child.size.width,
+          ));
+          context.canvas.drawParagraph(
+              paragraph,
+              (childParentData.offset + offset) +
+                  Offset(0, (child.size.height - paragraph.height) / 2));
+        }
+        return true;
+      }());
 
       child = childParentData.nextSibling;
     }
@@ -1176,10 +1259,17 @@ class _NodeDependency {
   int? rightDependencyType; // 0 toLeft，1 toRight
   int? bottomDependencyType; // toTop，1 toBottom
   int depth = -1;
-  CLVisibility? visibility;
+  bool? laidOut;
 
   bool isParent() {
     return nodeId == CL.parent;
+  }
+
+  bool isNotLaidOut() {
+    if (isParent()) {
+      return false;
+    }
+    return laidOut == false;
   }
 
   double getX() {
@@ -1214,7 +1304,7 @@ class _NodeDependency {
     if (isParent()) {
       return size.width;
     }
-    if (visibility == CL.gone) {
+    if (laidOut != true) {
       return 0;
     }
     return renderBox!.size.width;
@@ -1224,7 +1314,7 @@ class _NodeDependency {
     if (isParent()) {
       return size.height;
     }
-    if (visibility == CL.gone) {
+    if (laidOut != true) {
       return 0;
     }
     return renderBox!.size.height;
