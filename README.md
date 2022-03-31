@@ -31,6 +31,16 @@ Support platform:
 5. Linux
 6. Web
 
+# Import
+
+Null-safety
+
+```yaml
+dependencies:
+  flutter_constraintlayout:
+    git: https://github.com/hackware1993/Flutter-ConstraintLayout.git
+```
+
 # Example
 
 ```dart
