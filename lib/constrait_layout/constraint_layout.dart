@@ -37,6 +37,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final bool debugCheckDependencies;
   final bool releasePrintLayoutTime;
   final String? debugName;
+  final bool debugShowZIndex;
 
   ConstraintLayout({
     Key? key,
@@ -49,6 +50,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.debugCheckDependencies = true,
     this.releasePrintLayoutTime = false,
     this.debugName,
+    this.debugShowZIndex = false,
   }) : super(key: key, children: children);
 
   @override
@@ -61,7 +63,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugPrintLayoutTime = debugPrintLayoutTime
       ..debugCheckDependencies = debugCheckDependencies
       ..releasePrintLayoutTime = releasePrintLayoutTime
-      ..debugName = debugName;
+      ..debugName = debugName
+      ..debugShowZIndex = debugShowZIndex;
   }
 
   @override
@@ -77,7 +80,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugPrintLayoutTime = debugPrintLayoutTime
       ..debugCheckDependencies = debugCheckDependencies
       ..releasePrintLayoutTime = releasePrintLayoutTime
-      ..debugName = debugName;
+      ..debugName = debugName
+      ..debugShowZIndex = debugShowZIndex;
   }
 }
 
@@ -399,6 +403,7 @@ class _ConstraintRenderBox extends RenderBox
   bool? _debugCheckDependencies;
   bool? _releasePrintLayoutTime;
   String? _debugName;
+  bool? _debugShowZIndex;
 
   final Map<RenderBox, _NodeDependency> _nodeDependencies = HashMap();
   final Map<String, _NodeDependency> _tempNodeDependencies = HashMap();
@@ -456,6 +461,13 @@ class _ConstraintRenderBox extends RenderBox
     if (_debugName != value) {
       _debugName = value;
       markNeedsLayout();
+    }
+  }
+
+  set debugShowZIndex(bool value) {
+    if (_debugShowZIndex != value) {
+      _debugShowZIndex = value;
+      markNeedsPaint();
     }
   }
 
@@ -646,9 +658,10 @@ class _ConstraintRenderBox extends RenderBox
     _nodeDependencies.clear();
     _tempNodeDependencies.clear();
     RenderBox? child = firstChild;
-    int childIndex = 0;
+    int childIndex = -1;
 
     while (child != null) {
+      childIndex++;
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
 
@@ -755,7 +768,6 @@ class _ConstraintRenderBox extends RenderBox
         currentNode.bottomDependencyType = 1;
       }
 
-      childIndex++;
       child = childParentData.nextSibling;
     }
 
@@ -1196,7 +1208,9 @@ class _ConstraintRenderBox extends RenderBox
     Offset offset,
   ) {
     RenderBox? child = firstChild;
+    int childIndex = -1;
     while (child != null) {
+      childIndex++;
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
       if (childParentData.visibility == CL.gone ||
@@ -1237,6 +1251,25 @@ class _ConstraintRenderBox extends RenderBox
               paragraph,
               (childParentData.offset + offset) +
                   Offset(0, (child.size.height - paragraph.height) / 2));
+        }
+        return true;
+      }());
+
+      // draw child's z index
+      assert(() {
+        if (_debugShowZIndex == true) {
+          ui.ParagraphBuilder paragraphBuilder =
+              ui.ParagraphBuilder(ui.ParagraphStyle(
+            textAlign: TextAlign.center,
+            fontSize: 10,
+          ));
+          paragraphBuilder.addText("z-index $childIndex");
+          ui.Paragraph paragraph = paragraphBuilder.build();
+          paragraph.layout(ui.ParagraphConstraints(
+            width: child!.size.width,
+          ));
+          context.canvas
+              .drawParagraph(paragraph, (childParentData.offset + offset));
         }
         return true;
       }());
