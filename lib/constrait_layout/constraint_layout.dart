@@ -191,7 +191,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final bool centerHorizontal;
   final bool centerVertical;
 
-  final int zIndex;
+  final int? zIndex;
   final Offset translate;
   final bool translateDependency;
 
@@ -228,7 +228,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.centerVertical = false,
     this.horizontalBias = 0.5,
     this.verticalBias = 0.5,
-    this.zIndex = 0,
+    this.zIndex, // default is child index
     this.translate = Offset.zero,
     this.translateDependency = false,
   }) : super(
