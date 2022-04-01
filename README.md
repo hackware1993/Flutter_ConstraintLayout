@@ -49,8 +49,19 @@ dependencies:
 # Example
 
 ```dart
-class Example extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+
+class Example extends StatefulWidget {
   const Example({Key? key}) : super(key: key);
+
+  @override
+  State createState() => ExampleState();
+}
+
+class ExampleState extends State<Example> {
+  double x = 0;
+  double y = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -86,47 +97,6 @@ class Example extends StatelessWidget {
               ),
             ),
             Constrained(
-              id: 'box4',
-              width: 50,
-              height: 50,
-              rightToRight: CL.parent,
-              bottomToBottom: CL.parent,
-              child: Container(
-                color: Colors.redAccent,
-                alignment: Alignment.center,
-                child: const Text('box4'),
-              ),
-            ),
-            Constrained(
-              id: 'box7',
-              width: 120,
-              height: 120,
-              centerVertical: true,
-              verticalBias: 0.8,
-              leftToRight: 'box3',
-              rightToRight: CL.parent,
-              child: Container(
-                color: Colors.lightGreen,
-                alignment: Alignment.center,
-                child: const Text('box7'),
-              ),
-            ),
-            Constrained(
-              id: 'box8',
-              width: CL.matchConstraint,
-              height: CL.matchConstraint,
-              topToTop: 'box1',
-              leftToLeft: CL.parent,
-              rightToLeft: 'box3',
-              bottomToBottom: CL.parent,
-              margin: const EdgeInsets.all(50),
-              child: Container(
-                color: Colors.lightGreen,
-                alignment: Alignment.center,
-                child: const Text('box8'),
-              ),
-            ),
-            Constrained(
               id: 'box3',
               width: CL.wrapContent,
               height: CL.wrapContent,
@@ -141,26 +111,78 @@ class Example extends StatelessWidget {
               ),
             ),
             Constrained(
-              width: 100,
-              height: 100,
-              center: true,
-              zIndex: 4,
+              id: 'box4',
+              width: 50,
+              height: 50,
+              rightToRight: CL.parent,
+              bottomToBottom: CL.parent,
               child: Container(
-                color: Colors.pink,
+                color: Colors.redAccent,
                 alignment: Alignment.center,
-                child: const Text('child[6]'),
+                child: const Text('box4'),
               ),
             ),
             Constrained(
-              width: 50,
-              height: 20,
-              leftToRight: 'box7',
-              bottomToTop: 'box7',
-              margin: const EdgeInsets.only(left: -25),
+              id: 'box5',
+              width: 120,
+              height: 100,
+              center: true,
+              zIndex: 100,
+              translate: Offset(x, y),
+              clickPadding: const EdgeInsets.all(30),
+              translateDependency: true,
+              child: GestureDetector(
+                child: Container(
+                  color: Colors.pink,
+                  alignment: Alignment.center,
+                  child: const Text('box5 draggable'),
+                ),
+                onPanUpdate: (details) {
+                  setState(() {
+                    x += details.delta.dx;
+                    y += details.delta.dy;
+                  });
+                },
+              ),
+            ),
+            Constrained(
+              id: 'box6',
+              width: 120,
+              height: 120,
+              centerVertical: true,
+              verticalBias: 0.8,
+              leftToRight: 'box3',
+              rightToRight: CL.parent,
+              child: Container(
+                color: Colors.lightGreen,
+                alignment: Alignment.center,
+                child: const Text('box6'),
+              ),
+            ),
+            Constrained(
+              id: 'box7',
+              width: CL.matchConstraint,
+              height: CL.matchConstraint,
+              topToTop: 'box1',
+              leftToLeft: CL.parent,
+              rightToLeft: 'box3',
+              bottomToBottom: CL.parent,
+              margin: const EdgeInsets.all(50),
+              child: Container(
+                color: Colors.lightGreen,
+                alignment: Alignment.center,
+                child: const Text('box7'),
+              ),
+            ),
+            Constrained(
+              width: 200,
+              height: 100,
+              leftToRight: 'box5',
+              bottomToTop: 'box5',
               child: Container(
                 color: Colors.cyan,
                 alignment: Alignment.center,
-                child: const Text('child[7]'),
+                child: const Text('child[7] pinned to the top right'),
               ),
             )
           ],
