@@ -133,6 +133,19 @@ class ExampleState extends State<Example> {
                 alignment: Alignment.center,
                 child: const Text('child[7] pinned to the top right'),
               ),
+            ),
+            const Constrained(
+              id: 'box9',
+              width: CL.wrapContent,
+              height: CL.wrapContent,
+              baselineToBaseline: 'box7',
+              leftToLeft: 'box7',
+              child: Text(
+                'box9 baseline to box7',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             )
           ],
         ),

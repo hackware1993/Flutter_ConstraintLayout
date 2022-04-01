@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -131,6 +130,7 @@ enum _DependencyType {
   toRight,
   toTop,
   toBottom,
+  toBaseline,
 }
 
 class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
@@ -154,6 +154,10 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   int? zIndex;
   Offset? translate;
   bool? translateDependency;
+  String? baselineToTop;
+  String? baselineToBottom;
+  String? baselineToBaseline;
+  TextBaseline? textBaseline;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -186,6 +190,13 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final String? topToBottom;
   final String? bottomToTop;
   final String? bottomToBottom;
+
+  // when setting baseline alignment, height must be wrap_content or fixed size
+  // other vertical constraints will be ignored
+  final String? baselineToTop;
+  final String? baselineToBottom;
+  final String? baselineToBaseline;
+  final TextBaseline textBaseline;
 
   final bool center;
   final bool centerHorizontal;
@@ -231,6 +242,10 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.zIndex, // default is child index
     this.translate = Offset.zero,
     this.translateDependency = false,
+    this.baselineToTop,
+    this.baselineToBottom,
+    this.baselineToBaseline,
+    this.textBaseline = TextBaseline.alphabetic,
   }) : super(
           key: key,
           child: child,
@@ -246,24 +261,29 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     }
   }
 
-  bool checkDependency(String? dependency) {
-    return dependency == null || dependency.trim().isNotEmpty;
+  bool checkConstraint(String? constraint) {
+    return constraint == null || constraint.trim().isNotEmpty;
   }
 
   @override
   void applyParentData(RenderObject renderObject) {
     assert(renderObject.parentData is _ConstraintBoxData);
+
+    // bounds check
     assert(checkSize(width));
     assert(checkSize(height));
-    assert(checkDependency(id));
-    assert(checkDependency(this.leftToLeft));
-    assert(checkDependency(this.leftToRight));
-    assert(checkDependency(this.rightToLeft));
-    assert(checkDependency(this.rightToRight));
-    assert(checkDependency(this.topToTop));
-    assert(checkDependency(this.topToBottom));
-    assert(checkDependency(this.bottomToTop));
-    assert(checkDependency(this.bottomToBottom));
+    assert(checkConstraint(id));
+    assert(checkConstraint(this.leftToLeft));
+    assert(checkConstraint(this.leftToRight));
+    assert(checkConstraint(this.rightToLeft));
+    assert(checkConstraint(this.rightToRight));
+    assert(checkConstraint(this.topToTop));
+    assert(checkConstraint(this.topToBottom));
+    assert(checkConstraint(this.bottomToTop));
+    assert(checkConstraint(this.bottomToBottom));
+    assert(checkConstraint(this.baselineToTop));
+    assert(checkConstraint(this.baselineToBottom));
+    assert(checkConstraint(this.baselineToBaseline));
     assert((horizontalBias >= 0 && horizontalBias <= 1));
     assert((verticalBias >= 0 && verticalBias <= 1));
 
@@ -275,8 +295,26 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     String? topToBottom = this.topToBottom;
     String? bottomToTop = this.bottomToTop;
     String? bottomToBottom = this.bottomToBottom;
+    String? baselineToTop = this.baselineToTop;
+    String? baselineToBottom = this.baselineToBottom;
+    String? baselineToBaseline = this.baselineToBaseline;
 
     if (width == CL.matchParent) {
+      assert(() {
+        if (leftToLeft != null ||
+            leftToRight != null ||
+            rightToLeft != null ||
+            rightToRight != null) {
+          throw Exception(
+              'When setting the width to match_parent for child with id $id, there is no need to set left or right constraint.');
+        }
+
+        if (centerHorizontal) {
+          throw Exception(
+              'When setting the width to match_parent for child with id $id, there is no need to set centerHorizontal = true.');
+        }
+        return true;
+      }());
       leftToLeft = CL.parent;
       rightToRight = CL.parent;
       leftToRight = null;
@@ -284,13 +322,54 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     }
 
     if (height == CL.matchParent) {
+      assert(() {
+        if (topToTop != null ||
+            topToBottom != null ||
+            bottomToTop != null ||
+            bottomToBottom != null ||
+            baselineToTop != null ||
+            baselineToBottom != null ||
+            baselineToBaseline != null) {
+          throw Exception(
+              'When setting the height to match_parent for child with id $id, there is no need to set top or bottom or baseline constraint.');
+        }
+
+        if (centerVertical) {
+          throw Exception(
+              'When setting the height to match_parent for child with id $id, there is no need to set centerVertical = true.');
+        }
+        return true;
+      }());
       topToTop = CL.parent;
       bottomToBottom = CL.parent;
       topToBottom = null;
       bottomToTop = null;
+      baselineToTop = null;
+      baselineToBottom = null;
+      baselineToBaseline = null;
     }
 
+    assert(() {
+      if (width == CL.matchParent && height == CL.matchParent) {
+        if (center) {
+          throw Exception(
+              'When setting the width and height to match_parent for child with id $id, there is no need to set center = true.');
+        }
+      }
+      return true;
+    }());
+
     if (centerHorizontal) {
+      assert(() {
+        if (leftToLeft != null ||
+            leftToRight != null ||
+            rightToLeft != null ||
+            rightToRight != null) {
+          throw Exception(
+              'When setting centerHorizontal = true for child with id $id, there is no need to set left or right constraint.');
+        }
+        return true;
+      }());
       leftToLeft = CL.parent;
       rightToRight = CL.parent;
       leftToRight = null;
@@ -298,13 +377,46 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     }
 
     if (centerVertical) {
+      assert(() {
+        if (topToTop != null ||
+            topToBottom != null ||
+            bottomToTop != null ||
+            bottomToBottom != null ||
+            baselineToTop != null ||
+            baselineToBottom != null ||
+            baselineToBaseline != null) {
+          throw Exception(
+              'When setting centerVertical = true for child with id $id, there is no need to set top or bottom or baseline constraint.');
+        }
+        return true;
+      }());
       topToTop = CL.parent;
       bottomToBottom = CL.parent;
       topToBottom = null;
       bottomToTop = null;
+      baselineToTop = null;
+      baselineToBottom = null;
+      baselineToBaseline = null;
     }
 
     if (center) {
+      assert(() {
+        if (leftToLeft != null ||
+            leftToRight != null ||
+            rightToLeft != null ||
+            rightToRight != null ||
+            topToTop != null ||
+            topToBottom != null ||
+            bottomToTop != null ||
+            bottomToBottom != null ||
+            baselineToTop != null ||
+            baselineToBottom != null ||
+            baselineToBaseline != null) {
+          throw Exception(
+              'When setting center = true for child with id $id, there is no need to set left or right or top or bottom or baseline constraint.');
+        }
+        return true;
+      }());
       leftToLeft = CL.parent;
       rightToRight = CL.parent;
       topToTop = CL.parent;
@@ -313,6 +425,9 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       rightToLeft = null;
       topToBottom = null;
       bottomToTop = null;
+      baselineToTop = null;
+      baselineToBottom = null;
+      baselineToBaseline = null;
     }
 
     _ConstraintBoxData parentData =
@@ -373,6 +488,26 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
 
     if (parentData.bottomToBottom != bottomToBottom) {
       parentData.bottomToBottom = bottomToBottom;
+      needsLayout = true;
+    }
+
+    if (parentData.baselineToTop != baselineToTop) {
+      parentData.baselineToTop = baselineToTop;
+      needsLayout = true;
+    }
+
+    if (parentData.baselineToBottom != baselineToBottom) {
+      parentData.baselineToBottom = baselineToBottom;
+      needsLayout = true;
+    }
+
+    if (parentData.baselineToBaseline != baselineToBaseline) {
+      parentData.baselineToBaseline = baselineToBaseline;
+      needsLayout = true;
+    }
+
+    if (parentData.textBaseline != textBaseline) {
+      parentData.textBaseline = textBaseline;
       needsLayout = true;
     }
 
@@ -589,6 +724,15 @@ class _ConstraintRenderBox extends RenderBox
       if (childParentData.bottomToBottom != null) {
         dependencyIdSet.add(childParentData.bottomToBottom!);
       }
+      if (childParentData.baselineToTop != null) {
+        dependencyIdSet.add(childParentData.baselineToTop!);
+      }
+      if (childParentData.baselineToBottom != null) {
+        dependencyIdSet.add(childParentData.baselineToBottom!);
+      }
+      if (childParentData.baselineToBaseline != null) {
+        dependencyIdSet.add(childParentData.baselineToBaseline!);
+      }
       child = childParentData.nextSibling;
     }
     Set<String> illegalIdSet = dependencyIdSet.difference(idSet);
@@ -608,7 +752,7 @@ class _ConstraintRenderBox extends RenderBox
         }
         if (start.leftDependency == element) {
           throw Exception(
-              'There is a circular left dependency in horizontal direction, between ${start.nodeId} and ${element.nodeId}.');
+              'There is a circular left constraint, between ${start.nodeId} and ${element.nodeId}.');
         }
         start = start.leftDependency;
       }
@@ -619,7 +763,7 @@ class _ConstraintRenderBox extends RenderBox
         }
         if (start.rightDependency == element) {
           throw Exception(
-              'There is a circular right dependency in horizontal direction, between ${start.nodeId} and ${element.nodeId}.');
+              'There is a circular right constraint, between ${start.nodeId} and ${element.nodeId}.');
         }
         start = start.rightDependency;
       }
@@ -630,7 +774,7 @@ class _ConstraintRenderBox extends RenderBox
         }
         if (start.topDependency == element) {
           throw Exception(
-              'There is a circular top dependency in vertical direction, between ${start.nodeId} and ${element.nodeId}.');
+              'There is a circular top constraint, between ${start.nodeId} and ${element.nodeId}.');
         }
         start = start.topDependency;
       }
@@ -641,9 +785,20 @@ class _ConstraintRenderBox extends RenderBox
         }
         if (start.bottomDependency == element) {
           throw Exception(
-              'There is a circular bottom dependency in vertical direction, between ${start.nodeId} and ${element.nodeId}.');
+              'There is a circular bottom constraint, between ${start.nodeId} and ${element.nodeId}.');
         }
         start = start.bottomDependency;
+      }
+      start = element;
+      while (true) {
+        if (start == null || start.nodeId == CL.parent) {
+          break;
+        }
+        if (start.baselineDependency == element) {
+          throw Exception(
+              'There is a circular baseline constraint, between ${start.nodeId} and ${element.nodeId}.');
+        }
+        start = start.baselineDependency;
       }
     }
   }
@@ -655,7 +810,7 @@ class _ConstraintRenderBox extends RenderBox
       if (element.width == CL.wrapContent || element.width > 0) {
         if (element.leftDependency == null && element.rightDependency == null) {
           throw Exception(
-              'Need to set a left or right dependency for ${element.nodeId}.');
+              'Need to set a left or right constraint for ${element.nodeId}.');
         }
       } else if (element.width == CL.matchConstraint) {
         if (element.leftDependency == null || element.rightDependency == null) {
@@ -666,14 +821,30 @@ class _ConstraintRenderBox extends RenderBox
 
       // check constraint integrity in the vertical direction
       if (element.height == CL.wrapContent || element.height > 0) {
-        if (element.topDependency == null && element.bottomDependency == null) {
+        int verticalDependencyCount = (element.topDependency == null ? 0 : 1) +
+            (element.bottomDependency == null ? 0 : 1) +
+            (element.baselineDependency == null ? 0 : 10);
+        if (verticalDependencyCount == 0) {
           throw Exception(
-              'Need to set a top or bottom dependency for ${element.nodeId}.');
+              'Need to set a top or bottom or baseline constraint for ${element.nodeId}.');
+        } else if (verticalDependencyCount > 10) {
+          throw Exception(
+              'When the baseline constraint is set, the top or bottom constraint can not be set for ${element.nodeId}.');
         }
       } else if (element.height == CL.matchConstraint) {
+        if (element.baselineDependency != null) {
+          throw Exception(
+              'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
+        }
         if (element.topDependency == null || element.bottomDependency == null) {
           throw Exception(
               'Need to set both top and bottom dependencies for ${element.nodeId}.');
+        }
+      } else {
+        // match_parent
+        if (element.baselineDependency != null) {
+          throw Exception(
+              'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
       }
     }
@@ -687,7 +858,7 @@ class _ConstraintRenderBox extends RenderBox
     if (_debugCheckDependencies) {
       if (dependency != null) {
         debugPrint(
-            'Warning: The child element with id ${node.nodeId} has a duplicate $direction dependency.');
+            'Warning: The child element with id ${node.nodeId} has a duplicate $direction constraint.');
       }
     }
   }
@@ -761,6 +932,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.leftToLeft!);
         currentNode.leftDependencyType = _DependencyType.toLeft;
       }
+
       if (childParentData.leftToRight != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -771,6 +943,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.leftToRight!);
         currentNode.leftDependencyType = _DependencyType.toRight;
       }
+
       if (childParentData.rightToLeft != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -781,6 +954,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.rightToLeft!);
         currentNode.rightDependencyType = _DependencyType.toLeft;
       }
+
       if (childParentData.rightToRight != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -791,6 +965,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.rightToRight!);
         currentNode.rightDependencyType = _DependencyType.toRight;
       }
+
       if (childParentData.topToTop != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -801,6 +976,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.topToTop!);
         currentNode.topDependencyType = _DependencyType.toTop;
       }
+
       if (childParentData.topToBottom != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -811,6 +987,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.topToBottom!);
         currentNode.topDependencyType = _DependencyType.toBottom;
       }
+
       if (childParentData.bottomToTop != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -821,6 +998,7 @@ class _ConstraintRenderBox extends RenderBox
             _getNodeDependencyForChild(null, childParentData.bottomToTop!);
         currentNode.bottomDependencyType = _DependencyType.toTop;
       }
+
       if (childParentData.bottomToBottom != null) {
         assert(() {
           _debugEnsureNullDependency(
@@ -830,6 +1008,39 @@ class _ConstraintRenderBox extends RenderBox
         currentNode.bottomDependency =
             _getNodeDependencyForChild(null, childParentData.bottomToBottom!);
         currentNode.bottomDependencyType = _DependencyType.toBottom;
+      }
+
+      if (childParentData.baselineToTop != null) {
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.baselineDependency, 'baseline');
+          return true;
+        }());
+        currentNode.baselineDependency =
+            _getNodeDependencyForChild(null, childParentData.baselineToTop!);
+        currentNode.baselineDependencyType = _DependencyType.toTop;
+      }
+
+      if (childParentData.baselineToBottom != null) {
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.baselineDependency, 'baseline');
+          return true;
+        }());
+        currentNode.baselineDependency =
+            _getNodeDependencyForChild(null, childParentData.baselineToBottom!);
+        currentNode.baselineDependencyType = _DependencyType.toBottom;
+      }
+
+      if (childParentData.baselineToBaseline != null) {
+        assert(() {
+          _debugEnsureNullDependency(
+              currentNode, currentNode.baselineDependency, 'baseline');
+          return true;
+        }());
+        currentNode.baselineDependency = _getNodeDependencyForChild(
+            null, childParentData.baselineToBaseline!);
+        currentNode.baselineDependencyType = _DependencyType.toBaseline;
       }
 
       child = childParentData.nextSibling;
@@ -1214,6 +1425,23 @@ class _ConstraintRenderBox extends RenderBox
           bottom -= _getBottomInsets(margin);
         }
         offsetY = bottom - element.getMeasuredHeight(size);
+      } else if (element.baselineDependency != null) {
+        if (element.baselineDependencyType == _DependencyType.toTop) {
+          offsetY = element.baselineDependency!.getY() -
+              element.getDistanceToBaseline(element.textBaseline, false);
+        } else if (element.baselineDependencyType == _DependencyType.toBottom) {
+          offsetY = element.baselineDependency!.getBottom(size) -
+              element.getDistanceToBaseline(element.textBaseline, false);
+        } else {
+          offsetY = element.baselineDependency!
+                  .getDistanceToBaseline(element.textBaseline, true) -
+              element.getDistanceToBaseline(element.textBaseline, false);
+        }
+        if (element.baselineDependency!.isNotLaidOut()) {
+          offsetY += _getTopInsets(goneMargin);
+        } else {
+          offsetY += _getTopInsets(margin);
+        }
       } else {
         // it is not possible to execute this branch
       }
@@ -1388,10 +1616,12 @@ class _NodeDependency {
   _NodeDependency? topDependency;
   _NodeDependency? rightDependency;
   _NodeDependency? bottomDependency;
+  _NodeDependency? baselineDependency;
   _DependencyType? leftDependencyType;
   _DependencyType? topDependencyType;
   _DependencyType? rightDependencyType;
   _DependencyType? bottomDependencyType;
+  _DependencyType? baselineDependencyType;
   int depth = -1;
   late bool laidOut;
   late _ConstraintBoxData parentData;
@@ -1426,6 +1656,8 @@ class _NodeDependency {
   double get verticalBias => parentData.verticalBias!;
 
   EdgeInsets get clickPadding => parentData.clickPadding!;
+
+  TextBaseline get textBaseline => parentData.textBaseline!;
 
   set offset(Offset value) {
     parentData.offset = value;
@@ -1496,6 +1728,30 @@ class _NodeDependency {
     return renderBox!.size.height;
   }
 
+  double getDistanceToBaseline(TextBaseline textBaseline, bool absolute) {
+    if (isParent()) {
+      return 0;
+    }
+    if (!laidOut) {
+      return getY();
+    }
+    double? baseline;
+    if (kDebugMode) {
+      baseline = renderBox!.getDistanceToBaseline(textBaseline, onlyReal: true);
+    } else {
+      // ignore: invalid_use_of_protected_member
+      baseline = renderBox!.computeDistanceToActualBaseline(textBaseline);
+    }
+    if (baseline == null) {
+      baseline = getY();
+    } else {
+      if (absolute) {
+        baseline += getY();
+      }
+    }
+    return baseline;
+  }
+
   int getDepthFor(_NodeDependency? nodeDependency) {
     if (nodeDependency == null) {
       return -1;
@@ -1508,13 +1764,15 @@ class _NodeDependency {
       if (nodeId == CL.parent) {
         depth = 0;
       } else {
-        depth = max(
-                max(
-                    max(getDepthFor(leftDependency),
-                        getDepthFor(topDependency)),
-                    getDepthFor(rightDependency)),
-                getDepthFor(bottomDependency)) +
-            1;
+        List<int> list = [
+          getDepthFor(leftDependency),
+          getDepthFor(topDependency),
+          getDepthFor(rightDependency),
+          getDepthFor(bottomDependency),
+          getDepthFor(baselineDependency),
+        ];
+        list.sort((left, right) => left - right);
+        depth = list.last + 1;
       }
     }
     return depth;
@@ -1573,6 +1831,20 @@ class _NodeDependency {
           map['bottomDependencyType'] = 'toTop';
         } else {
           map['bottomDependencyType'] = 'toBottom';
+        }
+      }
+      if (baselineDependency != null) {
+        if (baselineDependency!.isParent()) {
+          map['baselineDependency'] = 'parent';
+        } else {
+          map['baselineDependency'] = baselineDependency!.toJson();
+        }
+        if (baselineDependencyType == _DependencyType.toTop) {
+          map['baselineDependencyType'] = 'toTop';
+        } else if (baselineDependencyType == _DependencyType.toBottom) {
+          map['baselineDependencyType'] = 'toBottom';
+        } else {
+          map['baselineDependencyType'] = 'toBaseline';
         }
       }
     }
