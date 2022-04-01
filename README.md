@@ -193,7 +193,7 @@ class ExampleState extends State<Example> {
 }
 ```
 
-![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.webp?raw=true)
+![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
 
 # Support me
 
