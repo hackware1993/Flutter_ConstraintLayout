@@ -56,7 +56,7 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.2-alpha'
+      ref: 'v0.2-alpha2'
 ```
 
 # Example
@@ -139,7 +139,7 @@ class ExampleState extends State<Example> {
               id: 'box5',
               width: 120,
               height: 100,
-              center: true,
+              center: CL.parent,
               zIndex: 100,
               translate: Offset(x, y),
               clickPadding: const EdgeInsets.all(30),
@@ -162,7 +162,7 @@ class ExampleState extends State<Example> {
               id: 'box6',
               width: 120,
               height: 120,
-              centerVertical: true,
+              centerVertical: 'box2',
               verticalBias: 0.8,
               leftToRight: 'box3',
               rightToRight: CL.parent,
