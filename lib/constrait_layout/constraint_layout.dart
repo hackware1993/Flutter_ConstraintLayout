@@ -6,9 +6,42 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-/// No matter how complex the layout is and how deep the dependencies
+/// No matter how complex the layout is and how deep the constraints
 /// are, each child element of ConstraintLayout will only be measured once
 /// This results in extremely high layout performance.
+///
+/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/// Warning:
+/// For layout performance considerations, constraints are always
+/// one-way, and there is no two child elements that directly or
+/// indirectly restrain each other. Each constraint should describe
+/// exactly where the child elements are located. The following code
+/// is not allowed and will cause a stack overflow exception：
+///        ConstraintLayout(
+//           children: [
+//             Constrained(
+//               id: 'leftOne',
+//               width: CL.matchConstraint,
+//               height: CL.matchParent,
+//               leftToLeft: CL.parent,
+//               rightToLeft: 'rightOne',
+//               child: Container(
+//                 color: Colors.redAccent,
+//               ),
+//             ),
+//             Constrained(
+//               id: 'rightOne',
+//               width: CL.matchConstraint,
+//               height: CL.matchParent,
+//               leftToRight: 'leftOne',
+//               rightToRight: CL.parent,
+//               child: Container(
+//                 color: Colors.blue,
+//               ),
+//             )
+//           ],
+//         )
+/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ///
 /// features:
 ///   1. build flexible layouts with constraints
@@ -35,9 +68,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   // already supported
   final bool debugShowClickArea;
-  final bool debugPrintDependencies;
+  final bool debugPrintConstraints;
   final bool debugPrintLayoutTime;
-  final bool debugCheckDependencies;
+  final bool debugCheckConstraints;
   final bool releasePrintLayoutTime;
   final String? debugName;
   final bool debugShowZIndex;
@@ -48,9 +81,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.debugShowGuideline = false,
     this.debugShowPreview = false,
     this.debugShowClickArea = false,
-    this.debugPrintDependencies = false,
+    this.debugPrintConstraints = false,
     this.debugPrintLayoutTime = true,
-    this.debugCheckDependencies = true,
+    this.debugCheckConstraints = true,
     this.releasePrintLayoutTime = false,
     this.debugName,
     this.debugShowZIndex = false,
@@ -65,9 +98,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugShowGuideline = debugShowGuideline
       .._debugShowPreview = debugShowPreview
       .._debugShowClickArea = debugShowClickArea
-      .._debugPrintDependencies = debugPrintDependencies
+      .._debugPrintConstraints = debugPrintConstraints
       .._debugPrintLayoutTime = debugPrintLayoutTime
-      .._debugCheckDependencies = debugCheckDependencies
+      .._debugCheckConstraints = debugCheckConstraints
       .._releasePrintLayoutTime = releasePrintLayoutTime
       .._debugName = debugName
       .._debugShowZIndex = debugShowZIndex;
@@ -82,9 +115,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugShowGuideline = debugShowGuideline
       ..debugShowPreview = debugShowPreview
       ..debugShowClickArea = debugShowClickArea
-      ..debugPrintDependencies = debugPrintDependencies
+      ..debugPrintConstraints = debugPrintConstraints
       ..debugPrintLayoutTime = debugPrintLayoutTime
-      ..debugCheckDependencies = debugCheckDependencies
+      ..debugCheckConstraints = debugCheckConstraints
       ..releasePrintLayoutTime = releasePrintLayoutTime
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex;
@@ -125,7 +158,7 @@ enum BarrierDirection {
   bottom,
 }
 
-enum _DependencyType {
+enum _ConstraintType {
   toLeft,
   toRight,
   toTop,
@@ -153,7 +186,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? verticalBias;
   int? zIndex;
   Offset? translate;
-  bool? translateDependency;
+  bool? translateConstraint;
   String? baselineToTop;
   String? baselineToBottom;
   String? baselineToBaseline;
@@ -191,8 +224,11 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final String? bottomToTop;
   final String? bottomToBottom;
 
-  // when setting baseline alignment, height must be wrap_content or fixed size
-  // other vertical constraints will be ignored
+  /// when setting baseline alignment, height must be wrap_content or fixed size
+  /// other vertical constraints will be ignored
+  /// Warning:
+  /// Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
+  /// See https://github.com/flutter/flutter/issues/101179
   final String? baselineToTop;
   final String? baselineToBottom;
   final String? baselineToBaseline;
@@ -204,7 +240,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
 
   final int? zIndex;
   final Offset translate;
-  final bool translateDependency;
+  final bool translateConstraint;
 
   // TODO support chain
   // final ChainStyle? chainStyle;
@@ -241,7 +277,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.verticalBias = 0.5,
     this.zIndex, // default is child index
     this.translate = Offset.zero,
-    this.translateDependency = false,
+    this.translateConstraint = false,
     this.baselineToTop,
     this.baselineToBottom,
     this.baselineToBaseline,
@@ -548,14 +584,14 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       needsReorderChildren = true;
     }
 
-    if (parentData.translateDependency != translateDependency) {
-      parentData.translateDependency = translateDependency;
+    if (parentData.translateConstraint != translateConstraint) {
+      parentData.translateConstraint = translateConstraint;
       needsLayout = true;
     }
 
     if (parentData.translate != translate) {
       parentData.translate = translate;
-      if (translateDependency) {
+      if (translateConstraint) {
         needsLayout = true;
       } else {
         needsPaint = true;
@@ -596,17 +632,17 @@ class _ConstraintRenderBox extends RenderBox
   late bool _debugShowGuideline;
   late bool _debugShowPreview;
   late bool _debugShowClickArea;
-  late bool _debugPrintDependencies;
+  late bool _debugPrintConstraints;
   late bool _debugPrintLayoutTime;
-  late bool _debugCheckDependencies;
+  late bool _debugCheckConstraints;
   late bool _releasePrintLayoutTime;
   String? _debugName;
   late bool _debugShowZIndex;
   late bool _needsReorderChildren;
 
-  final Map<RenderBox, _NodeDependency> _nodeDependencies = HashMap();
-  final Map<String, _NodeDependency> _tempNodeDependencies = HashMap();
-  late List<_NodeDependency> _paintingOrderList;
+  final Map<RenderBox, _ConstrainedNode> _constrainedNodes = HashMap();
+  final Map<String, _ConstrainedNode> _tempConstrainedNodes = HashMap();
+  late List<_ConstrainedNode> _paintingOrderList;
 
   set debugShowGuideline(bool value) {
     if (_debugShowGuideline != value) {
@@ -629,9 +665,9 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  set debugPrintDependencies(bool value) {
-    if (_debugPrintDependencies != value) {
-      _debugPrintDependencies = value;
+  set debugPrintConstraints(bool value) {
+    if (_debugPrintConstraints != value) {
+      _debugPrintConstraints = value;
       markNeedsLayout();
     }
   }
@@ -643,9 +679,9 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  set debugCheckDependencies(bool value) {
-    if (_debugCheckDependencies != value) {
-      _debugCheckDependencies = value;
+  set debugCheckConstraints(bool value) {
+    if (_debugCheckConstraints != value) {
+      _debugCheckConstraints = value;
       markNeedsLayout();
     }
   }
@@ -691,7 +727,7 @@ class _ConstraintRenderBox extends RenderBox
     RenderBox? child = firstChild;
     Set<String> idSet = HashSet();
     idSet.add(CL.parent);
-    Set<String> dependencyIdSet = HashSet();
+    Set<String> constraintsIdSet = HashSet();
     while (child != null) {
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
@@ -701,148 +737,99 @@ class _ConstraintRenderBox extends RenderBox
         }
       }
       if (childParentData.leftToLeft != null) {
-        dependencyIdSet.add(childParentData.leftToLeft!);
+        constraintsIdSet.add(childParentData.leftToLeft!);
       }
       if (childParentData.leftToRight != null) {
-        dependencyIdSet.add(childParentData.leftToRight!);
+        constraintsIdSet.add(childParentData.leftToRight!);
       }
       if (childParentData.rightToLeft != null) {
-        dependencyIdSet.add(childParentData.rightToLeft!);
+        constraintsIdSet.add(childParentData.rightToLeft!);
       }
       if (childParentData.rightToRight != null) {
-        dependencyIdSet.add(childParentData.rightToRight!);
+        constraintsIdSet.add(childParentData.rightToRight!);
       }
       if (childParentData.topToTop != null) {
-        dependencyIdSet.add(childParentData.topToTop!);
+        constraintsIdSet.add(childParentData.topToTop!);
       }
       if (childParentData.topToBottom != null) {
-        dependencyIdSet.add(childParentData.topToBottom!);
+        constraintsIdSet.add(childParentData.topToBottom!);
       }
       if (childParentData.bottomToTop != null) {
-        dependencyIdSet.add(childParentData.bottomToTop!);
+        constraintsIdSet.add(childParentData.bottomToTop!);
       }
       if (childParentData.bottomToBottom != null) {
-        dependencyIdSet.add(childParentData.bottomToBottom!);
+        constraintsIdSet.add(childParentData.bottomToBottom!);
       }
       if (childParentData.baselineToTop != null) {
-        dependencyIdSet.add(childParentData.baselineToTop!);
+        constraintsIdSet.add(childParentData.baselineToTop!);
       }
       if (childParentData.baselineToBottom != null) {
-        dependencyIdSet.add(childParentData.baselineToBottom!);
+        constraintsIdSet.add(childParentData.baselineToBottom!);
       }
       if (childParentData.baselineToBaseline != null) {
-        dependencyIdSet.add(childParentData.baselineToBaseline!);
+        constraintsIdSet.add(childParentData.baselineToBaseline!);
       }
       child = childParentData.nextSibling;
     }
-    Set<String> illegalIdSet = dependencyIdSet.difference(idSet);
+    Set<String> illegalIdSet = constraintsIdSet.difference(idSet);
     if (illegalIdSet.isNotEmpty) {
       throw Exception('These ids $illegalIdSet are not yet defined.');
     }
   }
 
-  // there should be no circular dependencies in a single direction
-  // TODO need to rethink the logic here to make sure it's accurate
-  void _debugCheckCircularDependency() {
-    for (final element in _nodeDependencies.values) {
-      _NodeDependency? start = element;
-      while (true) {
-        if (start == null || start.nodeId == CL.parent) {
-          break;
-        }
-        if (start.leftDependency == element) {
-          throw Exception(
-              'There is a circular left constraint, between ${start.nodeId} and ${element.nodeId}.');
-        }
-        start = start.leftDependency;
-      }
-      start = element;
-      while (true) {
-        if (start == null || start.nodeId == CL.parent) {
-          break;
-        }
-        if (start.rightDependency == element) {
-          throw Exception(
-              'There is a circular right constraint, between ${start.nodeId} and ${element.nodeId}.');
-        }
-        start = start.rightDependency;
-      }
-      start = element;
-      while (true) {
-        if (start == null || start.nodeId == CL.parent) {
-          break;
-        }
-        if (start.topDependency == element) {
-          throw Exception(
-              'There is a circular top constraint, between ${start.nodeId} and ${element.nodeId}.');
-        }
-        start = start.topDependency;
-      }
-      start = element;
-      while (true) {
-        if (start == null || start.nodeId == CL.parent) {
-          break;
-        }
-        if (start.bottomDependency == element) {
-          throw Exception(
-              'There is a circular bottom constraint, between ${start.nodeId} and ${element.nodeId}.');
-        }
-        start = start.bottomDependency;
-      }
-      start = element;
-      while (true) {
-        if (start == null || start.nodeId == CL.parent) {
-          break;
-        }
-        if (start.baselineDependency == element) {
-          throw Exception(
-              'There is a circular baseline constraint, between ${start.nodeId} and ${element.nodeId}.');
-        }
-        start = start.baselineDependency;
+  // there should be no loop constraints
+  void _debugCheckLoopConstraints() {
+    for (final element in _constrainedNodes.values) {
+      try {
+        element.getDepth();
+      } on StackOverflowError catch (_) {
+        const msg =
+            'There are some loop constraints, please check the code. For layout performance considerations, constraints are always one-way, and there is no two child elements that directly or indirectly restrain each other. Each constraint should describe exactly where the child elements are located. Use Guideline to break loop constraints.';
+        throw Exception(msg);
       }
     }
   }
 
-  // each child element must have complete dependencies both horizontally and vertically
-  void _debugCheckDependencyIntegrity() {
-    for (final element in _nodeDependencies.values) {
+  // each child element must have complete constraints both horizontally and vertically
+  void _debugCheckConstraintsIntegrity() {
+    for (final element in _constrainedNodes.values) {
       // check constraint integrity in the horizontal direction
       if (element.width == CL.wrapContent || element.width > 0) {
-        if (element.leftDependency == null && element.rightDependency == null) {
+        if (element.leftConstraint == null && element.rightConstraint == null) {
           throw Exception(
               'Need to set a left or right constraint for ${element.nodeId}.');
         }
       } else if (element.width == CL.matchConstraint) {
-        if (element.leftDependency == null || element.rightDependency == null) {
+        if (element.leftConstraint == null || element.rightConstraint == null) {
           throw Exception(
-              'Need to set left and right dependencies for ${element.nodeId}.');
+              'Need to set left and right constraints for ${element.nodeId}.');
         }
       }
 
       // check constraint integrity in the vertical direction
       if (element.height == CL.wrapContent || element.height > 0) {
-        int verticalDependencyCount = (element.topDependency == null ? 0 : 1) +
-            (element.bottomDependency == null ? 0 : 1) +
-            (element.baselineDependency == null ? 0 : 10);
-        if (verticalDependencyCount == 0) {
+        int verticalConstraintCount = (element.topConstraint == null ? 0 : 1) +
+            (element.bottomConstraint == null ? 0 : 1) +
+            (element.baselineConstraint == null ? 0 : 10);
+        if (verticalConstraintCount == 0) {
           throw Exception(
               'Need to set a top or bottom or baseline constraint for ${element.nodeId}.');
-        } else if (verticalDependencyCount > 10) {
+        } else if (verticalConstraintCount > 10) {
           throw Exception(
               'When the baseline constraint is set, the top or bottom constraint can not be set for ${element.nodeId}.');
         }
       } else if (element.height == CL.matchConstraint) {
-        if (element.baselineDependency != null) {
+        if (element.baselineConstraint != null) {
           throw Exception(
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
-        if (element.topDependency == null || element.bottomDependency == null) {
+        if (element.topConstraint == null || element.bottomConstraint == null) {
           throw Exception(
-              'Need to set both top and bottom dependencies for ${element.nodeId}.');
+              'Need to set both top and bottom constraints for ${element.nodeId}.');
         }
       } else {
         // match_parent
-        if (element.baselineDependency != null) {
+        if (element.baselineConstraint != null) {
           throw Exception(
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
@@ -850,13 +837,13 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  void _debugEnsureNullDependency(
-    _NodeDependency node,
-    _NodeDependency? dependency,
+  void _debugEnsureNullConstraint(
+    _ConstrainedNode node,
+    _ConstrainedNode? constrainedNode,
     String direction,
   ) {
-    if (_debugCheckDependencies) {
-      if (dependency != null) {
+    if (_debugCheckConstraints) {
+      if (constrainedNode != null) {
         debugPrint(
             'Warning: The child element with id ${node.nodeId} has a duplicate $direction constraint.');
       }
@@ -872,26 +859,26 @@ class _ConstraintRenderBox extends RenderBox
     return false;
   }
 
-  _NodeDependency _getNodeDependencyForChild(
+  _ConstrainedNode _getConstrainedNodeForChild(
     RenderBox? child,
     String id,
   ) {
-    _NodeDependency? node = _tempNodeDependencies[id];
+    _ConstrainedNode? node = _tempConstrainedNodes[id];
     if (node == null) {
-      node = _NodeDependency();
+      node = _ConstrainedNode();
       node.nodeId = id;
-      _tempNodeDependencies[id] = node;
+      _tempConstrainedNodes[id] = node;
     }
     if (child != null && node.renderBox == null) {
       node.renderBox = child;
-      _nodeDependencies[child] = node;
+      _constrainedNodes[child] = node;
     }
     return node;
   }
 
-  void _buildDependencyTrees() {
-    _nodeDependencies.clear();
-    _tempNodeDependencies.clear();
+  void _buildConstrainedNodeTrees() {
+    _constrainedNodes.clear();
+    _tempConstrainedNodes.clear();
     RenderBox? child = firstChild;
     int childIndex = -1;
 
@@ -901,7 +888,7 @@ class _ConstraintRenderBox extends RenderBox
           child.parentData as _ConstraintBoxData;
 
       assert(() {
-        if (_debugCheckDependencies) {
+        if (_debugCheckConstraints) {
           if (childParentData.width == null) {
             if (!_isInternalBox(child!)) {
               throw Exception(
@@ -917,136 +904,136 @@ class _ConstraintRenderBox extends RenderBox
         return true;
       }());
 
-      _NodeDependency currentNode = _getNodeDependencyForChild(
+      _ConstrainedNode currentNode = _getConstrainedNodeForChild(
           child, childParentData.id ?? 'child[$childIndex]@${child.hashCode}');
       currentNode.parentData = childParentData;
       currentNode.index = childIndex;
 
       if (childParentData.leftToLeft != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.leftDependency, 'left');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.leftConstraint, 'left');
           return true;
         }());
-        currentNode.leftDependency =
-            _getNodeDependencyForChild(null, childParentData.leftToLeft!);
-        currentNode.leftDependencyType = _DependencyType.toLeft;
+        currentNode.leftConstraint =
+            _getConstrainedNodeForChild(null, childParentData.leftToLeft!);
+        currentNode.leftConstraintType = _ConstraintType.toLeft;
       }
 
       if (childParentData.leftToRight != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.leftDependency, 'left');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.leftConstraint, 'left');
           return true;
         }());
-        currentNode.leftDependency =
-            _getNodeDependencyForChild(null, childParentData.leftToRight!);
-        currentNode.leftDependencyType = _DependencyType.toRight;
+        currentNode.leftConstraint =
+            _getConstrainedNodeForChild(null, childParentData.leftToRight!);
+        currentNode.leftConstraintType = _ConstraintType.toRight;
       }
 
       if (childParentData.rightToLeft != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.rightDependency, 'right');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.rightConstraint, 'right');
           return true;
         }());
-        currentNode.rightDependency =
-            _getNodeDependencyForChild(null, childParentData.rightToLeft!);
-        currentNode.rightDependencyType = _DependencyType.toLeft;
+        currentNode.rightConstraint =
+            _getConstrainedNodeForChild(null, childParentData.rightToLeft!);
+        currentNode.rightConstraintType = _ConstraintType.toLeft;
       }
 
       if (childParentData.rightToRight != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.rightDependency, 'right');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.rightConstraint, 'right');
           return true;
         }());
-        currentNode.rightDependency =
-            _getNodeDependencyForChild(null, childParentData.rightToRight!);
-        currentNode.rightDependencyType = _DependencyType.toRight;
+        currentNode.rightConstraint =
+            _getConstrainedNodeForChild(null, childParentData.rightToRight!);
+        currentNode.rightConstraintType = _ConstraintType.toRight;
       }
 
       if (childParentData.topToTop != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.topDependency, 'top');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.topConstraint, 'top');
           return true;
         }());
-        currentNode.topDependency =
-            _getNodeDependencyForChild(null, childParentData.topToTop!);
-        currentNode.topDependencyType = _DependencyType.toTop;
+        currentNode.topConstraint =
+            _getConstrainedNodeForChild(null, childParentData.topToTop!);
+        currentNode.topConstraintType = _ConstraintType.toTop;
       }
 
       if (childParentData.topToBottom != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.topDependency, 'top');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.topConstraint, 'top');
           return true;
         }());
-        currentNode.topDependency =
-            _getNodeDependencyForChild(null, childParentData.topToBottom!);
-        currentNode.topDependencyType = _DependencyType.toBottom;
+        currentNode.topConstraint =
+            _getConstrainedNodeForChild(null, childParentData.topToBottom!);
+        currentNode.topConstraintType = _ConstraintType.toBottom;
       }
 
       if (childParentData.bottomToTop != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.bottomDependency, 'bottom');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.bottomConstraint, 'bottom');
           return true;
         }());
-        currentNode.bottomDependency =
-            _getNodeDependencyForChild(null, childParentData.bottomToTop!);
-        currentNode.bottomDependencyType = _DependencyType.toTop;
+        currentNode.bottomConstraint =
+            _getConstrainedNodeForChild(null, childParentData.bottomToTop!);
+        currentNode.bottomConstraintType = _ConstraintType.toTop;
       }
 
       if (childParentData.bottomToBottom != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.bottomDependency, 'bottom');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.bottomConstraint, 'bottom');
           return true;
         }());
-        currentNode.bottomDependency =
-            _getNodeDependencyForChild(null, childParentData.bottomToBottom!);
-        currentNode.bottomDependencyType = _DependencyType.toBottom;
+        currentNode.bottomConstraint =
+            _getConstrainedNodeForChild(null, childParentData.bottomToBottom!);
+        currentNode.bottomConstraintType = _ConstraintType.toBottom;
       }
 
       if (childParentData.baselineToTop != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.baselineDependency, 'baseline');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.baselineConstraint, 'baseline');
           return true;
         }());
-        currentNode.baselineDependency =
-            _getNodeDependencyForChild(null, childParentData.baselineToTop!);
-        currentNode.baselineDependencyType = _DependencyType.toTop;
+        currentNode.baselineConstraint =
+            _getConstrainedNodeForChild(null, childParentData.baselineToTop!);
+        currentNode.baselineConstraintType = _ConstraintType.toTop;
       }
 
       if (childParentData.baselineToBottom != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.baselineDependency, 'baseline');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.baselineConstraint, 'baseline');
           return true;
         }());
-        currentNode.baselineDependency =
-            _getNodeDependencyForChild(null, childParentData.baselineToBottom!);
-        currentNode.baselineDependencyType = _DependencyType.toBottom;
+        currentNode.baselineConstraint = _getConstrainedNodeForChild(
+            null, childParentData.baselineToBottom!);
+        currentNode.baselineConstraintType = _ConstraintType.toBottom;
       }
 
       if (childParentData.baselineToBaseline != null) {
         assert(() {
-          _debugEnsureNullDependency(
-              currentNode, currentNode.baselineDependency, 'baseline');
+          _debugEnsureNullConstraint(
+              currentNode, currentNode.baselineConstraint, 'baseline');
           return true;
         }());
-        currentNode.baselineDependency = _getNodeDependencyForChild(
+        currentNode.baselineConstraint = _getConstrainedNodeForChild(
             null, childParentData.baselineToBaseline!);
-        currentNode.baselineDependencyType = _DependencyType.toBaseline;
+        currentNode.baselineConstraintType = _ConstraintType.toBaseline;
       }
 
       child = childParentData.nextSibling;
     }
 
-    _tempNodeDependencies.clear();
+    _tempConstrainedNodes.clear();
   }
 
   @override
@@ -1067,30 +1054,31 @@ class _ConstraintRenderBox extends RenderBox
     size = constraints.constrain(const Size(double.infinity, double.infinity));
 
     assert(() {
-      if (_debugCheckDependencies) {
+      if (_debugCheckConstraints) {
         _debugCheckIds();
       }
       return true;
     }());
 
-    // traverse once, building the dependency tree for each child element
-    _buildDependencyTrees();
+    // traverse once, building the constrained node tree for each child element
+    _buildConstrainedNodeTrees();
 
     assert(() {
-      if (_debugCheckDependencies) {
-        _debugCheckDependencyIntegrity();
-        _debugCheckCircularDependency();
+      if (_debugCheckConstraints) {
+        _debugCheckConstraintsIntegrity();
+        _debugCheckLoopConstraints();
       }
       return true;
     }());
 
-    // sort by the depth of dependency from shallow to deep, the lowest depth is 0, representing parent
-    List<_NodeDependency> nodeDependencies = _nodeDependencies.values.toList();
-    nodeDependencies.sort((left, right) {
+    // sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
+    List<_ConstrainedNode> constrainedNodeTrees =
+        _constrainedNodes.values.toList();
+    constrainedNodeTrees.sort((left, right) {
       return left.getDepth() - right.getDepth();
     });
 
-    _paintingOrderList = _nodeDependencies.values.toList();
+    _paintingOrderList = _constrainedNodes.values.toList();
     _paintingOrderList.sort((left, right) {
       int result = left.zIndex - right.zIndex;
       if (result == 0) {
@@ -1101,15 +1089,15 @@ class _ConstraintRenderBox extends RenderBox
     _needsReorderChildren = false;
 
     assert(() {
-      // print dependencies
-      if (_debugPrintDependencies) {
-        debugPrint('ConstraintLayout@${_debugName ?? hashCode} dependencies: ' +
-            jsonEncode(nodeDependencies.map((e) => e.toJson()).toList()));
+      // print constraints
+      if (_debugPrintConstraints) {
+        debugPrint('ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
+            jsonEncode(constrainedNodeTrees.map((e) => e.toJson()).toList()));
       }
       return true;
     }());
 
-    _layoutByDependencyTrees(nodeDependencies);
+    _layoutByConstrainedNodeTrees(constrainedNodeTrees);
 
     if (_releasePrintLayoutTime && kReleaseMode) {
       print(
@@ -1160,8 +1148,9 @@ class _ConstraintRenderBox extends RenderBox
     return _getTopInsets(insets) + _getBottomInsets(insets);
   }
 
-  void _layoutByDependencyTrees(List<_NodeDependency> nodeDependencies) {
-    for (final element in nodeDependencies) {
+  void _layoutByConstrainedNodeTrees(
+      List<_ConstrainedNode> constrainedNodeTrees) {
+    for (final element in constrainedNodeTrees) {
       EdgeInsets? margin = element.margin;
       EdgeInsets? goneMargin = element.goneMargin;
 
@@ -1182,7 +1171,7 @@ class _ConstraintRenderBox extends RenderBox
         } else if (width == CL.matchParent) {
           minWidth = size.width - _getHorizontalInsets(margin);
           assert(() {
-            if (_debugCheckDependencies) {
+            if (_debugCheckConstraints) {
               if (minWidth < 0) {
                 debugPrint(
                     'Warning: The child element with id ${element.nodeId} has a negative width');
@@ -1193,30 +1182,30 @@ class _ConstraintRenderBox extends RenderBox
           maxWidth = minWidth;
         } else if (width == CL.matchConstraint) {
           double left;
-          if (element.leftDependencyType == _DependencyType.toLeft) {
-            left = element.leftDependency!.getX();
+          if (element.leftConstraintType == _ConstraintType.toLeft) {
+            left = element.leftConstraint!.getX();
           } else {
-            left = element.leftDependency!.getRight(size);
+            left = element.leftConstraint!.getRight(size);
           }
-          if (element.leftDependency!.isNotLaidOut()) {
+          if (element.leftConstraint!.isNotLaidOut()) {
             left += _getLeftInsets(goneMargin);
           } else {
             left += _getLeftInsets(margin);
           }
           double right;
-          if (element.rightDependencyType == _DependencyType.toLeft) {
-            right = element.rightDependency!.getX();
+          if (element.rightConstraintType == _ConstraintType.toLeft) {
+            right = element.rightConstraint!.getX();
           } else {
-            right = element.rightDependency!.getRight(size);
+            right = element.rightConstraint!.getRight(size);
           }
-          if (element.rightDependency!.isNotLaidOut()) {
+          if (element.rightConstraint!.isNotLaidOut()) {
             right -= _getRightInsets(goneMargin);
           } else {
             right -= _getRightInsets(margin);
           }
           minWidth = right - left;
           assert(() {
-            if (_debugCheckDependencies) {
+            if (_debugCheckConstraints) {
               if (minWidth < 0) {
                 debugPrint(
                     'Warning: The child element with id ${element.nodeId} has a negative width');
@@ -1237,7 +1226,7 @@ class _ConstraintRenderBox extends RenderBox
         } else if (height == CL.matchParent) {
           minHeight = size.height - _getVerticalInsets(margin);
           assert(() {
-            if (_debugCheckDependencies) {
+            if (_debugCheckConstraints) {
               if (minHeight < 0) {
                 debugPrint(
                     'Warning: The child element with id ${element.nodeId} has a negative height');
@@ -1248,30 +1237,30 @@ class _ConstraintRenderBox extends RenderBox
           maxHeight = minHeight;
         } else if (height == CL.matchConstraint) {
           double top;
-          if (element.topDependencyType == _DependencyType.toTop) {
-            top = element.topDependency!.getY();
+          if (element.topConstraintType == _ConstraintType.toTop) {
+            top = element.topConstraint!.getY();
           } else {
-            top = element.topDependency!.getBottom(size);
+            top = element.topConstraint!.getBottom(size);
           }
-          if (element.topDependency!.isNotLaidOut()) {
+          if (element.topConstraint!.isNotLaidOut()) {
             top += _getTopInsets(goneMargin);
           } else {
             top += _getTopInsets(margin);
           }
           double bottom;
-          if (element.bottomDependencyType == _DependencyType.toTop) {
-            bottom = element.bottomDependency!.getY();
+          if (element.bottomConstraintType == _ConstraintType.toTop) {
+            bottom = element.bottomConstraint!.getY();
           } else {
-            bottom = element.bottomDependency!.getBottom(size);
+            bottom = element.bottomConstraint!.getBottom(size);
           }
-          if (element.bottomDependency!.isNotLaidOut()) {
+          if (element.bottomConstraint!.isNotLaidOut()) {
             bottom -= _getBottomInsets(goneMargin);
           } else {
             bottom -= _getBottomInsets(margin);
           }
           minHeight = bottom - top;
           assert(() {
-            if (_debugCheckDependencies) {
+            if (_debugCheckConstraints) {
               if (minHeight < 0) {
                 debugPrint(
                     'Warning: The child element with id ${element.nodeId} has a negative height');
@@ -1294,7 +1283,7 @@ class _ConstraintRenderBox extends RenderBox
         );
         element.laidOut = false;
         assert(() {
-          if (_debugCheckDependencies) {
+          if (_debugCheckConstraints) {
             debugPrint(
                 'Warning: The child element with id ${element.nodeId} has a negative size, will not be laid out and paint.');
           }
@@ -1315,25 +1304,25 @@ class _ConstraintRenderBox extends RenderBox
 
       // calculate child x offset
       double offsetX = 0;
-      if (element.leftDependency != null && element.rightDependency != null) {
+      if (element.leftConstraint != null && element.rightConstraint != null) {
         double left;
-        if (element.leftDependencyType == _DependencyType.toLeft) {
-          left = element.leftDependency!.getX();
+        if (element.leftConstraintType == _ConstraintType.toLeft) {
+          left = element.leftConstraint!.getX();
         } else {
-          left = element.leftDependency!.getRight(size);
+          left = element.leftConstraint!.getRight(size);
         }
-        if (element.leftDependency!.isNotLaidOut()) {
+        if (element.leftConstraint!.isNotLaidOut()) {
           left += _getLeftInsets(goneMargin);
         } else {
           left += _getLeftInsets(margin);
         }
         double right;
-        if (element.rightDependencyType == _DependencyType.toLeft) {
-          right = element.rightDependency!.getX();
+        if (element.rightConstraintType == _ConstraintType.toLeft) {
+          right = element.rightConstraint!.getX();
         } else {
-          right = element.rightDependency!.getRight(size);
+          right = element.rightConstraint!.getRight(size);
         }
-        if (element.rightDependency!.isNotLaidOut()) {
+        if (element.rightConstraint!.isNotLaidOut()) {
           right -= _getRightInsets(goneMargin);
         } else {
           right -= _getRightInsets(margin);
@@ -1341,27 +1330,27 @@ class _ConstraintRenderBox extends RenderBox
         double horizontalBias = element.horizontalBias;
         offsetX = left +
             (right - left - element.getMeasuredWidth(size)) * horizontalBias;
-      } else if (element.leftDependency != null) {
+      } else if (element.leftConstraint != null) {
         double left;
-        if (element.leftDependencyType == _DependencyType.toLeft) {
-          left = element.leftDependency!.getX();
+        if (element.leftConstraintType == _ConstraintType.toLeft) {
+          left = element.leftConstraint!.getX();
         } else {
-          left = element.leftDependency!.getRight(size);
+          left = element.leftConstraint!.getRight(size);
         }
-        if (element.leftDependency!.isNotLaidOut()) {
+        if (element.leftConstraint!.isNotLaidOut()) {
           left += _getLeftInsets(goneMargin);
         } else {
           left += _getLeftInsets(margin);
         }
         offsetX = left;
-      } else if (element.rightDependency != null) {
+      } else if (element.rightConstraint != null) {
         double right;
-        if (element.rightDependencyType == _DependencyType.toLeft) {
-          right = element.rightDependency!.getX();
+        if (element.rightConstraintType == _ConstraintType.toLeft) {
+          right = element.rightConstraint!.getX();
         } else {
-          right = element.rightDependency!.getRight(size);
+          right = element.rightConstraint!.getRight(size);
         }
-        if (element.rightDependency!.isNotLaidOut()) {
+        if (element.rightConstraint!.isNotLaidOut()) {
           right -= _getRightInsets(goneMargin);
         } else {
           right -= _getRightInsets(margin);
@@ -1373,25 +1362,25 @@ class _ConstraintRenderBox extends RenderBox
 
       // calculate child y offset
       double offsetY = 0;
-      if (element.topDependency != null && element.bottomDependency != null) {
+      if (element.topConstraint != null && element.bottomConstraint != null) {
         double top;
-        if (element.topDependencyType == _DependencyType.toTop) {
-          top = element.topDependency!.getY();
+        if (element.topConstraintType == _ConstraintType.toTop) {
+          top = element.topConstraint!.getY();
         } else {
-          top = element.topDependency!.getBottom(size);
+          top = element.topConstraint!.getBottom(size);
         }
-        if (element.topDependency!.isNotLaidOut()) {
+        if (element.topConstraint!.isNotLaidOut()) {
           top += _getTopInsets(goneMargin);
         } else {
           top += _getTopInsets(margin);
         }
         double bottom;
-        if (element.bottomDependencyType == _DependencyType.toTop) {
-          bottom = element.bottomDependency!.getY();
+        if (element.bottomConstraintType == _ConstraintType.toTop) {
+          bottom = element.bottomConstraint!.getY();
         } else {
-          bottom = element.bottomDependency!.getBottom(size);
+          bottom = element.bottomConstraint!.getBottom(size);
         }
-        if (element.bottomDependency!.isNotLaidOut()) {
+        if (element.bottomConstraint!.isNotLaidOut()) {
           bottom -= _getBottomInsets(goneMargin);
         } else {
           bottom -= _getBottomInsets(margin);
@@ -1399,45 +1388,45 @@ class _ConstraintRenderBox extends RenderBox
         double verticalBias = element.verticalBias;
         offsetY = top +
             (bottom - top - element.getMeasuredHeight(size)) * verticalBias;
-      } else if (element.topDependency != null) {
+      } else if (element.topConstraint != null) {
         double top;
-        if (element.topDependencyType == _DependencyType.toTop) {
-          top = element.topDependency!.getY();
+        if (element.topConstraintType == _ConstraintType.toTop) {
+          top = element.topConstraint!.getY();
         } else {
-          top = element.topDependency!.getBottom(size);
+          top = element.topConstraint!.getBottom(size);
         }
-        if (element.topDependency!.isNotLaidOut()) {
+        if (element.topConstraint!.isNotLaidOut()) {
           top += _getTopInsets(goneMargin);
         } else {
           top += _getTopInsets(margin);
         }
         offsetY = top;
-      } else if (element.bottomDependency != null) {
+      } else if (element.bottomConstraint != null) {
         double bottom;
-        if (element.bottomDependencyType == _DependencyType.toTop) {
-          bottom = element.bottomDependency!.getY();
+        if (element.bottomConstraintType == _ConstraintType.toTop) {
+          bottom = element.bottomConstraint!.getY();
         } else {
-          bottom = element.bottomDependency!.getBottom(size);
+          bottom = element.bottomConstraint!.getBottom(size);
         }
-        if (element.bottomDependency!.isNotLaidOut()) {
+        if (element.bottomConstraint!.isNotLaidOut()) {
           bottom -= _getBottomInsets(goneMargin);
         } else {
           bottom -= _getBottomInsets(margin);
         }
         offsetY = bottom - element.getMeasuredHeight(size);
-      } else if (element.baselineDependency != null) {
-        if (element.baselineDependencyType == _DependencyType.toTop) {
-          offsetY = element.baselineDependency!.getY() -
+      } else if (element.baselineConstraint != null) {
+        if (element.baselineConstraintType == _ConstraintType.toTop) {
+          offsetY = element.baselineConstraint!.getY() -
               element.getDistanceToBaseline(element.textBaseline, false);
-        } else if (element.baselineDependencyType == _DependencyType.toBottom) {
-          offsetY = element.baselineDependency!.getBottom(size) -
+        } else if (element.baselineConstraintType == _ConstraintType.toBottom) {
+          offsetY = element.baselineConstraint!.getBottom(size) -
               element.getDistanceToBaseline(element.textBaseline, false);
         } else {
-          offsetY = element.baselineDependency!
+          offsetY = element.baselineConstraint!
                   .getDistanceToBaseline(element.textBaseline, true) -
               element.getDistanceToBaseline(element.textBaseline, false);
         }
-        if (element.baselineDependency!.isNotLaidOut()) {
+        if (element.baselineConstraint!.isNotLaidOut()) {
           offsetY += _getTopInsets(goneMargin);
         } else {
           offsetY += _getTopInsets(margin);
@@ -1461,7 +1450,7 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       Offset clickShift = Offset.zero;
-      if (!element.translateDependency) {
+      if (!element.translateConstraint) {
         clickShift = element.translate;
       }
 
@@ -1536,7 +1525,7 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       Offset paintShift = Offset.zero;
-      if (!element.translateDependency) {
+      if (!element.translateConstraint) {
         paintShift = element.translate;
       }
       context.paintChild(
@@ -1609,19 +1598,19 @@ class _ConstraintRenderBox extends RenderBox
   }
 }
 
-class _NodeDependency {
+class _ConstrainedNode {
   late String nodeId;
   RenderBox? renderBox;
-  _NodeDependency? leftDependency;
-  _NodeDependency? topDependency;
-  _NodeDependency? rightDependency;
-  _NodeDependency? bottomDependency;
-  _NodeDependency? baselineDependency;
-  _DependencyType? leftDependencyType;
-  _DependencyType? topDependencyType;
-  _DependencyType? rightDependencyType;
-  _DependencyType? bottomDependencyType;
-  _DependencyType? baselineDependencyType;
+  _ConstrainedNode? leftConstraint;
+  _ConstrainedNode? topConstraint;
+  _ConstrainedNode? rightConstraint;
+  _ConstrainedNode? bottomConstraint;
+  _ConstrainedNode? baselineConstraint;
+  _ConstraintType? leftConstraintType;
+  _ConstraintType? topConstraintType;
+  _ConstraintType? rightConstraintType;
+  _ConstraintType? bottomConstraintType;
+  _ConstraintType? baselineConstraintType;
   int depth = -1;
   late bool laidOut;
   late _ConstraintBoxData parentData;
@@ -1634,7 +1623,7 @@ class _NodeDependency {
   int get zIndex => parentData.zIndex ?? index;
 
   Offset get offset {
-    if (translateDependency) {
+    if (translateConstraint) {
       return parentData.offset + translate;
     } else {
       return parentData.offset;
@@ -1643,7 +1632,7 @@ class _NodeDependency {
 
   Offset get translate => parentData.translate!;
 
-  bool get translateDependency => parentData.translateDependency!;
+  bool get translateConstraint => parentData.translateConstraint!;
 
   EdgeInsets get margin => parentData.margin!;
 
@@ -1752,11 +1741,11 @@ class _NodeDependency {
     return baseline;
   }
 
-  int getDepthFor(_NodeDependency? nodeDependency) {
-    if (nodeDependency == null) {
+  int getDepthFor(_ConstrainedNode? constrainedNode) {
+    if (constrainedNode == null) {
       return -1;
     }
-    return nodeDependency.getDepth();
+    return constrainedNode.getDepth();
   }
 
   int getDepth() {
@@ -1765,11 +1754,11 @@ class _NodeDependency {
         depth = 0;
       } else {
         List<int> list = [
-          getDepthFor(leftDependency),
-          getDepthFor(topDependency),
-          getDepthFor(rightDependency),
-          getDepthFor(bottomDependency),
-          getDepthFor(baselineDependency),
+          getDepthFor(leftConstraint),
+          getDepthFor(topConstraint),
+          getDepthFor(rightConstraint),
+          getDepthFor(bottomConstraint),
+          getDepthFor(baselineConstraint),
         ];
         list.sort((left, right) => left - right);
         depth = list.last + 1;
@@ -1785,66 +1774,66 @@ class _NodeDependency {
       map['nodeId'] = 'parent';
     } else {
       map['nodeId'] = nodeId;
-      if (leftDependency != null) {
-        if (leftDependency!.isParent()) {
-          map['leftDependency'] = 'parent';
+      if (leftConstraint != null) {
+        if (leftConstraint!.isParent()) {
+          map['leftConstraint'] = 'parent';
         } else {
-          map['leftDependency'] = leftDependency!.toJson();
+          map['leftConstraint'] = leftConstraint!.toJson();
         }
-        if (leftDependencyType == _DependencyType.toLeft) {
-          map['leftDependencyType'] = 'toLeft';
+        if (leftConstraintType == _ConstraintType.toLeft) {
+          map['leftConstraintType'] = 'toLeft';
         } else {
-          map['leftDependencyType'] = 'toRight';
-        }
-      }
-      if (topDependency != null) {
-        if (topDependency!.isParent()) {
-          map['topDependency'] = 'parent';
-        } else {
-          map['topDependency'] = topDependency!.toJson();
-        }
-        if (topDependencyType == _DependencyType.toTop) {
-          map['topDependencyType'] = 'toTop';
-        } else {
-          map['topDependencyType'] = 'toBottom';
+          map['leftConstraintType'] = 'toRight';
         }
       }
-      if (rightDependency != null) {
-        if (rightDependency!.isParent()) {
-          map['rightDependency'] = 'parent';
+      if (topConstraint != null) {
+        if (topConstraint!.isParent()) {
+          map['topConstraint'] = 'parent';
         } else {
-          map['rightDependency'] = rightDependency!.toJson();
+          map['topConstraint'] = topConstraint!.toJson();
         }
-        if (rightDependencyType == _DependencyType.toLeft) {
-          map['rightDependencyType'] = 'toLeft';
+        if (topConstraintType == _ConstraintType.toTop) {
+          map['topConstraintType'] = 'toTop';
         } else {
-          map['rightDependencyType'] = 'toRight';
-        }
-      }
-      if (bottomDependency != null) {
-        if (bottomDependency!.isParent()) {
-          map['bottomDependency'] = 'parent';
-        } else {
-          map['bottomDependency'] = bottomDependency!.toJson();
-        }
-        if (bottomDependencyType == _DependencyType.toTop) {
-          map['bottomDependencyType'] = 'toTop';
-        } else {
-          map['bottomDependencyType'] = 'toBottom';
+          map['topConstraintType'] = 'toBottom';
         }
       }
-      if (baselineDependency != null) {
-        if (baselineDependency!.isParent()) {
-          map['baselineDependency'] = 'parent';
+      if (rightConstraint != null) {
+        if (rightConstraint!.isParent()) {
+          map['rightConstraint'] = 'parent';
         } else {
-          map['baselineDependency'] = baselineDependency!.toJson();
+          map['rightConstraint'] = rightConstraint!.toJson();
         }
-        if (baselineDependencyType == _DependencyType.toTop) {
-          map['baselineDependencyType'] = 'toTop';
-        } else if (baselineDependencyType == _DependencyType.toBottom) {
-          map['baselineDependencyType'] = 'toBottom';
+        if (rightConstraintType == _ConstraintType.toLeft) {
+          map['rightConstraintType'] = 'toLeft';
         } else {
-          map['baselineDependencyType'] = 'toBaseline';
+          map['rightConstraintType'] = 'toRight';
+        }
+      }
+      if (bottomConstraint != null) {
+        if (bottomConstraint!.isParent()) {
+          map['bottomConstraint'] = 'parent';
+        } else {
+          map['bottomConstraint'] = bottomConstraint!.toJson();
+        }
+        if (bottomConstraintType == _ConstraintType.toTop) {
+          map['bottomConstraintType'] = 'toTop';
+        } else {
+          map['bottomConstraintType'] = 'toBottom';
+        }
+      }
+      if (baselineConstraint != null) {
+        if (baselineConstraint!.isParent()) {
+          map['baselineConstraint'] = 'parent';
+        } else {
+          map['baselineConstraint'] = baselineConstraint!.toJson();
+        }
+        if (baselineConstraintType == _ConstraintType.toTop) {
+          map['baselineConstraintType'] = 'toTop';
+        } else if (baselineConstraintType == _ConstraintType.toBottom) {
+          map['baselineConstraintType'] = 'toBottom';
+        } else {
+          map['baselineConstraintType'] = 'toBaseline';
         }
       }
     }
@@ -1854,6 +1843,7 @@ class _NodeDependency {
 }
 
 class Guideline extends LeafRenderObjectWidget {
+  final String id;
   final double? guidelineBegin;
   final double? guidelineEnd;
   final double? guidelinePercent;
@@ -1861,6 +1851,7 @@ class Guideline extends LeafRenderObjectWidget {
 
   const Guideline({
     Key? key,
+    required this.id,
     this.guidelineBegin,
     this.guidelineEnd,
     this.guidelinePercent,

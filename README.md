@@ -130,7 +130,7 @@ class ExampleState extends State<Example> {
               zIndex: 100,
               translate: Offset(x, y),
               clickPadding: const EdgeInsets.all(30),
-              translateDependency: true,
+              translateConstraint: true,
               child: GestureDetector(
                 child: Container(
                   color: Colors.pink,
@@ -183,6 +183,26 @@ class ExampleState extends State<Example> {
                 color: Colors.cyan,
                 alignment: Alignment.center,
                 child: const Text('child[7] pinned to the top right'),
+              ),
+            ),
+            const Constrained(
+              id: 'box9',
+              width: CL.wrapContent,
+              height: CL.wrapContent,
+              baselineToBaseline: 'box7',
+
+              /// when setting baseline alignment, height must be wrap_content or fixed size
+              /// other vertical constraints will be ignored
+              /// Warning:
+              /// Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
+              /// See https://github.com/flutter/flutter/issues/101179
+
+              leftToLeft: 'box7',
+              child: Text(
+                'box9 baseline to box7',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
               ),
             )
           ],
