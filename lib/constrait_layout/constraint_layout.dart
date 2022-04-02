@@ -234,9 +234,9 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final String? baselineToBaseline;
   final TextBaseline textBaseline;
 
-  final bool center;
-  final bool centerHorizontal;
-  final bool centerVertical;
+  final String? center;
+  final String? centerHorizontal;
+  final String? centerVertical;
 
   final int? zIndex;
   final Offset translate;
@@ -269,9 +269,9 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.visibility = CL.visible,
     this.margin = EdgeInsets.zero,
     this.goneMargin = EdgeInsets.zero,
-    this.center = false,
-    this.centerHorizontal = false,
-    this.centerVertical = false,
+    this.center,
+    this.centerHorizontal,
+    this.centerVertical,
     this.horizontalBias = 0.5,
     this.verticalBias = 0.5,
     this.zIndex, // default is child index
@@ -344,9 +344,9 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
               'When setting the width to match_parent for child with id $id, there is no need to set left or right constraint.');
         }
 
-        if (centerHorizontal) {
+        if (centerHorizontal != null) {
           throw Exception(
-              'When setting the width to match_parent for child with id $id, there is no need to set centerHorizontal = true.');
+              'When setting the width to match_parent for child with id $id, there is no need to set centerHorizontal.');
         }
         return true;
       }());
@@ -369,9 +369,9 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
               'When setting the height to match_parent for child with id $id, there is no need to set top or bottom or baseline constraint.');
         }
 
-        if (centerVertical) {
+        if (centerVertical != null) {
           throw Exception(
-              'When setting the height to match_parent for child with id $id, there is no need to set centerVertical = true.');
+              'When setting the height to match_parent for child with id $id, there is no need to set centerVertical.');
         }
         return true;
       }());
@@ -386,32 +386,32 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
 
     assert(() {
       if (width == CL.matchParent && height == CL.matchParent) {
-        if (center) {
+        if (center != null) {
           throw Exception(
-              'When setting the width and height to match_parent for child with id $id, there is no need to set center = true.');
+              'When setting the width and height to match_parent for child with id $id, there is no need to set center.');
         }
       }
       return true;
     }());
 
-    if (centerHorizontal) {
+    if (centerHorizontal != null) {
       assert(() {
         if (leftToLeft != null ||
             leftToRight != null ||
             rightToLeft != null ||
             rightToRight != null) {
           throw Exception(
-              'When setting centerHorizontal = true for child with id $id, there is no need to set left or right constraint.');
+              'When setting centerHorizontal for child with id $id, there is no need to set left or right constraint.');
         }
         return true;
       }());
-      leftToLeft = CL.parent;
-      rightToRight = CL.parent;
+      leftToLeft = centerHorizontal;
+      rightToRight = centerHorizontal;
       leftToRight = null;
       rightToLeft = null;
     }
 
-    if (centerVertical) {
+    if (centerVertical != null) {
       assert(() {
         if (topToTop != null ||
             topToBottom != null ||
@@ -421,12 +421,12 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             baselineToBottom != null ||
             baselineToBaseline != null) {
           throw Exception(
-              'When setting centerVertical = true for child with id $id, there is no need to set top or bottom or baseline constraint.');
+              'When setting centerVertical for child with id $id, there is no need to set top or bottom or baseline constraint.');
         }
         return true;
       }());
-      topToTop = CL.parent;
-      bottomToBottom = CL.parent;
+      topToTop = centerVertical;
+      bottomToBottom = centerVertical;
       topToBottom = null;
       bottomToTop = null;
       baselineToTop = null;
@@ -434,7 +434,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       baselineToBaseline = null;
     }
 
-    if (center) {
+    if (center != null) {
       assert(() {
         if (leftToLeft != null ||
             leftToRight != null ||
@@ -448,14 +448,14 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             baselineToBottom != null ||
             baselineToBaseline != null) {
           throw Exception(
-              'When setting center = true for child with id $id, there is no need to set left or right or top or bottom or baseline constraint.');
+              'When setting center for child with id $id, there is no need to set left or right or top or bottom or baseline constraint.');
         }
         return true;
       }());
-      leftToLeft = CL.parent;
-      rightToRight = CL.parent;
-      topToTop = CL.parent;
-      bottomToBottom = CL.parent;
+      leftToLeft = center;
+      rightToRight = center;
+      topToTop = center;
+      bottomToBottom = center;
       leftToRight = null;
       rightToLeft = null;
       topToBottom = null;
