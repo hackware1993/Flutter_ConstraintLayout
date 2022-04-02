@@ -153,6 +153,34 @@ class ExampleState extends State<Example> {
                   color: Colors.white,
                 ),
               ),
+            ),
+            ...hChain(
+              leftToLeft: CL.parent,
+              rightToRight: CL.parent,
+              hChainList: [
+                Constrained(
+                  id: 'box10',
+                  width: CL.matchConstraint,
+                  height: 200,
+                  topToTop: CL.parent,
+                  child: Container(
+                    color: Colors.redAccent,
+                    alignment: Alignment.center,
+                    child: const Text('chain item 1'),
+                  ),
+                ),
+                Constrained(
+                  id: 'box11',
+                  width: CL.matchConstraint,
+                  height: 200,
+                  topToTop: CL.parent,
+                  child: Container(
+                    color: Colors.redAccent,
+                    alignment: Alignment.center,
+                    child: const Text('chain item 2'),
+                  ),
+                ),
+              ],
             )
           ],
         ),

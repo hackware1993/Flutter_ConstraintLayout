@@ -77,7 +77,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   ConstraintLayout({
     Key? key,
-    List<Widget> children = const <Widget>[],
+    required List<Widget> children,
     this.debugShowGuideline = false,
     this.debugShowPreview = false,
     this.debugShowClickArea = false,
@@ -124,6 +124,30 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex;
   }
+}
+
+List<Constrained> hChain({
+  String? leftToLeft,
+  String? leftToRight,
+  String? rightToLeft,
+  String? rightToRight,
+  required List<Constrained> hChainList,
+}) {
+  assert(hChainList.length > 1,
+      'The number of child elements in the chain must be > 1.');
+  return [];
+}
+
+List<Constrained> vChain({
+  String? topToTop,
+  String? topToBottom,
+  String? bottomToTop,
+  String? bottomToBottom,
+  required List<Constrained> vChainList,
+}) {
+  assert(vChainList.length > 1,
+      'The number of child elements in the chain must be > 1.');
+  return [];
 }
 
 bool _debugEnsureNotEmptyString(String name, String? value) {
@@ -208,7 +232,6 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   String? baselineToBottom;
   String? baselineToBaseline;
   TextBaseline? textBaseline;
-  bool? wrappedByConstraint;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -320,6 +343,9 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
 
   @override
   void applyParentData(RenderObject renderObject) {
+    assert(renderObject is! _InternalBox,
+        'Guideline, Barrier can not be wrapped with Constrained.');
+
     // bounds check
     assert(checkSize(width));
     assert(checkSize(height));
@@ -615,8 +641,6 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       }
     }
 
-    parentData.wrappedByConstraint = true;
-
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
@@ -904,11 +928,6 @@ class _ConstraintRenderBox extends RenderBox
           if (childParentData.width == null) {
             throw ConstraintLayoutException(
                 'Child elements must be wrapped with Constrained.');
-          } else if (childParentData.wrappedByConstraint == true) {
-            if (child is _InternalBox) {
-              throw ConstraintLayoutException(
-                  'Guideline, Barrier can not be wrapped with Constrained.');
-            }
           }
         }
         return true;
