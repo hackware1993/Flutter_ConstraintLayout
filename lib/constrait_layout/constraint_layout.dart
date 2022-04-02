@@ -16,7 +16,7 @@ import 'package:flutter/rendering.dart';
 /// one-way, and there is no two child elements that directly or
 /// indirectly restrain each other. Each constraint should describe
 /// exactly where the child elements are located. The following code
-/// is not allowed and will cause a stack overflow exception：
+/// is not allowed and will cause a exception：
 ///        ConstraintLayout(
 //           children: [
 //             Constrained(
@@ -94,6 +94,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
+    assert(_debugEnsureNotEmptyString('debugName', debugName));
     return _ConstraintRenderBox()
       .._debugShowGuideline = debugShowGuideline
       .._debugShowPreview = debugShowPreview
@@ -111,6 +112,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     BuildContext context,
     covariant RenderObject renderObject,
   ) {
+    assert(_debugEnsureNotEmptyString('debugName', debugName));
     (renderObject as _ConstraintRenderBox)
       ..debugShowGuideline = debugShowGuideline
       ..debugShowPreview = debugShowPreview
@@ -122,6 +124,21 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex;
   }
+}
+
+bool _debugEnsureNotEmptyString(String name, String? value) {
+  if (value != null && value.trim().isEmpty) {
+    throw ConstraintLayoutException(
+        '$name can be null, but not an empty string.');
+  }
+  return true;
+}
+
+bool _debugEnsurePercent(String name, double? percent) {
+  if (percent == null || percent < 0 || percent > 1) {
+    throw ConstraintLayoutException('$name is between [0-1].');
+  }
+  return true;
 }
 
 class CL {
@@ -191,6 +208,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   String? baselineToBottom;
   String? baselineToBaseline;
   TextBaseline? textBaseline;
+  bool? wrappedByConstraint;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -214,7 +232,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final double horizontalBias;
   final double verticalBias;
 
-  /// depends on sibling id or CL.parent
+  /// constraint on sibling id or CL.parent
   final String? leftToLeft;
   final String? leftToRight;
   final String? rightToLeft;
@@ -292,35 +310,35 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
         size == CL.matchConstraint) {
       return true;
     } else {
-      return size != double.infinity && size > 0;
+      if (size == double.infinity || size < 0) {
+        throw ConstraintLayoutException(
+            'width or height can not be infinity or negative.');
+      }
+      return true;
     }
-  }
-
-  bool checkConstraint(String? constraint) {
-    return constraint == null || constraint.trim().isNotEmpty;
   }
 
   @override
   void applyParentData(RenderObject renderObject) {
-    assert(renderObject.parentData is _ConstraintBoxData);
-
     // bounds check
     assert(checkSize(width));
     assert(checkSize(height));
-    assert(checkConstraint(id));
-    assert(checkConstraint(this.leftToLeft));
-    assert(checkConstraint(this.leftToRight));
-    assert(checkConstraint(this.rightToLeft));
-    assert(checkConstraint(this.rightToRight));
-    assert(checkConstraint(this.topToTop));
-    assert(checkConstraint(this.topToBottom));
-    assert(checkConstraint(this.bottomToTop));
-    assert(checkConstraint(this.bottomToBottom));
-    assert(checkConstraint(this.baselineToTop));
-    assert(checkConstraint(this.baselineToBottom));
-    assert(checkConstraint(this.baselineToBaseline));
-    assert((horizontalBias >= 0 && horizontalBias <= 1));
-    assert((verticalBias >= 0 && verticalBias <= 1));
+    assert(_debugEnsureNotEmptyString('id', id));
+    assert(_debugEnsureNotEmptyString('leftToLeft', this.leftToLeft));
+    assert(_debugEnsureNotEmptyString('leftToRight', this.leftToRight));
+    assert(_debugEnsureNotEmptyString('rightToLeft', this.rightToLeft));
+    assert(_debugEnsureNotEmptyString('rightToRight', this.rightToRight));
+    assert(_debugEnsureNotEmptyString('topToTop', this.topToTop));
+    assert(_debugEnsureNotEmptyString('topToBottom', this.topToBottom));
+    assert(_debugEnsureNotEmptyString('bottomToTop', this.bottomToTop));
+    assert(_debugEnsureNotEmptyString('bottomToBottom', this.bottomToBottom));
+    assert(_debugEnsureNotEmptyString('baselineToTop', this.baselineToTop));
+    assert(
+        _debugEnsureNotEmptyString('baselineToBottom', this.baselineToBottom));
+    assert(_debugEnsureNotEmptyString(
+        'baselineToBaseline', this.baselineToBaseline));
+    assert(_debugEnsurePercent('horizontalBias', horizontalBias));
+    assert(_debugEnsurePercent('verticalBias', verticalBias));
 
     String? leftToLeft = this.leftToLeft;
     String? leftToRight = this.leftToRight;
@@ -340,12 +358,12 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             leftToRight != null ||
             rightToLeft != null ||
             rightToRight != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting the width to match_parent for child with id $id, there is no need to set left or right constraint.');
         }
 
         if (centerHorizontal != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting the width to match_parent for child with id $id, there is no need to set centerHorizontal.');
         }
         return true;
@@ -365,12 +383,12 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             baselineToTop != null ||
             baselineToBottom != null ||
             baselineToBaseline != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting the height to match_parent for child with id $id, there is no need to set top or bottom or baseline constraint.');
         }
 
         if (centerVertical != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting the height to match_parent for child with id $id, there is no need to set centerVertical.');
         }
         return true;
@@ -387,7 +405,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     assert(() {
       if (width == CL.matchParent && height == CL.matchParent) {
         if (center != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting the width and height to match_parent for child with id $id, there is no need to set center.');
         }
       }
@@ -400,7 +418,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             leftToRight != null ||
             rightToLeft != null ||
             rightToRight != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting centerHorizontal for child with id $id, there is no need to set left or right constraint.');
         }
         return true;
@@ -420,7 +438,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             baselineToTop != null ||
             baselineToBottom != null ||
             baselineToBaseline != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting centerVertical for child with id $id, there is no need to set top or bottom or baseline constraint.');
         }
         return true;
@@ -447,7 +465,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
             baselineToTop != null ||
             baselineToBottom != null ||
             baselineToBaseline != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting center for child with id $id, there is no need to set left or right or top or bottom or baseline constraint.');
         }
         return true;
@@ -597,6 +615,8 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       }
     }
 
+    parentData.wrappedByConstraint = true;
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
@@ -717,6 +737,12 @@ class _ConstraintRenderBox extends RenderBox
   void setupParentData(covariant RenderObject child) {
     if (child.parentData is! _ConstraintBoxData) {
       child.parentData = _ConstraintBoxData();
+
+      /// Do not do special treatment for built-in components, treat them as ordinary
+      /// child elements, but have a size of 0 and are gone
+      if (child is _InternalBox) {
+        (child).updateParentData();
+      }
     }
   }
 
@@ -732,7 +758,7 @@ class _ConstraintRenderBox extends RenderBox
           child.parentData as _ConstraintBoxData;
       if (childParentData.id != null) {
         if (!idSet.add(childParentData.id!)) {
-          throw Exception('Duplicate id in ConstraintLayout.');
+          throw ConstraintLayoutException('Duplicate id in ConstraintLayout.');
         }
       }
       if (childParentData.leftToLeft != null) {
@@ -772,7 +798,8 @@ class _ConstraintRenderBox extends RenderBox
     }
     Set<String> illegalIdSet = constraintsIdSet.difference(idSet);
     if (illegalIdSet.isNotEmpty) {
-      throw Exception('These ids $illegalIdSet are not yet defined.');
+      throw ConstraintLayoutException(
+          'These ids $illegalIdSet are not yet defined.');
     }
   }
 
@@ -782,9 +809,8 @@ class _ConstraintRenderBox extends RenderBox
       try {
         element.getDepth();
       } on StackOverflowError catch (_) {
-        const msg =
-            'There are some loop constraints, please check the code. For layout performance considerations, constraints are always one-way, and there is no two child elements that directly or indirectly restrain each other. Each constraint should describe exactly where the child elements are located. Use Guideline to break loop constraints.';
-        throw Exception(msg);
+        throw ConstraintLayoutException(
+            'There are some loop constraints, please check the code. For layout performance considerations, constraints are always one-way, and there should be no two child elements directly or indirectly restrain each other. Each constraint should describe exactly where the child elements are located. Use Guideline to break loop constraints.');
       }
     }
   }
@@ -793,43 +819,43 @@ class _ConstraintRenderBox extends RenderBox
   void _debugCheckConstraintsIntegrity() {
     for (final element in _constrainedNodes.values) {
       // check constraint integrity in the horizontal direction
-      if (element.width == CL.wrapContent || element.width > 0) {
+      if (element.width == CL.wrapContent || element.width >= 0) {
         if (element.leftConstraint == null && element.rightConstraint == null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'Need to set a left or right constraint for ${element.nodeId}.');
         }
       } else if (element.width == CL.matchConstraint) {
         if (element.leftConstraint == null || element.rightConstraint == null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'Need to set left and right constraints for ${element.nodeId}.');
         }
       }
 
       // check constraint integrity in the vertical direction
-      if (element.height == CL.wrapContent || element.height > 0) {
+      if (element.height == CL.wrapContent || element.height >= 0) {
         int verticalConstraintCount = (element.topConstraint == null ? 0 : 1) +
             (element.bottomConstraint == null ? 0 : 1) +
             (element.baselineConstraint == null ? 0 : 10);
         if (verticalConstraintCount == 0) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'Need to set a top or bottom or baseline constraint for ${element.nodeId}.');
         } else if (verticalConstraintCount > 10) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When the baseline constraint is set, the top or bottom constraint can not be set for ${element.nodeId}.');
         }
       } else if (element.height == CL.matchConstraint) {
         if (element.baselineConstraint != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
         if (element.topConstraint == null || element.bottomConstraint == null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'Need to set both top and bottom constraints for ${element.nodeId}.');
         }
       } else {
         // match_parent
         if (element.baselineConstraint != null) {
-          throw Exception(
+          throw ConstraintLayoutException(
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
       }
@@ -849,25 +875,12 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  bool _isInternalBox(RenderBox renderBox) {
-    if (renderBox is _GuidelineRenderBox) {
-      return true;
-    } else if (renderBox is _BarrierRenderBox) {
-      return true;
-    }
-    return false;
-  }
-
   _ConstrainedNode _getConstrainedNodeForChild(
     RenderBox? child,
     String id,
   ) {
-    _ConstrainedNode? node = _tempConstrainedNodes[id];
-    if (node == null) {
-      node = _ConstrainedNode();
-      node.nodeId = id;
-      _tempConstrainedNodes[id] = node;
-    }
+    _ConstrainedNode node = _tempConstrainedNodes.putIfAbsent(
+        id, () => _ConstrainedNode()..nodeId = id);
     if (child != null && node.renderBox == null) {
       node.renderBox = child;
       _constrainedNodes[child] = node;
@@ -889,13 +902,11 @@ class _ConstraintRenderBox extends RenderBox
       assert(() {
         if (_debugCheckConstraints) {
           if (childParentData.width == null) {
-            if (!_isInternalBox(child!)) {
-              throw Exception(
-                  'Child elements must be wrapped with Constrained.');
-            }
-          } else {
-            if (_isInternalBox(child!)) {
-              throw Exception(
+            throw ConstraintLayoutException(
+                'Child elements must be wrapped with Constrained.');
+          } else if (childParentData.wrappedByConstraint == true) {
+            if (child is _InternalBox) {
+              throw ConstraintLayoutException(
                   'Guideline, Barrier can not be wrapped with Constrained.');
             }
           }
@@ -1150,8 +1161,8 @@ class _ConstraintRenderBox extends RenderBox
   void _layoutByConstrainedNodeTrees(
       List<_ConstrainedNode> constrainedNodeTrees) {
     for (final element in constrainedNodeTrees) {
-      EdgeInsets? margin = element.margin;
-      EdgeInsets? goneMargin = element.goneMargin;
+      EdgeInsets margin = element.margin;
+      EdgeInsets goneMargin = element.goneMargin;
 
       // calculate child width
       double minWidth = 0;
@@ -1535,7 +1546,7 @@ class _ConstraintRenderBox extends RenderBox
         if (_debugShowClickArea) {
           Paint paint = Paint();
           paint.color = Colors.yellow.withAlpha(192);
-          EdgeInsets? clickPadding = element.clickPadding;
+          EdgeInsets clickPadding = element.clickPadding;
           Rect rect = Rect.fromLTRB(
               element.getX() - _getLeftInsets(clickPadding),
               element.getY() - _getTopInsets(clickPadding),
@@ -1841,6 +1852,27 @@ class _ConstrainedNode {
   }
 }
 
+class _InternalBox extends RenderBox {
+  @protected
+  @mustCallSuper
+  void updateParentData() {
+    _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
+    constraintBoxData.visibility = CL.gone;
+    constraintBoxData.translate = Offset.zero;
+    constraintBoxData.translateConstraint = false;
+    constraintBoxData.goneMargin = EdgeInsets.zero;
+    constraintBoxData.horizontalBias = 0.5;
+    constraintBoxData.verticalBias = 0.5;
+    constraintBoxData.clickPadding = EdgeInsets.zero;
+    constraintBoxData.textBaseline = TextBaseline.alphabetic;
+  }
+
+  @override
+  void performLayout() {
+    size = Size.zero;
+  }
+}
+
 class Guideline extends LeafRenderObjectWidget {
   final String id;
   final double? guidelineBegin;
@@ -1857,12 +1889,135 @@ class Guideline extends LeafRenderObjectWidget {
     this.horizontal = false,
   }) : super(key: key);
 
+  bool _checkParam() {
+    if (id.trim().isEmpty) {
+      throw ConstraintLayoutException('id of Guideline must not be empty.');
+    }
+    int guideConstraintCount = (guidelineBegin == null ? 0 : 1) +
+        (guidelineEnd == null ? 0 : 1) +
+        (guidelinePercent == null ? 0 : 1);
+    if (guideConstraintCount == 0) {
+      throw ConstraintLayoutException(
+          'Must set one of guidelineBegin、guidelineEnd、guidelinePercent.');
+    } else if (guideConstraintCount != 1) {
+      throw ConstraintLayoutException(
+          'Must set only one of guidelineBegin、guidelineEnd、guidelinePercent.');
+    }
+    if (guidelinePercent != null) {
+      _debugEnsurePercent('guidelinePercent', guidelinePercent);
+    }
+    return true;
+  }
+
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _GuidelineRenderBox();
+  RenderObject createRenderObject(BuildContext context) {
+    assert(_checkParam());
+    return _GuidelineRenderBox()
+      .._id = id
+      .._guidelineBegin = guidelineBegin
+      .._guidelineEnd = guidelineEnd
+      .._guidelinePercent = guidelinePercent
+      .._horizontal = horizontal;
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant RenderObject renderObject,
+  ) {
+    assert(_checkParam());
+    (renderObject as _GuidelineRenderBox)
+      ..id = id
+      ..guidelineBegin = guidelineBegin
+      ..guidelineEnd = guidelineEnd
+      ..guidelinePercent = guidelinePercent
+      ..horizontal = horizontal;
+  }
 }
 
-class _GuidelineRenderBox extends RenderBox {}
+class _GuidelineRenderBox extends _InternalBox {
+  late String _id;
+  double? _guidelineBegin;
+  double? _guidelineEnd;
+  double? _guidelinePercent;
+  late bool _horizontal;
+
+  set id(String value) {
+    if (_id != value) {
+      _id = value;
+      updateParentData();
+      markParentNeedsLayout();
+    }
+  }
+
+  set guidelineBegin(double? value) {
+    if (_guidelineBegin != value) {
+      _guidelineBegin = value;
+      updateParentData();
+      markParentNeedsLayout();
+    }
+  }
+
+  set guidelineEnd(double? value) {
+    if (_guidelineEnd != value) {
+      _guidelineEnd = value;
+      updateParentData();
+      markParentNeedsLayout();
+    }
+  }
+
+  set guidelinePercent(double? value) {
+    if (_guidelinePercent != value) {
+      _guidelinePercent = value;
+      updateParentData();
+      markParentNeedsLayout();
+    }
+  }
+
+  set horizontal(bool value) {
+    if (_horizontal != value) {
+      _horizontal = value;
+      updateParentData();
+      markParentNeedsLayout();
+    }
+  }
+
+  @override
+  void updateParentData() {
+    super.updateParentData();
+    _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
+    constraintBoxData.id = _id;
+    if (_horizontal) {
+      if (_guidelineBegin != null) {
+        constraintBoxData.topToTop = CL.parent;
+        constraintBoxData.bottomToBottom = null;
+        constraintBoxData.width = CL.matchParent;
+        constraintBoxData.height = 0;
+        constraintBoxData.margin = EdgeInsets.only(top: _guidelineBegin!);
+      } else if (_guidelineEnd != null) {
+        constraintBoxData.bottomToBottom = CL.parent;
+        constraintBoxData.topToTop = null;
+        constraintBoxData.width = CL.matchParent;
+        constraintBoxData.height = 0;
+        constraintBoxData.margin = EdgeInsets.only(bottom: _guidelineEnd!);
+      } else {}
+    } else {
+      if (_guidelineBegin != null) {
+        constraintBoxData.leftToLeft = CL.parent;
+        constraintBoxData.rightToRight = null;
+        constraintBoxData.width = 0;
+        constraintBoxData.height = CL.matchParent;
+        constraintBoxData.margin = EdgeInsets.only(left: _guidelineBegin!);
+      } else if (_guidelineEnd != null) {
+        constraintBoxData.rightToRight = CL.parent;
+        constraintBoxData.leftToLeft = null;
+        constraintBoxData.width = 0;
+        constraintBoxData.height = CL.matchParent;
+        constraintBoxData.margin = EdgeInsets.only(right: _guidelineEnd!);
+      } else {}
+    }
+  }
+}
 
 class Barrier extends LeafRenderObjectWidget {
   final BarrierDirection direction;
@@ -1878,4 +2033,15 @@ class Barrier extends LeafRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) => _BarrierRenderBox();
 }
 
-class _BarrierRenderBox extends RenderBox {}
+class _BarrierRenderBox extends _InternalBox {}
+
+class ConstraintLayoutException implements Exception {
+  final String msg;
+
+  ConstraintLayoutException(this.msg);
+
+  @override
+  String toString() {
+    return 'ConstraintLayoutException throw: $msg';
+  }
+}
