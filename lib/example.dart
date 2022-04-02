@@ -181,7 +181,26 @@ class ExampleState extends State<Example> {
                   ),
                 ),
               ],
-            )
+            ),
+            Constrained(
+              id: 'box12',
+              width: CL.matchConstraint,
+              height: CL.matchConstraint,
+              leftToLeft: CL.parent,
+              rightToRight: CL.parent,
+              topToTop: CL.parent,
+              bottomToBottom: CL.parent,
+              widthPercent: 0.5,
+              heightPercent: 0.3,
+              translate: Offset(x, y),
+              zIndex: 6,
+              child: Container(
+                color: Colors.yellow,
+                alignment: Alignment.bottomCenter,
+                child: const Text(
+                    'percentage layout, width: 50% of parent, height: 30% of parent'),
+              ),
+            ),
           ],
         ),
       ),

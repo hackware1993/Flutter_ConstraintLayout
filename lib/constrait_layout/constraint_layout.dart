@@ -51,6 +51,8 @@ import 'package:flutter/rendering.dart';
 ///   5. constraint integrity hint
 ///   6. bias
 ///   7. z-index
+///   8. percentage layout
+///   9. guideline
 ///
 ///  not implement
 ///   . guideline
@@ -135,6 +137,7 @@ List<Constrained> hChain({
 }) {
   assert(hChainList.length > 1,
       'The number of child elements in the chain must be > 1.');
+  for (final constrained in hChainList) {}
   return [];
 }
 
@@ -232,6 +235,8 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   String? baselineToBottom;
   String? baselineToBaseline;
   TextBaseline? textBaseline;
+  double? widthPercent;
+  double? heightPercent;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -283,6 +288,12 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final Offset translate;
   final bool translateConstraint;
 
+  // only takes effect when width is CL.matchConstraint
+  final double widthPercent;
+
+  // only takes effect when height is CL.matchConstraint
+  final double heightPercent;
+
   // TODO support chain
   // final ChainStyle? chainStyle;
   // TODO support circle positioned
@@ -322,7 +333,15 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.baselineToBottom,
     this.baselineToBaseline,
     this.textBaseline = TextBaseline.alphabetic,
-  }) : super(
+    this.widthPercent = 1,
+    this.heightPercent = 1,
+  })  : assert(child is! Constrained,
+            'Constrained can not be wrapped with Constrained.'),
+        assert(child is! Guideline,
+            'Guideline can not be wrapped with Constrained.'),
+        assert(
+            child is! Barrier, 'Barrier can not be wrapped with Constrained.'),
+        super(
           key: key,
           child: child,
         );
@@ -343,9 +362,6 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
 
   @override
   void applyParentData(RenderObject renderObject) {
-    assert(renderObject is! _InternalBox,
-        'Guideline, Barrier can not be wrapped with Constrained.');
-
     // bounds check
     assert(checkSize(width));
     assert(checkSize(height));
@@ -365,6 +381,8 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
         'baselineToBaseline', this.baselineToBaseline));
     assert(_debugEnsurePercent('horizontalBias', horizontalBias));
     assert(_debugEnsurePercent('verticalBias', verticalBias));
+    assert(_debugEnsurePercent('widthPercent', widthPercent));
+    assert(_debugEnsurePercent('heightPercent', heightPercent));
 
     String? leftToLeft = this.leftToLeft;
     String? leftToRight = this.leftToRight;
@@ -639,6 +657,16 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       } else {
         needsPaint = true;
       }
+    }
+
+    if (parentData.widthPercent != widthPercent) {
+      parentData.widthPercent = widthPercent;
+      needsLayout = true;
+    }
+
+    if (parentData.heightPercent != heightPercent) {
+      parentData.heightPercent = heightPercent;
+      needsLayout = true;
     }
 
     if (needsLayout) {
@@ -1232,7 +1260,7 @@ class _ConstraintRenderBox extends RenderBox
           } else {
             right -= _getRightInsets(margin);
           }
-          minWidth = right - left;
+          minWidth = (right - left) * element.widthPercent;
           assert(() {
             if (_debugCheckConstraints) {
               if (minWidth < 0) {
@@ -1287,7 +1315,7 @@ class _ConstraintRenderBox extends RenderBox
           } else {
             bottom -= _getBottomInsets(margin);
           }
-          minHeight = bottom - top;
+          minHeight = (bottom - top) * element.heightPercent;
           assert(() {
             if (_debugCheckConstraints) {
               if (minHeight < 0) {
@@ -1676,6 +1704,10 @@ class _ConstrainedNode {
   EdgeInsets get clickPadding => parentData.clickPadding!;
 
   TextBaseline get textBaseline => parentData.textBaseline!;
+
+  double get widthPercent => parentData.widthPercent!;
+
+  double get heightPercent => parentData.heightPercent!;
 
   set offset(Offset value) {
     parentData.offset = value;

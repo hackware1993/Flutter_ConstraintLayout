@@ -28,15 +28,15 @@ ConstraintLayout will only be measured once, This results in extremely high layo
 6. bias
 7. z-index
 8. translate
+9. percentage layout
+10. guideline
 
 Coming soon:
 
-1. guideline
-2. barrier
-3. constraints visualization
-4. chain
-5. percentage layout
-6. more...
+1. barrier
+2. constraints visualization
+3. chain
+4. more...
 
 Support platform:
 
