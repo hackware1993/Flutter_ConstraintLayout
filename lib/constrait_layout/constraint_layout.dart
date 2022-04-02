@@ -248,7 +248,6 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   // TODO support dimension ratio
   // TODO support barrier
   // TODO support guideline
-  // TODO support baseline align
   // TODO consider flow
   // group is pointless
 

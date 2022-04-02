@@ -8,6 +8,19 @@ ConstraintLayout will only be measured once, This results in extremely high layo
 # Feature
 
 1. build flexible layouts with constraints
+    1. leftToLeft
+    2. leftToRight
+    3. rightToLeft
+    4. rightToRight
+    5. topToTop
+    6. topToBottom
+    7. bottomToTop
+    8. bottomToBottom
+    9. baselineToTop
+    10. baselineToBottom
+    11. baselineToBaseline
+    12. width、height can be set: CL.matchParent、CL.wrapContent、CL.matchConstraint、fixed size
+    13. center、centerHorizontal、centerVertical
 2. margin and goneMargin
 3. clickPadding (quickly expand the click area of child elements without changing their actual size)
 4. visibility control
@@ -43,7 +56,7 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.1-stable'
+      ref: 'v0.2-alpha'
 ```
 
 # Example
