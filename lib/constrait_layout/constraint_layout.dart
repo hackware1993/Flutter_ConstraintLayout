@@ -153,6 +153,10 @@ List<Constrained> vChain({
   return [];
 }
 
+/// Wrapper constraints design for simplicity of use, it will eventually convert to base constraints.
+const Object _wrapperConstraints = Object();
+const Object _baseConstraints = Object();
+
 bool _debugEnsureNotEmptyString(String name, String? value) {
   if (value != null && value.trim().isEmpty) {
     throw ConstraintLayoutException(
@@ -219,17 +223,29 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   EdgeInsets? margin;
   EdgeInsets? goneMargin;
 
-  /// There are only basic constraints here
+  /// There are only base constraints here
+
+  @_baseConstraints
   String? leftToLeft;
+  @_baseConstraints
   String? leftToRight;
+  @_baseConstraints
   String? rightToLeft;
+  @_baseConstraints
   String? rightToRight;
+  @_baseConstraints
   String? topToTop;
+  @_baseConstraints
   String? topToBottom;
+  @_baseConstraints
   String? bottomToTop;
+  @_baseConstraints
   String? bottomToBottom;
+  @_baseConstraints
   String? baselineToTop;
+  @_baseConstraints
   String? baselineToBottom;
+  @_baseConstraints
   String? baselineToBaseline;
 
   TextBaseline? textBaseline;
@@ -261,16 +277,27 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final EdgeInsets goneMargin;
 
   /// These are the base constraints constraint on sibling id or CL.parent
+  @_baseConstraints
   final String? leftToLeft;
+  @_baseConstraints
   final String? leftToRight;
+  @_baseConstraints
   final String? rightToLeft;
+  @_baseConstraints
   final String? rightToRight;
+  @_baseConstraints
   final String? topToTop;
+  @_baseConstraints
   final String? topToBottom;
+  @_baseConstraints
   final String? bottomToTop;
+  @_baseConstraints
   final String? bottomToBottom;
+  @_baseConstraints
   final String? baselineToTop;
+  @_baseConstraints
   final String? baselineToBottom;
+  @_baseConstraints
   final String? baselineToBaseline;
 
   /// When setting baseline alignment, height must be wrap_content or fixed size, other vertical constraints will be illegal.
@@ -297,16 +324,27 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   final double verticalBias;
 
   /// These are wrapper constraints for simplicity of use, which will eventually convert to base constraints.
+  @_wrapperConstraints
   final String? topLeftTo;
+  @_wrapperConstraints
   final String? topCenterTo;
+  @_wrapperConstraints
   final String? topRightTo;
+  @_wrapperConstraints
   final String? centerLeftTo;
+  @_wrapperConstraints
   final String? centerTo;
+  @_wrapperConstraints
   final String? centerRightTo;
+  @_wrapperConstraints
   final String? bottomLeftTo;
+  @_wrapperConstraints
   final String? bottomCenterTo;
+  @_wrapperConstraints
   final String? bottomRightTo;
+  @_wrapperConstraints
   final String? centerHorizontalTo;
+  @_wrapperConstraints
   final String? centerVerticalTo;
 
   /// TODO support chain
@@ -314,7 +352,6 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   /// TODO support circle positioned
   /// TODO support dimension ratio
   /// TODO support barrier
-  /// TODO support guideline
   /// TODO consider flow
   /// group is pointless
 
@@ -324,17 +361,17 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.id,
     required this.width,
     required this.height,
-    this.leftToLeft,
-    this.leftToRight,
-    this.rightToLeft,
-    this.rightToRight,
-    this.topToTop,
-    this.topToBottom,
-    this.bottomToTop,
-    this.bottomToBottom,
-    this.baselineToTop,
-    this.baselineToBottom,
-    this.baselineToBaseline,
+    @_baseConstraints this.leftToLeft,
+    @_baseConstraints this.leftToRight,
+    @_baseConstraints this.rightToLeft,
+    @_baseConstraints this.rightToRight,
+    @_baseConstraints this.topToTop,
+    @_baseConstraints this.topToBottom,
+    @_baseConstraints this.bottomToTop,
+    @_baseConstraints this.bottomToBottom,
+    @_baseConstraints this.baselineToTop,
+    @_baseConstraints this.baselineToBottom,
+    @_baseConstraints this.baselineToBaseline,
     this.clickPadding = EdgeInsets.zero,
     this.visibility = CL.visible,
     this.margin = EdgeInsets.zero,
@@ -347,17 +384,17 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     this.heightPercent = 1,
     this.horizontalBias = 0.5,
     this.verticalBias = 0.5,
-    this.topLeftTo,
-    this.topCenterTo,
-    this.topRightTo,
-    this.centerLeftTo,
-    this.centerTo,
-    this.centerRightTo,
-    this.bottomLeftTo,
-    this.bottomCenterTo,
-    this.bottomRightTo,
-    this.centerHorizontalTo,
-    this.centerVerticalTo,
+    @_wrapperConstraints this.topLeftTo,
+    @_wrapperConstraints this.topCenterTo,
+    @_wrapperConstraints this.topRightTo,
+    @_wrapperConstraints this.centerLeftTo,
+    @_wrapperConstraints this.centerTo,
+    @_wrapperConstraints this.centerRightTo,
+    @_wrapperConstraints this.bottomLeftTo,
+    @_wrapperConstraints this.bottomCenterTo,
+    @_wrapperConstraints this.bottomRightTo,
+    @_wrapperConstraints this.centerHorizontalTo,
+    @_wrapperConstraints this.centerVerticalTo,
   })  : assert(child is! Constrained,
             'Constrained can not be wrapped with Constrained.'),
         assert(child is! Guideline,
@@ -419,16 +456,27 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     assert(_debugEnsurePercent('horizontalBias', horizontalBias));
     assert(_debugEnsurePercent('verticalBias', verticalBias));
 
+    @_baseConstraints
     String? leftToLeft = this.leftToLeft;
+    @_baseConstraints
     String? leftToRight = this.leftToRight;
+    @_baseConstraints
     String? rightToLeft = this.rightToLeft;
+    @_baseConstraints
     String? rightToRight = this.rightToRight;
+    @_baseConstraints
     String? topToTop = this.topToTop;
+    @_baseConstraints
     String? topToBottom = this.topToBottom;
+    @_baseConstraints
     String? bottomToTop = this.bottomToTop;
+    @_baseConstraints
     String? bottomToBottom = this.bottomToBottom;
+    @_baseConstraints
     String? baselineToTop = this.baselineToTop;
+    @_baseConstraints
     String? baselineToBottom = this.baselineToBottom;
+    @_baseConstraints
     String? baselineToBaseline = this.baselineToBaseline;
 
     /// Convert wrapper constraints first

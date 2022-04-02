@@ -87,8 +87,7 @@ class ExampleState extends State<Example> {
               id: 'box1',
               width: 200,
               height: 200,
-              topToTop: CL.parent,
-              rightToRight: CL.parent,
+              topRightTo: CL.parent,
               child: Container(
                 color: Colors.redAccent,
                 alignment: Alignment.center,
@@ -99,8 +98,7 @@ class ExampleState extends State<Example> {
               id: 'box2',
               width: CL.matchConstraint,
               height: CL.matchConstraint,
-              leftToLeft: 'box3',
-              rightToRight: 'box3',
+              centerHorizontalTo: 'box3',
               topToBottom: 'box3',
               bottomToBottom: CL.parent,
               child: Container(
@@ -127,8 +125,7 @@ class ExampleState extends State<Example> {
               id: 'box4',
               width: 50,
               height: 50,
-              rightToRight: CL.parent,
-              bottomToBottom: CL.parent,
+              bottomRightTo: CL.parent,
               child: Container(
                 color: Colors.redAccent,
                 alignment: Alignment.center,
@@ -139,10 +136,9 @@ class ExampleState extends State<Example> {
               id: 'box5',
               width: 120,
               height: 100,
-              center: CL.parent,
+              centerTo: CL.parent,
               zIndex: 100,
               translate: Offset(x, y),
-              clickPadding: const EdgeInsets.all(30),
               translateConstraint: true,
               child: GestureDetector(
                 child: Container(
@@ -162,7 +158,7 @@ class ExampleState extends State<Example> {
               id: 'box6',
               width: 120,
               height: 120,
-              centerVertical: 'box2',
+              centerVerticalTo: 'box2',
               verticalBias: 0.8,
               leftToRight: 'box3',
               rightToRight: CL.parent,
@@ -176,10 +172,9 @@ class ExampleState extends State<Example> {
               id: 'box7',
               width: CL.matchConstraint,
               height: CL.matchConstraint,
-              topToTop: 'box1',
               leftToLeft: CL.parent,
               rightToLeft: 'box3',
-              bottomToBottom: CL.parent,
+              centerVerticalTo: CL.parent,
               margin: const EdgeInsets.all(50),
               child: Container(
                 color: Colors.lightGreen,
@@ -217,7 +212,52 @@ class ExampleState extends State<Example> {
                   color: Colors.white,
                 ),
               ),
-            )
+            ),
+            ...hChain(
+              leftToLeft: CL.parent,
+              rightToRight: CL.parent,
+              hChainList: [
+                Constrained(
+                  id: 'box10',
+                  width: CL.matchConstraint,
+                  height: 200,
+                  topToTop: CL.parent,
+                  child: Container(
+                    color: Colors.redAccent,
+                    alignment: Alignment.center,
+                    child: const Text('chain item 1'),
+                  ),
+                ),
+                Constrained(
+                  id: 'box11',
+                  width: CL.matchConstraint,
+                  height: 200,
+                  topToTop: CL.parent,
+                  child: Container(
+                    color: Colors.redAccent,
+                    alignment: Alignment.center,
+                    child: const Text('chain item 2'),
+                  ),
+                ),
+              ],
+            ),
+            Constrained(
+              id: 'box12',
+              width: CL.matchConstraint,
+              height: CL.matchConstraint,
+              widthPercent: 0.5,
+              heightPercent: 0.3,
+              horizontalBias: 0,
+              verticalBias: 0,
+              centerTo: CL.parent,
+              zIndex: 6,
+              child: Container(
+                color: Colors.yellow,
+                alignment: Alignment.bottomCenter,
+                child: const Text(
+                    'percentage layout, width: 50% of parent, height: 30% of parent'),
+              ),
+            ),
           ],
         ),
       ),
