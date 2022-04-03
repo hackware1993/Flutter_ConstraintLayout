@@ -28,6 +28,7 @@ ConstraintLayout will only be measured once, This results in extremely high layo
 8. translate
 9. percentage layout
 10. guideline
+11. constraints and widgets separation
 
 Coming soon:
 
@@ -74,6 +75,7 @@ class ExampleState extends State<Example> {
   double x = 0;
   double y = 0;
 
+  ConstraintId box0 = ConstraintId();
   ConstraintId box1 = ConstraintId();
   ConstraintId box2 = ConstraintId();
   ConstraintId box3 = ConstraintId();
@@ -92,22 +94,43 @@ class ExampleState extends State<Example> {
       home: Scaffold(
         backgroundColor: Colors.black,
         body: ConstraintLayout(
+          // Constraints can be separated from widgets
+          childConstraints: [
+            Constraint(
+              id: box0,
+              width: 200,
+              height: 200,
+              bottomLeftTo: parent,
+              zIndex: 20,
+            )
+          ],
           children: [
             Container(
               color: Colors.redAccent,
               alignment: Alignment.center,
+              child: const Text('box0'),
+            ).applyConstraintId(
+              id: box0, // Constraints can be separated from widgets
+            ),
+            Container(
+              color: Colors.redAccent,
+              alignment: Alignment.center,
               child: const Text('box1'),
-            ).applyConstraint(
-              id: box1,
-              width: 200,
-              height: 100,
-              topRightTo: parent,
+            ).apply(
+              constraint: Constraint(
+                // Constraints set with widgets
+                id: box1,
+                width: 200,
+                height: 100,
+                topRightTo: parent,
+              ),
             ),
             Container(
               color: Colors.blue,
               alignment: Alignment.center,
               child: const Text('box2'),
             ).applyConstraint(
+              // Constraints set with widgets easy way
               id: box2,
               width: matchConstraint,
               height: matchConstraint,
@@ -207,7 +230,7 @@ class ExampleState extends State<Example> {
               baseline: box7.baseline,
               left: box7.left,
             ),
-            ...hChain(
+            ...horizontalChain(
               centerHorizontalTo: parent,
               hChainList: [
                 Container(
@@ -245,7 +268,6 @@ class ExampleState extends State<Example> {
               horizontalBias: 0,
               verticalBias: 0,
               centerTo: parent,
-              zIndex: 6,
             ),
           ],
         ),

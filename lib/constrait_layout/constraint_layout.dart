@@ -37,6 +37,9 @@ import 'package:flutter/rendering.dart';
 /// home page: https:///github.com/hackware1993
 /// email: hackware1993@gmail.com
 class ConstraintLayout extends MultiChildRenderObjectWidget {
+  /// Constraints can be separated from widgets
+  final List<Constraint>? childConstraints;
+
   /// TODO implement debug function
   final bool debugShowGuideline;
   final bool debugShowPreview;
@@ -52,6 +55,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   ConstraintLayout({
     Key? key,
+    this.childConstraints,
     required List<Widget> children,
     this.debugShowGuideline = false,
     this.debugShowPreview = false,
@@ -71,6 +75,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
     return _ConstraintRenderBox()
+      .._childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
       .._debugShowPreview = debugShowPreview
       .._debugShowClickArea = debugShowClickArea
@@ -89,6 +94,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   ) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
     (renderObject as _ConstraintRenderBox)
+      ..childConstraints = childConstraints
       ..debugShowGuideline = debugShowGuideline
       ..debugShowPreview = debugShowPreview
       ..debugShowClickArea = debugShowClickArea
@@ -101,7 +107,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   }
 }
 
-List<Constrained> hChain({
+List<Constrained> horizontalChain({
   _Align? left,
   _Align? right,
   ConstraintId? centerHorizontalTo,
@@ -112,7 +118,7 @@ List<Constrained> hChain({
   return [];
 }
 
-List<Constrained> vChain({
+List<Constrained> verticalChain({
   _Align? top,
   _Align? bottom,
   ConstraintId? centerVerticalTo,
@@ -164,42 +170,64 @@ extension WidgetsExt on Widget {
   }) {
     return Constrained(
       key: key,
-      id: id,
-      width: width,
-      height: height,
-      left: left,
-      top: top,
-      right: right,
-      bottom: bottom,
-      baseline: baseline,
-      clickPadding: clickPadding,
-      visibility: visibility,
-      margin: margin,
-      goneMargin: goneMargin,
-      textBaseline: textBaseline,
-      zIndex: zIndex,
-      translate: translate,
-      translateConstraint: translateConstraint,
-      widthPercent: widthPercent,
-      heightPercent: heightPercent,
-      horizontalBias: horizontalBias,
-      verticalBias: verticalBias,
-      topLeftTo: topLeftTo,
-      topCenterTo: topCenterTo,
-      topRightTo: topRightTo,
-      centerLeftTo: centerLeftTo,
-      centerTo: centerTo,
-      centerRightTo: centerRightTo,
-      bottomLeftTo: bottomLeftTo,
-      bottomCenterTo: bottomCenterTo,
-      bottomRightTo: bottomRightTo,
-      centerHorizontalTo: centerHorizontalTo,
-      centerVerticalTo: centerVerticalTo,
+      constraint: Constraint(
+        id: id,
+        width: width,
+        height: height,
+        left: left,
+        top: top,
+        right: right,
+        bottom: bottom,
+        baseline: baseline,
+        clickPadding: clickPadding,
+        visibility: visibility,
+        margin: margin,
+        goneMargin: goneMargin,
+        textBaseline: textBaseline,
+        zIndex: zIndex,
+        translate: translate,
+        translateConstraint: translateConstraint,
+        widthPercent: widthPercent,
+        heightPercent: heightPercent,
+        horizontalBias: horizontalBias,
+        verticalBias: verticalBias,
+        topLeftTo: topLeftTo,
+        topCenterTo: topCenterTo,
+        topRightTo: topRightTo,
+        centerLeftTo: centerLeftTo,
+        centerTo: centerTo,
+        centerRightTo: centerRightTo,
+        bottomLeftTo: bottomLeftTo,
+        bottomCenterTo: bottomCenterTo,
+        bottomRightTo: bottomRightTo,
+        centerHorizontalTo: centerHorizontalTo,
+        centerVerticalTo: centerVerticalTo,
+      ),
       child: this,
     );
   }
 
-  void withConstraintId(ConstraintId constraintId) {}
+  Constrained apply({
+    Key? key,
+    required Constraint constraint,
+  }) {
+    return Constrained(
+      key: key,
+      constraint: constraint,
+      child: this,
+    );
+  }
+
+  UnConstrained applyConstraintId({
+    Key? key,
+    required ConstraintId id,
+  }) {
+    return UnConstrained(
+      key: key,
+      id: id,
+      child: this,
+    );
+  }
 }
 
 bool _debugEnsureNotEmptyString(String name, String? value) {
@@ -290,6 +318,11 @@ class ConstraintId {
       return name.hashCode;
     }
   }
+
+  @override
+  String toString() {
+    return 'ConstraintId{name: $name}';
+  }
 }
 
 class _Align {
@@ -310,38 +343,7 @@ class _Align {
   int get hashCode => id.hashCode ^ type.hashCode;
 }
 
-enum _AlignType {
-  left,
-  right,
-  top,
-  bottom,
-  baseline,
-}
-
-class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
-  ConstraintId? id;
-  double? width;
-  double? height;
-  EdgeInsets? clickPadding;
-  CLVisibility? visibility;
-  EdgeInsets? margin;
-  EdgeInsets? goneMargin;
-  _Align? left;
-  _Align? top;
-  _Align? right;
-  _Align? bottom;
-  _Align? baseline;
-  TextBaseline? textBaseline;
-  int? zIndex;
-  Offset? translate;
-  bool? translateConstraint;
-  double? widthPercent;
-  double? heightPercent;
-  double? horizontalBias;
-  double? verticalBias;
-}
-
-class Constrained extends ParentDataWidget<_ConstraintBoxData> {
+class Constraint {
   /// id can be null, but not an empty string
   final ConstraintId? id;
 
@@ -418,17 +420,7 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
   @_wrapperConstraint
   final ConstraintId? centerVerticalTo;
 
-  /// TODO support chain
-  /// final ChainStyle? chainStyle;
-  /// TODO support circle positioned
-  /// TODO support dimension ratio
-  /// TODO support barrier
-  /// TODO consider flow
-  /// group is pointless
-
-  const Constrained({
-    Key? key,
-    required Widget child,
+  const Constraint({
     this.id,
     required this.width,
     required this.height,
@@ -460,16 +452,78 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     @_wrapperConstraint this.bottomRightTo,
     @_wrapperConstraint this.centerHorizontalTo,
     @_wrapperConstraint this.centerVerticalTo,
-  })  : assert(child is! Constrained,
-            'Constrained can not be wrapped with Constrained.'),
-        assert(child is! Guideline,
-            'Guideline can not be wrapped with Constrained.'),
-        assert(
-            child is! Barrier, 'Barrier can not be wrapped with Constrained.'),
-        super(
-          key: key,
-          child: child,
-        );
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Constraint &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          width == other.width &&
+          height == other.height &&
+          clickPadding == other.clickPadding &&
+          visibility == other.visibility &&
+          margin == other.margin &&
+          goneMargin == other.goneMargin &&
+          left == other.left &&
+          top == other.top &&
+          right == other.right &&
+          bottom == other.bottom &&
+          baseline == other.baseline &&
+          textBaseline == other.textBaseline &&
+          zIndex == other.zIndex &&
+          translate == other.translate &&
+          translateConstraint == other.translateConstraint &&
+          widthPercent == other.widthPercent &&
+          heightPercent == other.heightPercent &&
+          horizontalBias == other.horizontalBias &&
+          verticalBias == other.verticalBias &&
+          topLeftTo == other.topLeftTo &&
+          topCenterTo == other.topCenterTo &&
+          topRightTo == other.topRightTo &&
+          centerLeftTo == other.centerLeftTo &&
+          centerTo == other.centerTo &&
+          centerRightTo == other.centerRightTo &&
+          bottomLeftTo == other.bottomLeftTo &&
+          bottomCenterTo == other.bottomCenterTo &&
+          bottomRightTo == other.bottomRightTo &&
+          centerHorizontalTo == other.centerHorizontalTo &&
+          centerVerticalTo == other.centerVerticalTo;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      width.hashCode ^
+      height.hashCode ^
+      clickPadding.hashCode ^
+      visibility.hashCode ^
+      margin.hashCode ^
+      goneMargin.hashCode ^
+      left.hashCode ^
+      top.hashCode ^
+      right.hashCode ^
+      bottom.hashCode ^
+      baseline.hashCode ^
+      textBaseline.hashCode ^
+      zIndex.hashCode ^
+      translate.hashCode ^
+      translateConstraint.hashCode ^
+      widthPercent.hashCode ^
+      heightPercent.hashCode ^
+      horizontalBias.hashCode ^
+      verticalBias.hashCode ^
+      topLeftTo.hashCode ^
+      topCenterTo.hashCode ^
+      topRightTo.hashCode ^
+      centerLeftTo.hashCode ^
+      centerTo.hashCode ^
+      centerRightTo.hashCode ^
+      bottomLeftTo.hashCode ^
+      bottomCenterTo.hashCode ^
+      bottomRightTo.hashCode ^
+      centerHorizontalTo.hashCode ^
+      centerVerticalTo.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -483,32 +537,29 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     }
   }
 
-  @override
-  void applyParentData(RenderObject renderObject) {
-    /// Bounds check
+  bool validate() {
     assert(checkSize(width));
     assert(checkSize(height));
-    assert(this.left == null ||
-        (this.left!.type == _AlignType.left ||
-            this.left!.type == _AlignType.right));
-    assert(this.top == null ||
-        (this.top!.type == _AlignType.top ||
-            this.top!.type == _AlignType.bottom));
-    assert(this.right == null ||
-        (this.right!.type == _AlignType.left ||
-            this.right!.type == _AlignType.right));
-    assert(this.bottom == null ||
-        (this.bottom!.type == _AlignType.top ||
-            this.bottom!.type == _AlignType.bottom));
-    assert(this.baseline == null ||
-        (this.baseline!.type == _AlignType.top ||
-            this.baseline!.type == _AlignType.bottom ||
-            this.baseline!.type == _AlignType.baseline));
+    assert(left == null ||
+        (left!.type == _AlignType.left || left!.type == _AlignType.right));
+    assert(top == null ||
+        (top!.type == _AlignType.top || top!.type == _AlignType.bottom));
+    assert(right == null ||
+        (right!.type == _AlignType.left || right!.type == _AlignType.right));
+    assert(bottom == null ||
+        (bottom!.type == _AlignType.top || bottom!.type == _AlignType.bottom));
+    assert(baseline == null ||
+        (baseline!.type == _AlignType.top ||
+            baseline!.type == _AlignType.bottom ||
+            baseline!.type == _AlignType.baseline));
     assert(_debugEnsurePercent('widthPercent', widthPercent));
     assert(_debugEnsurePercent('heightPercent', heightPercent));
     assert(_debugEnsurePercent('horizontalBias', horizontalBias));
     assert(_debugEnsurePercent('verticalBias', verticalBias));
+    return true;
+  }
 
+  void applyTo(RenderObject renderObject) {
     _Align? left = this.left;
     _Align? top = this.top;
     _Align? right = this.right;
@@ -738,6 +789,108 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
       }
     }
   }
+}
+
+enum _AlignType {
+  left,
+  right,
+  top,
+  bottom,
+  baseline,
+}
+
+class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
+  ConstraintId? id;
+  double? width;
+  double? height;
+  EdgeInsets? clickPadding;
+  CLVisibility? visibility;
+  EdgeInsets? margin;
+  EdgeInsets? goneMargin;
+  _Align? left;
+  _Align? top;
+  _Align? right;
+  _Align? bottom;
+  _Align? baseline;
+  TextBaseline? textBaseline;
+  int? zIndex;
+  Offset? translate;
+  bool? translateConstraint;
+  double? widthPercent;
+  double? heightPercent;
+  double? horizontalBias;
+  double? verticalBias;
+}
+
+class Constrained extends ParentDataWidget<_ConstraintBoxData> {
+  final Constraint constraint;
+
+  const Constrained({
+    Key? key,
+    required Widget child,
+    required this.constraint,
+  })  : assert(child is! Constrained,
+            'Constrained can not be wrapped with Constrained.'),
+        assert(child is! UnConstrained,
+            'UnConstrained can not be wrapped with Constrained.'),
+        assert(child is! Guideline,
+            'Guideline can not be wrapped with Constrained.'),
+        assert(
+            child is! Barrier, 'Barrier can not be wrapped with Constrained.'),
+        super(
+          key: key,
+          child: child,
+        );
+
+  @override
+  void applyParentData(RenderObject renderObject) {
+    assert(renderObject.parent is _ConstraintRenderBox);
+    assert(constraint.validate());
+    constraint.applyTo(renderObject);
+  }
+
+  @override
+  Type get debugTypicalAncestorWidgetClass {
+    return ConstraintLayout;
+  }
+}
+
+class UnConstrained extends ParentDataWidget<_ConstraintBoxData> {
+  final ConstraintId id;
+
+  const UnConstrained({
+    Key? key,
+    required this.id,
+    required Widget child,
+  })  : assert(child is! UnConstrained,
+            'UnConstrained can not be wrapped with UnConstrained.'),
+        assert(child is! Constrained,
+            'Constrained can not be wrapped with UnConstrained.'),
+        assert(child is! Guideline,
+            'Guideline can not be wrapped with UnConstrained.'),
+        assert(child is! Barrier,
+            'Barrier can not be wrapped with UnConstrained.'),
+        super(
+          key: key,
+          child: child,
+        );
+
+  @override
+  void applyParentData(RenderObject renderObject) {
+    assert(renderObject.parent is _ConstraintRenderBox);
+    List<Constraint>? childConstraints =
+        (renderObject.parent as _ConstraintRenderBox)._childConstraints;
+    assert(childConstraints != null,
+        'Can not find Constraint for child with id $id.');
+    Iterable<Constraint> constraintIterable =
+        childConstraints!.where((element) => element.id == id);
+    assert(constraintIterable.isNotEmpty,
+        'Can not find Constraint for child with id $id.');
+    assert(constraintIterable.length == 1, 'Duplicate id in childConstraints.');
+    Constraint constraint = constraintIterable.first;
+    assert(constraint.validate());
+    constraint.applyTo(renderObject);
+  }
 
   @override
   Type get debugTypicalAncestorWidgetClass {
@@ -749,6 +902,7 @@ class _ConstraintRenderBox extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ConstraintBoxData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ConstraintBoxData> {
+  List<Constraint>? _childConstraints;
   late bool _debugShowGuideline;
   late bool _debugShowPreview;
   late bool _debugShowClickArea;
@@ -763,6 +917,13 @@ class _ConstraintRenderBox extends RenderBox
   final Map<RenderBox, _ConstrainedNode> _constrainedNodes = HashMap();
   final Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes = HashMap();
   late List<_ConstrainedNode> _paintingOrderList;
+
+  set childConstraints(List<Constraint>? value) {
+    if (_childConstraints != value) {
+      _childConstraints = value;
+      markNeedsLayout();
+    }
+  }
 
   set debugShowGuideline(bool value) {
     if (_debugShowGuideline != value) {
@@ -862,7 +1023,7 @@ class _ConstraintRenderBox extends RenderBox
         if (_debugCheckConstraints) {
           if (childParentData.width == null) {
             throw ConstraintLayoutException(
-                'Child elements must be wrapped with Constrained.');
+                'Must provide Constraint for child elements, try use Constrained widget.');
           }
         }
         return true;
