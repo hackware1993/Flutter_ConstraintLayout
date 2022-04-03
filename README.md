@@ -19,8 +19,6 @@ ConstraintLayout will only be measured once, This results in extremely high layo
     9. baselineToTop
     10. baselineToBottom
     11. baselineToBaseline
-    12. width、height can be set: CL.matchParent、CL.wrapContent、CL.matchConstraint、fixed size
-    13. center、centerHorizontal、centerVertical
 2. margin and goneMargin
 3. clickPadding (quickly expand the click area of child elements without changing their actual size)
 4. visibility control
@@ -76,6 +74,18 @@ class ExampleState extends State<Example> {
   double x = 0;
   double y = 0;
 
+  ConstraintId box1 = ConstraintId();
+  ConstraintId box2 = ConstraintId();
+  ConstraintId box3 = ConstraintId();
+  ConstraintId box4 = ConstraintId();
+  ConstraintId box5 = ConstraintId();
+  ConstraintId box6 = ConstraintId();
+  ConstraintId box7 = ConstraintId();
+  ConstraintId box8 = ConstraintId();
+  ConstraintId box9 = ConstraintId();
+  ConstraintId box10 = ConstraintId();
+  ConstraintId box11 = ConstraintId();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -84,10 +94,10 @@ class ExampleState extends State<Example> {
         body: ConstraintLayout(
           children: [
             Constrained(
-              id: 'box1',
+              id: box1,
               width: 200,
               height: 200,
-              topRightTo: CL.parent,
+              topRightTo: parent,
               child: Container(
                 color: Colors.redAccent,
                 alignment: Alignment.center,
@@ -95,12 +105,12 @@ class ExampleState extends State<Example> {
               ),
             ),
             Constrained(
-              id: 'box2',
-              width: CL.matchConstraint,
-              height: CL.matchConstraint,
-              centerHorizontalTo: 'box3',
-              topToBottom: 'box3',
-              bottomToBottom: CL.parent,
+              id: box2,
+              width: matchConstraint,
+              height: matchConstraint,
+              centerHorizontalTo: box3,
+              top: box3.bottom,
+              bottom: parent.bottom,
               child: Container(
                 color: Colors.blue,
                 alignment: Alignment.center,
@@ -108,11 +118,11 @@ class ExampleState extends State<Example> {
               ),
             ),
             Constrained(
-              id: 'box3',
-              width: CL.wrapContent,
-              height: CL.wrapContent,
-              rightToLeft: 'box1',
-              topToBottom: 'box1',
+              id: box3,
+              width: wrapContent,
+              height: wrapContent,
+              right: box1.left,
+              top: box1.bottom,
               child: Container(
                 color: Colors.orange,
                 width: 200,
@@ -122,10 +132,10 @@ class ExampleState extends State<Example> {
               ),
             ),
             Constrained(
-              id: 'box4',
+              id: box4,
               width: 50,
               height: 50,
-              bottomRightTo: CL.parent,
+              bottomRightTo: parent,
               child: Container(
                 color: Colors.redAccent,
                 alignment: Alignment.center,
@@ -133,10 +143,10 @@ class ExampleState extends State<Example> {
               ),
             ),
             Constrained(
-              id: 'box5',
+              id: box5,
               width: 120,
               height: 100,
-              centerTo: CL.parent,
+              centerTo: parent,
               zIndex: 100,
               translate: Offset(x, y),
               translateConstraint: true,
@@ -155,13 +165,13 @@ class ExampleState extends State<Example> {
               ),
             ),
             Constrained(
-              id: 'box6',
+              id: box6,
               width: 120,
               height: 120,
-              centerVerticalTo: 'box2',
+              centerVerticalTo: box2,
               verticalBias: 0.8,
-              leftToRight: 'box3',
-              rightToRight: CL.parent,
+              left: box3.right,
+              right: parent.right,
               child: Container(
                 color: Colors.lightGreen,
                 alignment: Alignment.center,
@@ -169,12 +179,12 @@ class ExampleState extends State<Example> {
               ),
             ),
             Constrained(
-              id: 'box7',
-              width: CL.matchConstraint,
-              height: CL.matchConstraint,
-              leftToLeft: CL.parent,
-              rightToLeft: 'box3',
-              centerVerticalTo: CL.parent,
+              id: box7,
+              width: matchConstraint,
+              height: matchConstraint,
+              left: parent.left,
+              right: box3.left,
+              centerVerticalTo: parent,
               margin: const EdgeInsets.all(50),
               child: Container(
                 color: Colors.lightGreen,
@@ -185,19 +195,19 @@ class ExampleState extends State<Example> {
             Constrained(
               width: 200,
               height: 100,
-              leftToRight: 'box5',
-              bottomToTop: 'box5',
+              left: box5.right,
+              bottom: box5.top,
               child: Container(
                 color: Colors.cyan,
                 alignment: Alignment.center,
                 child: const Text('child[7] pinned to the top right'),
               ),
             ),
-            const Constrained(
-              id: 'box9',
-              width: CL.wrapContent,
-              height: CL.wrapContent,
-              baselineToBaseline: 'box7',
+            Constrained(
+              id: box9,
+              width: wrapContent,
+              height: wrapContent,
+              baseline: box7.baseline,
 
               /// when setting baseline alignment, height must be wrap_content or fixed size
               /// other vertical constraints will be ignored
@@ -205,8 +215,8 @@ class ExampleState extends State<Example> {
               /// Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
               /// See https://github.com/flutter/flutter/issues/101179
 
-              leftToLeft: 'box7',
-              child: Text(
+              left: box7.left,
+              child: const Text(
                 'box9 baseline to box7',
                 style: TextStyle(
                   color: Colors.white,
@@ -214,14 +224,13 @@ class ExampleState extends State<Example> {
               ),
             ),
             ...hChain(
-              leftToLeft: CL.parent,
-              rightToRight: CL.parent,
+              centerHorizontalTo: parent,
               hChainList: [
                 Constrained(
-                  id: 'box10',
-                  width: CL.matchConstraint,
+                  id: box10,
+                  width: matchConstraint,
                   height: 200,
-                  topToTop: CL.parent,
+                  top: parent.top,
                   child: Container(
                     color: Colors.redAccent,
                     alignment: Alignment.center,
@@ -229,10 +238,10 @@ class ExampleState extends State<Example> {
                   ),
                 ),
                 Constrained(
-                  id: 'box11',
-                  width: CL.matchConstraint,
+                  id: box11,
+                  width: matchConstraint,
                   height: 200,
-                  topToTop: CL.parent,
+                  top: parent.top,
                   child: Container(
                     color: Colors.redAccent,
                     alignment: Alignment.center,
@@ -242,14 +251,13 @@ class ExampleState extends State<Example> {
               ],
             ),
             Constrained(
-              id: 'box12',
-              width: CL.matchConstraint,
-              height: CL.matchConstraint,
+              width: matchConstraint,
+              height: matchConstraint,
               widthPercent: 0.5,
               heightPercent: 0.3,
               horizontalBias: 0,
               verticalBias: 0,
-              centerTo: CL.parent,
+              centerTo: parent,
               zIndex: 6,
               child: Container(
                 color: Colors.yellow,
