@@ -55,7 +55,7 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.6-beta'
+      ref: 'v0.6-beta2'
 ```
 
 # Example
