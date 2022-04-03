@@ -128,6 +128,79 @@ List<Constrained> vChain({
 const Object _wrapperConstraint = Object();
 const Object _baseConstraint = Object();
 
+extension WidgetsExt on Widget {
+  Constrained applyConstraint({
+    Key? key,
+    ConstraintId? id,
+    required double width,
+    required double height,
+    @_baseConstraint _Constraint? left,
+    @_baseConstraint _Constraint? top,
+    @_baseConstraint _Constraint? right,
+    @_baseConstraint _Constraint? bottom,
+    @_baseConstraint _Constraint? baseline,
+    EdgeInsets clickPadding = EdgeInsets.zero,
+    CLVisibility visibility = visible,
+    EdgeInsets margin = EdgeInsets.zero,
+    EdgeInsets goneMargin = EdgeInsets.zero,
+    TextBaseline textBaseline = TextBaseline.alphabetic,
+    int? zIndex, // default is child index
+    Offset translate = Offset.zero,
+    bool translateConstraint = false,
+    double widthPercent = 1,
+    double heightPercent = 1,
+    double horizontalBias = 0.5,
+    double verticalBias = 0.5,
+    @_wrapperConstraint ConstraintId? topLeftTo,
+    @_wrapperConstraint ConstraintId? topCenterTo,
+    @_wrapperConstraint ConstraintId? topRightTo,
+    @_wrapperConstraint ConstraintId? centerLeftTo,
+    @_wrapperConstraint ConstraintId? centerTo,
+    @_wrapperConstraint ConstraintId? centerRightTo,
+    @_wrapperConstraint ConstraintId? bottomLeftTo,
+    @_wrapperConstraint ConstraintId? bottomCenterTo,
+    @_wrapperConstraint ConstraintId? bottomRightTo,
+    @_wrapperConstraint ConstraintId? centerHorizontalTo,
+    @_wrapperConstraint ConstraintId? centerVerticalTo,
+  }) {
+    return Constrained(
+      key: key,
+      id: id,
+      width: width,
+      height: height,
+      left: left,
+      top: top,
+      right: right,
+      bottom: bottom,
+      baseline: baseline,
+      clickPadding: clickPadding,
+      visibility: visibility,
+      margin: margin,
+      goneMargin: goneMargin,
+      textBaseline: textBaseline,
+      zIndex: zIndex,
+      translate: translate,
+      translateConstraint: translateConstraint,
+      widthPercent: widthPercent,
+      heightPercent: heightPercent,
+      horizontalBias: horizontalBias,
+      verticalBias: verticalBias,
+      topLeftTo: topLeftTo,
+      topCenterTo: topCenterTo,
+      topRightTo: topRightTo,
+      centerLeftTo: centerLeftTo,
+      centerTo: centerTo,
+      centerRightTo: centerRightTo,
+      bottomLeftTo: bottomLeftTo,
+      bottomCenterTo: bottomCenterTo,
+      bottomRightTo: bottomRightTo,
+      centerHorizontalTo: centerHorizontalTo,
+      centerVerticalTo: centerVerticalTo,
+      child: this,
+    );
+  }
+}
+
 bool _debugEnsureNotEmptyString(String name, String? value) {
   if (value != null && value.trim().isEmpty) {
     throw ConstraintLayoutException(
@@ -791,6 +864,17 @@ class _ConstraintRenderBox extends RenderBox
     while (child != null) {
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
+
+      assert(() {
+        if (_debugCheckConstraints) {
+          if (childParentData.width == null) {
+            throw ConstraintLayoutException(
+                'Child elements must be wrapped with Constrained.');
+          }
+        }
+        return true;
+      }());
+
       if (childParentData.id != null) {
         if (!idSet.add(childParentData.id!)) {
           throw ConstraintLayoutException('Duplicate id in ConstraintLayout.');
@@ -902,16 +986,6 @@ class _ConstraintRenderBox extends RenderBox
       childIndex++;
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
-
-      assert(() {
-        if (_debugCheckConstraints) {
-          if (childParentData.width == null) {
-            throw ConstraintLayoutException(
-                'Child elements must be wrapped with Constrained.');
-          }
-        }
-        return true;
-      }());
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
           child,

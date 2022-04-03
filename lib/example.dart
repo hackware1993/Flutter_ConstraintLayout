@@ -31,56 +31,64 @@ class ExampleState extends State<Example> {
         backgroundColor: Colors.black,
         body: ConstraintLayout(
           children: [
-            Constrained(
+            Container(
+              color: Colors.redAccent,
+              alignment: Alignment.center,
+              child: const Text('box1'),
+            ).applyConstraint(
               id: box1,
               width: 200,
               height: 200,
               topRightTo: parent,
-              child: Container(
-                color: Colors.redAccent,
-                alignment: Alignment.center,
-                child: const Text('box1'),
-              ),
             ),
-            Constrained(
+            Container(
+              color: Colors.blue,
+              alignment: Alignment.center,
+              child: const Text('box2'),
+            ).applyConstraint(
               id: box2,
               width: matchConstraint,
               height: matchConstraint,
               centerHorizontalTo: box3,
               top: box3.bottom,
               bottom: parent.bottom,
-              child: Container(
-                color: Colors.blue,
-                alignment: Alignment.center,
-                child: const Text('box2'),
-              ),
             ),
-            Constrained(
+            Container(
+              color: Colors.orange,
+              width: 200,
+              height: 300,
+              alignment: Alignment.center,
+              child: const Text('box3'),
+            ).applyConstraint(
               id: box3,
               width: wrapContent,
               height: wrapContent,
               right: box1.left,
               top: box1.bottom,
-              child: Container(
-                color: Colors.orange,
-                width: 200,
-                height: 300,
-                alignment: Alignment.center,
-                child: const Text('box3'),
-              ),
             ),
-            Constrained(
+            Container(
+              color: Colors.redAccent,
+              alignment: Alignment.center,
+              child: const Text('box4'),
+            ).applyConstraint(
               id: box4,
               width: 50,
               height: 50,
               bottomRightTo: parent,
-              child: Container(
-                color: Colors.redAccent,
-                alignment: Alignment.center,
-                child: const Text('box4'),
-              ),
             ),
-            Constrained(
+            GestureDetector(
+              child: Container(
+                color: Colors.pink,
+                alignment: Alignment.center,
+                child: const Text('box5 draggable'),
+              ),
+              onPanUpdate: (details) {
+                setState(() {
+                  x += details.delta.dx;
+                  y += details.delta.dy;
+                });
+              },
+            ).applyConstraint(
               id: box5,
               width: 120,
               height: 100,
@@ -88,21 +96,12 @@ class ExampleState extends State<Example> {
               zIndex: 100,
               translate: Offset(x, y),
               translateConstraint: true,
-              child: GestureDetector(
-                child: Container(
-                  color: Colors.pink,
-                  alignment: Alignment.center,
-                  child: const Text('box5 draggable'),
-                ),
-                onPanUpdate: (details) {
-                  setState(() {
-                    x += details.delta.dx;
-                    y += details.delta.dy;
-                  });
-                },
-              ),
             ),
-            Constrained(
+            Container(
+              color: Colors.lightGreen,
+              alignment: Alignment.center,
+              child: const Text('box6'),
+            ).applyConstraint(
               id: box6,
               width: 120,
               height: 120,
@@ -110,13 +109,12 @@ class ExampleState extends State<Example> {
               verticalBias: 0.8,
               left: box3.right,
               right: parent.right,
-              child: Container(
-                color: Colors.lightGreen,
-                alignment: Alignment.center,
-                child: const Text('box6'),
-              ),
             ),
-            Constrained(
+            Container(
+              color: Colors.lightGreen,
+              alignment: Alignment.center,
+              child: const Text('box7'),
+            ).applyConstraint(
               id: box7,
               width: matchConstraint,
               height: matchConstraint,
@@ -124,71 +122,60 @@ class ExampleState extends State<Example> {
               right: box3.left,
               centerVerticalTo: parent,
               margin: const EdgeInsets.all(50),
-              child: Container(
-                color: Colors.lightGreen,
-                alignment: Alignment.center,
-                child: const Text('box7'),
-              ),
             ),
-            Constrained(
+            Container(
+              color: Colors.cyan,
+              alignment: Alignment.center,
+              child: const Text('child[7] pinned to the top right'),
+            ).applyConstraint(
               width: 200,
               height: 100,
               left: box5.right,
               bottom: box5.top,
-              child: Container(
-                color: Colors.cyan,
-                alignment: Alignment.center,
-                child: const Text('child[7] pinned to the top right'),
-              ),
             ),
-            Constrained(
+            const Text(
+              'box9 baseline to box7',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ).applyConstraint(
               id: box9,
               width: wrapContent,
               height: wrapContent,
               baseline: box7.baseline,
-
-              /// when setting baseline alignment, height must be wrap_content or fixed size
-              /// other vertical constraints will be ignored
-              /// Warning:
-              /// Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
-              /// See https://github.com/flutter/flutter/issues/101179
-
               left: box7.left,
-              child: const Text(
-                'box9 baseline to box7',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
             ),
             ...hChain(
               centerHorizontalTo: parent,
               hChainList: [
-                Constrained(
+                Container(
+                  color: Colors.redAccent,
+                  alignment: Alignment.center,
+                  child: const Text('chain item 1'),
+                ).applyConstraint(
                   id: box10,
                   width: matchConstraint,
                   height: 200,
                   top: parent.top,
-                  child: Container(
-                    color: Colors.redAccent,
-                    alignment: Alignment.center,
-                    child: const Text('chain item 1'),
-                  ),
                 ),
-                Constrained(
+                Container(
+                  color: Colors.redAccent,
+                  alignment: Alignment.center,
+                  child: const Text('chain item 2'),
+                ).applyConstraint(
                   id: box11,
                   width: matchConstraint,
                   height: 200,
                   top: parent.top,
-                  child: Container(
-                    color: Colors.redAccent,
-                    alignment: Alignment.center,
-                    child: const Text('chain item 2'),
-                  ),
                 ),
               ],
             ),
-            Constrained(
+            Container(
+              color: Colors.yellow,
+              alignment: Alignment.bottomCenter,
+              child: const Text(
+                  'percentage layout, width: 50% of parent, height: 30% of parent'),
+            ).applyConstraint(
               width: matchConstraint,
               height: matchConstraint,
               widthPercent: 0.5,
@@ -197,12 +184,6 @@ class ExampleState extends State<Example> {
               verticalBias: 0,
               centerTo: parent,
               zIndex: 6,
-              child: Container(
-                color: Colors.yellow,
-                alignment: Alignment.bottomCenter,
-                child: const Text(
-                    'percentage layout, width: 50% of parent, height: 30% of parent'),
-              ),
             ),
           ],
         ),
