@@ -35,7 +35,7 @@ import 'package:flutter/rendering.dart';
 ///
 /// author: hackware
 /// home page: https:///github.com/hackware1993
-/// email: cfb1993@163.com
+/// email: hackware1993@gmail.com
 class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// TODO implement debug function
   final bool debugShowGuideline;
