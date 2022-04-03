@@ -102,20 +102,19 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 }
 
 List<Constrained> hChain({
-  _Constraint? left,
-  _Constraint? right,
+  _Align? left,
+  _Align? right,
   ConstraintId? centerHorizontalTo,
   required List<Constrained> hChainList,
 }) {
   assert(hChainList.length > 1,
       'The number of child elements in the chain must be > 1.');
-  for (final constrained in hChainList) {}
   return [];
 }
 
 List<Constrained> vChain({
-  _Constraint? top,
-  _Constraint? bottom,
+  _Align? top,
+  _Align? bottom,
   ConstraintId? centerVerticalTo,
   required List<Constrained> vChainList,
 }) {
@@ -134,11 +133,11 @@ extension WidgetsExt on Widget {
     ConstraintId? id,
     required double width,
     required double height,
-    @_baseConstraint _Constraint? left,
-    @_baseConstraint _Constraint? top,
-    @_baseConstraint _Constraint? right,
-    @_baseConstraint _Constraint? bottom,
-    @_baseConstraint _Constraint? baseline,
+    @_baseConstraint _Align? left,
+    @_baseConstraint _Align? top,
+    @_baseConstraint _Align? right,
+    @_baseConstraint _Align? bottom,
+    @_baseConstraint _Align? baseline,
     EdgeInsets clickPadding = EdgeInsets.zero,
     CLVisibility visibility = visible,
     EdgeInsets margin = EdgeInsets.zero,
@@ -199,6 +198,8 @@ extension WidgetsExt on Widget {
       child: this,
     );
   }
+
+  void withConstraintId(ConstraintId constraintId) {}
 }
 
 bool _debugEnsureNotEmptyString(String name, String? value) {
@@ -254,15 +255,15 @@ class ConstraintId {
     baseline.id = this;
   }
 
-  _Constraint left = _Constraint(null, _ConstraintType.left);
+  _Align left = _Align(null, _AlignType.left);
 
-  _Constraint top = _Constraint(null, _ConstraintType.top);
+  _Align top = _Align(null, _AlignType.top);
 
-  _Constraint right = _Constraint(null, _ConstraintType.right);
+  _Align right = _Align(null, _AlignType.right);
 
-  _Constraint bottom = _Constraint(null, _ConstraintType.bottom);
+  _Align bottom = _Align(null, _AlignType.bottom);
 
-  _Constraint baseline = _Constraint(null, _ConstraintType.baseline);
+  _Align baseline = _Align(null, _AlignType.baseline);
 
   @override
   bool operator ==(Object other) {
@@ -291,16 +292,16 @@ class ConstraintId {
   }
 }
 
-class _Constraint {
+class _Align {
   ConstraintId? id;
-  _ConstraintType type;
+  _AlignType type;
 
-  _Constraint(this.id, this.type);
+  _Align(this.id, this.type);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is _Constraint &&
+      other is _Align &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           type == other.type;
@@ -309,16 +310,11 @@ class _Constraint {
   int get hashCode => id.hashCode ^ type.hashCode;
 }
 
-enum _ConstraintType {
-  @_baseConstraint
+enum _AlignType {
   left,
-  @_baseConstraint
   right,
-  @_baseConstraint
   top,
-  @_baseConstraint
   bottom,
-  @_baseConstraint
   baseline,
 }
 
@@ -330,14 +326,11 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   CLVisibility? visibility;
   EdgeInsets? margin;
   EdgeInsets? goneMargin;
-
-  /// There are only base constraints here
-  _Constraint? left;
-  _Constraint? top;
-  _Constraint? right;
-  _Constraint? bottom;
-  _Constraint? baseline;
-
+  _Align? left;
+  _Align? top;
+  _Align? right;
+  _Align? bottom;
+  _Align? baseline;
   TextBaseline? textBaseline;
   int? zIndex;
   Offset? translate;
@@ -368,15 +361,15 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
 
   /// These are the base constraints constraint on sibling id or parent
   @_baseConstraint
-  final _Constraint? left;
+  final _Align? left;
   @_baseConstraint
-  final _Constraint? top;
+  final _Align? top;
   @_baseConstraint
-  final _Constraint? right;
+  final _Align? right;
   @_baseConstraint
-  final _Constraint? bottom;
+  final _Align? bottom;
   @_baseConstraint
-  final _Constraint? baseline;
+  final _Align? baseline;
 
   /// When setting baseline alignment, height must be wrap_content or fixed size, other vertical constraints will be illegal.
   /// Warning: Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
@@ -496,31 +489,31 @@ class Constrained extends ParentDataWidget<_ConstraintBoxData> {
     assert(checkSize(width));
     assert(checkSize(height));
     assert(this.left == null ||
-        (this.left!.type == _ConstraintType.left ||
-            this.left!.type == _ConstraintType.right));
+        (this.left!.type == _AlignType.left ||
+            this.left!.type == _AlignType.right));
     assert(this.top == null ||
-        (this.top!.type == _ConstraintType.top ||
-            this.top!.type == _ConstraintType.bottom));
+        (this.top!.type == _AlignType.top ||
+            this.top!.type == _AlignType.bottom));
     assert(this.right == null ||
-        (this.right!.type == _ConstraintType.left ||
-            this.right!.type == _ConstraintType.right));
+        (this.right!.type == _AlignType.left ||
+            this.right!.type == _AlignType.right));
     assert(this.bottom == null ||
-        (this.bottom!.type == _ConstraintType.top ||
-            this.bottom!.type == _ConstraintType.bottom));
+        (this.bottom!.type == _AlignType.top ||
+            this.bottom!.type == _AlignType.bottom));
     assert(this.baseline == null ||
-        (this.baseline!.type == _ConstraintType.top ||
-            this.baseline!.type == _ConstraintType.bottom ||
-            this.baseline!.type == _ConstraintType.baseline));
+        (this.baseline!.type == _AlignType.top ||
+            this.baseline!.type == _AlignType.bottom ||
+            this.baseline!.type == _AlignType.baseline));
     assert(_debugEnsurePercent('widthPercent', widthPercent));
     assert(_debugEnsurePercent('heightPercent', heightPercent));
     assert(_debugEnsurePercent('horizontalBias', horizontalBias));
     assert(_debugEnsurePercent('verticalBias', verticalBias));
 
-    _Constraint? left = this.left;
-    _Constraint? top = this.top;
-    _Constraint? right = this.right;
-    _Constraint? bottom = this.bottom;
-    _Constraint? baseline = this.baseline;
+    _Align? left = this.left;
+    _Align? top = this.top;
+    _Align? right = this.right;
+    _Align? bottom = this.bottom;
+    _Align? baseline = this.baseline;
 
     /// Convert wrapper constraints first
 
@@ -997,31 +990,31 @@ class _ConstraintRenderBox extends RenderBox
       if (childParentData.left != null) {
         currentNode.leftConstraint =
             _getConstrainedNodeForChild(null, childParentData.left!.id!);
-        currentNode.leftConstraintType = childParentData.left!.type;
+        currentNode.leftAlignType = childParentData.left!.type;
       }
 
       if (childParentData.top != null) {
         currentNode.topConstraint =
             _getConstrainedNodeForChild(null, childParentData.top!.id!);
-        currentNode.topConstraintType = childParentData.top!.type;
+        currentNode.topAlignType = childParentData.top!.type;
       }
 
       if (childParentData.right != null) {
         currentNode.rightConstraint =
             _getConstrainedNodeForChild(null, childParentData.right!.id!);
-        currentNode.rightConstraintType = childParentData.right!.type;
+        currentNode.rightAlignType = childParentData.right!.type;
       }
 
       if (childParentData.bottom != null) {
         currentNode.bottomConstraint =
             _getConstrainedNodeForChild(null, childParentData.bottom!.id!);
-        currentNode.bottomConstraintType = childParentData.bottom!.type;
+        currentNode.bottomAlignType = childParentData.bottom!.type;
       }
 
       if (childParentData.baseline != null) {
         currentNode.baselineConstraint =
             _getConstrainedNodeForChild(null, childParentData.baseline!.id!);
-        currentNode.baselineConstraintType = childParentData.baseline!.type;
+        currentNode.baselineAlignType = childParentData.baseline!.type;
       }
 
       child = childParentData.nextSibling;
@@ -1176,7 +1169,7 @@ class _ConstraintRenderBox extends RenderBox
           maxWidth = minWidth;
         } else if (width == matchConstraint) {
           double left;
-          if (element.leftConstraintType == _ConstraintType.left) {
+          if (element.leftAlignType == _AlignType.left) {
             left = element.leftConstraint!.getX();
           } else {
             left = element.leftConstraint!.getRight(size);
@@ -1187,7 +1180,7 @@ class _ConstraintRenderBox extends RenderBox
             left += _getLeftInsets(margin);
           }
           double right;
-          if (element.rightConstraintType == _ConstraintType.left) {
+          if (element.rightAlignType == _AlignType.left) {
             right = element.rightConstraint!.getX();
           } else {
             right = element.rightConstraint!.getRight(size);
@@ -1231,7 +1224,7 @@ class _ConstraintRenderBox extends RenderBox
           maxHeight = minHeight;
         } else if (height == matchConstraint) {
           double top;
-          if (element.topConstraintType == _ConstraintType.top) {
+          if (element.topAlignType == _AlignType.top) {
             top = element.topConstraint!.getY();
           } else {
             top = element.topConstraint!.getBottom(size);
@@ -1242,7 +1235,7 @@ class _ConstraintRenderBox extends RenderBox
             top += _getTopInsets(margin);
           }
           double bottom;
-          if (element.bottomConstraintType == _ConstraintType.top) {
+          if (element.bottomAlignType == _AlignType.top) {
             bottom = element.bottomConstraint!.getY();
           } else {
             bottom = element.bottomConstraint!.getBottom(size);
@@ -1300,7 +1293,7 @@ class _ConstraintRenderBox extends RenderBox
       double offsetX = 0;
       if (element.leftConstraint != null && element.rightConstraint != null) {
         double left;
-        if (element.leftConstraintType == _ConstraintType.left) {
+        if (element.leftAlignType == _AlignType.left) {
           left = element.leftConstraint!.getX();
         } else {
           left = element.leftConstraint!.getRight(size);
@@ -1311,7 +1304,7 @@ class _ConstraintRenderBox extends RenderBox
           left += _getLeftInsets(margin);
         }
         double right;
-        if (element.rightConstraintType == _ConstraintType.left) {
+        if (element.rightAlignType == _AlignType.left) {
           right = element.rightConstraint!.getX();
         } else {
           right = element.rightConstraint!.getRight(size);
@@ -1326,7 +1319,7 @@ class _ConstraintRenderBox extends RenderBox
                 element.horizontalBias;
       } else if (element.leftConstraint != null) {
         double left;
-        if (element.leftConstraintType == _ConstraintType.left) {
+        if (element.leftAlignType == _AlignType.left) {
           left = element.leftConstraint!.getX();
         } else {
           left = element.leftConstraint!.getRight(size);
@@ -1339,7 +1332,7 @@ class _ConstraintRenderBox extends RenderBox
         offsetX = left;
       } else if (element.rightConstraint != null) {
         double right;
-        if (element.rightConstraintType == _ConstraintType.left) {
+        if (element.rightAlignType == _AlignType.left) {
           right = element.rightConstraint!.getX();
         } else {
           right = element.rightConstraint!.getRight(size);
@@ -1358,7 +1351,7 @@ class _ConstraintRenderBox extends RenderBox
       double offsetY = 0;
       if (element.topConstraint != null && element.bottomConstraint != null) {
         double top;
-        if (element.topConstraintType == _ConstraintType.top) {
+        if (element.topAlignType == _AlignType.top) {
           top = element.topConstraint!.getY();
         } else {
           top = element.topConstraint!.getBottom(size);
@@ -1369,7 +1362,7 @@ class _ConstraintRenderBox extends RenderBox
           top += _getTopInsets(margin);
         }
         double bottom;
-        if (element.bottomConstraintType == _ConstraintType.top) {
+        if (element.bottomAlignType == _AlignType.top) {
           bottom = element.bottomConstraint!.getY();
         } else {
           bottom = element.bottomConstraint!.getBottom(size);
@@ -1384,7 +1377,7 @@ class _ConstraintRenderBox extends RenderBox
             (bottom - top - element.getMeasuredHeight(size)) * verticalBias;
       } else if (element.topConstraint != null) {
         double top;
-        if (element.topConstraintType == _ConstraintType.top) {
+        if (element.topAlignType == _AlignType.top) {
           top = element.topConstraint!.getY();
         } else {
           top = element.topConstraint!.getBottom(size);
@@ -1397,7 +1390,7 @@ class _ConstraintRenderBox extends RenderBox
         offsetY = top;
       } else if (element.bottomConstraint != null) {
         double bottom;
-        if (element.bottomConstraintType == _ConstraintType.top) {
+        if (element.bottomAlignType == _AlignType.top) {
           bottom = element.bottomConstraint!.getY();
         } else {
           bottom = element.bottomConstraint!.getBottom(size);
@@ -1409,10 +1402,10 @@ class _ConstraintRenderBox extends RenderBox
         }
         offsetY = bottom - element.getMeasuredHeight(size);
       } else if (element.baselineConstraint != null) {
-        if (element.baselineConstraintType == _ConstraintType.top) {
+        if (element.baselineAlignType == _AlignType.top) {
           offsetY = element.baselineConstraint!.getY() -
               element.getDistanceToBaseline(element.textBaseline, false);
-        } else if (element.baselineConstraintType == _ConstraintType.bottom) {
+        } else if (element.baselineAlignType == _AlignType.bottom) {
           offsetY = element.baselineConstraint!.getBottom(size) -
               element.getDistanceToBaseline(element.textBaseline, false);
         } else {
@@ -1600,11 +1593,11 @@ class _ConstrainedNode {
   _ConstrainedNode? rightConstraint;
   _ConstrainedNode? bottomConstraint;
   _ConstrainedNode? baselineConstraint;
-  _ConstraintType? leftConstraintType;
-  _ConstraintType? topConstraintType;
-  _ConstraintType? rightConstraintType;
-  _ConstraintType? bottomConstraintType;
-  _ConstraintType? baselineConstraintType;
+  _AlignType? leftAlignType;
+  _AlignType? topAlignType;
+  _AlignType? rightAlignType;
+  _AlignType? bottomAlignType;
+  _AlignType? baselineAlignType;
   int depth = -1;
   late bool laidOut;
   late _ConstraintBoxData parentData;
@@ -1771,65 +1764,65 @@ class _ConstrainedNode {
     } else {
       map['nodeId'] = nodeId;
       if (leftConstraint != null) {
+        if (leftAlignType == _AlignType.left) {
+          map['leftAlignType'] = 'toLeft';
+        } else {
+          map['leftAlignType'] = 'toRight';
+        }
         if (leftConstraint!.isParent()) {
           map['leftConstraint'] = 'parent';
         } else {
           map['leftConstraint'] = leftConstraint!.toJson();
         }
-        if (leftConstraintType == _ConstraintType.left) {
-          map['leftConstraintType'] = 'toLeft';
-        } else {
-          map['leftConstraintType'] = 'toRight';
-        }
       }
       if (topConstraint != null) {
+        if (topAlignType == _AlignType.top) {
+          map['topAlignType'] = 'toTop';
+        } else {
+          map['topAlignType'] = 'toBottom';
+        }
         if (topConstraint!.isParent()) {
           map['topConstraint'] = 'parent';
         } else {
           map['topConstraint'] = topConstraint!.toJson();
         }
-        if (topConstraintType == _ConstraintType.top) {
-          map['topConstraintType'] = 'toTop';
-        } else {
-          map['topConstraintType'] = 'toBottom';
-        }
       }
       if (rightConstraint != null) {
+        if (rightAlignType == _AlignType.left) {
+          map['rightAlignType'] = 'toLeft';
+        } else {
+          map['rightAlignType'] = 'toRight';
+        }
         if (rightConstraint!.isParent()) {
           map['rightConstraint'] = 'parent';
         } else {
           map['rightConstraint'] = rightConstraint!.toJson();
         }
-        if (rightConstraintType == _ConstraintType.left) {
-          map['rightConstraintType'] = 'toLeft';
-        } else {
-          map['rightConstraintType'] = 'toRight';
-        }
       }
       if (bottomConstraint != null) {
+        if (bottomAlignType == _AlignType.top) {
+          map['bottomAlignType'] = 'toTop';
+        } else {
+          map['bottomAlignType'] = 'toBottom';
+        }
         if (bottomConstraint!.isParent()) {
           map['bottomConstraint'] = 'parent';
         } else {
           map['bottomConstraint'] = bottomConstraint!.toJson();
         }
-        if (bottomConstraintType == _ConstraintType.top) {
-          map['bottomConstraintType'] = 'toTop';
-        } else {
-          map['bottomConstraintType'] = 'toBottom';
-        }
       }
       if (baselineConstraint != null) {
+        if (baselineAlignType == _AlignType.top) {
+          map['baselineAlignType'] = 'toTop';
+        } else if (baselineAlignType == _AlignType.bottom) {
+          map['baselineAlignType'] = 'toBottom';
+        } else {
+          map['baselineAlignType'] = 'toBaseline';
+        }
         if (baselineConstraint!.isParent()) {
           map['baselineConstraint'] = 'parent';
         } else {
           map['baselineConstraint'] = baselineConstraint!.toJson();
-        }
-        if (baselineConstraintType == _ConstraintType.top) {
-          map['baselineConstraintType'] = 'toTop';
-        } else if (baselineConstraintType == _ConstraintType.bottom) {
-          map['baselineConstraintType'] = 'toBottom';
-        } else {
-          map['baselineConstraintType'] = 'toBaseline';
         }
       }
     }
