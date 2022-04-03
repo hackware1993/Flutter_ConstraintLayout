@@ -154,6 +154,8 @@ extension WidgetsExt on Widget {
     bool translateConstraint = false,
     double widthPercent = 1,
     double heightPercent = 1,
+    PercentageAnchor widthPercentageAnchor = PercentageAnchor.constraint,
+    PercentageAnchor heightPercentageAnchor = PercentageAnchor.constraint,
     double horizontalBias = 0.5,
     double verticalBias = 0.5,
     @_wrapperConstraint ConstraintId? topLeftTo,
@@ -189,6 +191,8 @@ extension WidgetsExt on Widget {
         translateConstraint: translateConstraint,
         widthPercent: widthPercent,
         heightPercent: heightPercent,
+        widthPercentageAnchor: widthPercentageAnchor,
+        heightPercentageAnchor: heightPercentageAnchor,
         horizontalBias: horizontalBias,
         verticalBias: verticalBias,
         topLeftTo: topLeftTo,
@@ -270,6 +274,11 @@ enum BarrierDirection {
   top,
   right,
   bottom,
+}
+
+enum PercentageAnchor {
+  constraint,
+  parent,
 }
 
 class ConstraintId {
@@ -390,6 +399,10 @@ class Constraint {
   /// Only takes effect when height is matchConstraint
   final double heightPercent;
 
+  final PercentageAnchor widthPercentageAnchor;
+
+  final PercentageAnchor heightPercentageAnchor;
+
   /// Only takes effect if both left and right constraints exist
   final double horizontalBias;
 
@@ -439,6 +452,8 @@ class Constraint {
     this.translateConstraint = false,
     this.widthPercent = 1,
     this.heightPercent = 1,
+    this.widthPercentageAnchor = PercentageAnchor.constraint,
+    this.heightPercentageAnchor = PercentageAnchor.constraint,
     this.horizontalBias = 0.5,
     this.verticalBias = 0.5,
     @_wrapperConstraint this.topLeftTo,
@@ -477,6 +492,8 @@ class Constraint {
           translateConstraint == other.translateConstraint &&
           widthPercent == other.widthPercent &&
           heightPercent == other.heightPercent &&
+          widthPercentageAnchor == other.widthPercentageAnchor &&
+          heightPercentageAnchor == other.heightPercentageAnchor &&
           horizontalBias == other.horizontalBias &&
           verticalBias == other.verticalBias &&
           topLeftTo == other.topLeftTo &&
@@ -511,6 +528,8 @@ class Constraint {
       translateConstraint.hashCode ^
       widthPercent.hashCode ^
       heightPercent.hashCode ^
+      widthPercentageAnchor.hashCode ^
+      heightPercentageAnchor.hashCode ^
       horizontalBias.hashCode ^
       verticalBias.hashCode ^
       topLeftTo.hashCode ^
@@ -759,6 +778,16 @@ class Constraint {
       needsLayout = true;
     }
 
+    if (parentData.widthPercentageAnchor != widthPercentageAnchor) {
+      parentData.widthPercentageAnchor = widthPercentageAnchor;
+      needsLayout = true;
+    }
+
+    if (parentData.heightPercentageAnchor != heightPercentageAnchor) {
+      parentData.heightPercentageAnchor = heightPercentageAnchor;
+      needsLayout = true;
+    }
+
     if (parentData.horizontalBias != horizontalBias) {
       parentData.horizontalBias = horizontalBias;
       needsLayout = true;
@@ -818,6 +847,8 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   bool? translateConstraint;
   double? widthPercent;
   double? heightPercent;
+  PercentageAnchor? widthPercentageAnchor;
+  PercentageAnchor? heightPercentageAnchor;
   double? horizontalBias;
   double? verticalBias;
 }
@@ -1329,29 +1360,34 @@ class _ConstraintRenderBox extends RenderBox
           }());
           maxWidth = minWidth;
         } else if (width == matchConstraint) {
-          double left;
-          if (element.leftAlignType == _AlignType.left) {
-            left = element.leftConstraint!.getX();
+          if (element.widthPercentageAnchor == PercentageAnchor.constraint) {
+            double left;
+            if (element.leftAlignType == _AlignType.left) {
+              left = element.leftConstraint!.getX();
+            } else {
+              left = element.leftConstraint!.getRight(size);
+            }
+            if (element.leftConstraint!.isNotLaidOut()) {
+              left += _getLeftInsets(goneMargin);
+            } else {
+              left += _getLeftInsets(margin);
+            }
+            double right;
+            if (element.rightAlignType == _AlignType.left) {
+              right = element.rightConstraint!.getX();
+            } else {
+              right = element.rightConstraint!.getRight(size);
+            }
+            if (element.rightConstraint!.isNotLaidOut()) {
+              right -= _getRightInsets(goneMargin);
+            } else {
+              right -= _getRightInsets(margin);
+            }
+            minWidth = (right - left) * element.widthPercent;
           } else {
-            left = element.leftConstraint!.getRight(size);
+            minWidth = (size.width - _getHorizontalInsets(margin)) *
+                element.widthPercent;
           }
-          if (element.leftConstraint!.isNotLaidOut()) {
-            left += _getLeftInsets(goneMargin);
-          } else {
-            left += _getLeftInsets(margin);
-          }
-          double right;
-          if (element.rightAlignType == _AlignType.left) {
-            right = element.rightConstraint!.getX();
-          } else {
-            right = element.rightConstraint!.getRight(size);
-          }
-          if (element.rightConstraint!.isNotLaidOut()) {
-            right -= _getRightInsets(goneMargin);
-          } else {
-            right -= _getRightInsets(margin);
-          }
-          minWidth = (right - left) * element.widthPercent;
           assert(() {
             if (_debugCheckConstraints) {
               if (minWidth < 0) {
@@ -1384,29 +1420,34 @@ class _ConstraintRenderBox extends RenderBox
           }());
           maxHeight = minHeight;
         } else if (height == matchConstraint) {
-          double top;
-          if (element.topAlignType == _AlignType.top) {
-            top = element.topConstraint!.getY();
+          if (element.heightPercentageAnchor == PercentageAnchor.constraint) {
+            double top;
+            if (element.topAlignType == _AlignType.top) {
+              top = element.topConstraint!.getY();
+            } else {
+              top = element.topConstraint!.getBottom(size);
+            }
+            if (element.topConstraint!.isNotLaidOut()) {
+              top += _getTopInsets(goneMargin);
+            } else {
+              top += _getTopInsets(margin);
+            }
+            double bottom;
+            if (element.bottomAlignType == _AlignType.top) {
+              bottom = element.bottomConstraint!.getY();
+            } else {
+              bottom = element.bottomConstraint!.getBottom(size);
+            }
+            if (element.bottomConstraint!.isNotLaidOut()) {
+              bottom -= _getBottomInsets(goneMargin);
+            } else {
+              bottom -= _getBottomInsets(margin);
+            }
+            minHeight = (bottom - top) * element.heightPercent;
           } else {
-            top = element.topConstraint!.getBottom(size);
+            minHeight = (size.height - _getVerticalInsets(margin)) *
+                element.heightPercent;
           }
-          if (element.topConstraint!.isNotLaidOut()) {
-            top += _getTopInsets(goneMargin);
-          } else {
-            top += _getTopInsets(margin);
-          }
-          double bottom;
-          if (element.bottomAlignType == _AlignType.top) {
-            bottom = element.bottomConstraint!.getY();
-          } else {
-            bottom = element.bottomConstraint!.getBottom(size);
-          }
-          if (element.bottomConstraint!.isNotLaidOut()) {
-            bottom -= _getBottomInsets(goneMargin);
-          } else {
-            bottom -= _getBottomInsets(margin);
-          }
-          minHeight = (bottom - top) * element.heightPercent;
           assert(() {
             if (_debugCheckConstraints) {
               if (minHeight < 0) {
@@ -1799,6 +1840,12 @@ class _ConstrainedNode {
   double get widthPercent => parentData.widthPercent!;
 
   double get heightPercent => parentData.heightPercent!;
+
+  PercentageAnchor get widthPercentageAnchor =>
+      parentData.widthPercentageAnchor!;
+
+  PercentageAnchor get heightPercentageAnchor =>
+      parentData.heightPercentageAnchor!;
 
   set offset(Offset value) {
     parentData.offset = value;
