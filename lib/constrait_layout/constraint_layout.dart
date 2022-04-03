@@ -169,6 +169,7 @@ extension WidgetsExt on Widget {
     @_wrapperConstraint ConstraintId? bottomRightTo,
     @_wrapperConstraint ConstraintId? centerHorizontalTo,
     @_wrapperConstraint ConstraintId? centerVerticalTo,
+    OnLayoutCallback? callback,
   }) {
     return Constrained(
       key: key,
@@ -206,6 +207,7 @@ extension WidgetsExt on Widget {
         bottomRightTo: bottomRightTo,
         centerHorizontalTo: centerHorizontalTo,
         centerVerticalTo: centerVerticalTo,
+        callback: callback,
       ),
       child: this,
     );
@@ -352,6 +354,8 @@ class _Align {
   int get hashCode => id.hashCode ^ type.hashCode;
 }
 
+typedef OnLayoutCallback = void Function(RenderObject renderObject, Rect rect);
+
 class Constraint {
   /// id can be null, but not an empty string
   final ConstraintId? id;
@@ -433,6 +437,8 @@ class Constraint {
   @_wrapperConstraint
   final ConstraintId? centerVerticalTo;
 
+  final OnLayoutCallback? callback;
+
   const Constraint({
     this.id,
     required this.width,
@@ -467,6 +473,7 @@ class Constraint {
     @_wrapperConstraint this.bottomRightTo,
     @_wrapperConstraint this.centerHorizontalTo,
     @_wrapperConstraint this.centerVerticalTo,
+    this.callback,
   });
 
   @override
@@ -506,7 +513,8 @@ class Constraint {
           bottomCenterTo == other.bottomCenterTo &&
           bottomRightTo == other.bottomRightTo &&
           centerHorizontalTo == other.centerHorizontalTo &&
-          centerVerticalTo == other.centerVerticalTo;
+          centerVerticalTo == other.centerVerticalTo &&
+          callback == other.callback;
 
   @override
   int get hashCode =>
@@ -542,7 +550,8 @@ class Constraint {
       bottomCenterTo.hashCode ^
       bottomRightTo.hashCode ^
       centerHorizontalTo.hashCode ^
-      centerVerticalTo.hashCode;
+      centerVerticalTo.hashCode ^
+      callback.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -798,6 +807,8 @@ class Constraint {
       needsLayout = true;
     }
 
+    parentData.callback = callback;
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
@@ -851,6 +862,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   PercentageAnchor? heightPercentageAnchor;
   double? horizontalBias;
   double? verticalBias;
+  OnLayoutCallback? callback;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -1625,6 +1637,12 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       element.offset = Offset(offsetX, offsetY);
+      if (element.callback != null) {
+        element.callback!.call(
+            element.renderBox!,
+            Rect.fromLTWH(offsetX, offsetY, element.getMeasuredWidth(size),
+                element.getMeasuredHeight(size)));
+      }
     }
   }
 
@@ -1846,6 +1864,8 @@ class _ConstrainedNode {
 
   PercentageAnchor get heightPercentageAnchor =>
       parentData.heightPercentageAnchor!;
+
+  OnLayoutCallback? get callback => parentData.callback;
 
   set offset(Offset value) {
     parentData.offset = value;
