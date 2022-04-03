@@ -100,7 +100,7 @@ class ExampleState extends State<Example> {
             ).applyConstraint(
               id: box1,
               width: 200,
-              height: 200,
+              height: 100,
               topRightTo: parent,
             ),
             Container(
@@ -118,7 +118,7 @@ class ExampleState extends State<Example> {
             Container(
               color: Colors.orange,
               width: 200,
-              height: 300,
+              height: 150,
               alignment: Alignment.center,
               child: const Text('box3'),
             ).applyConstraint(
@@ -236,7 +236,7 @@ class ExampleState extends State<Example> {
               color: Colors.yellow,
               alignment: Alignment.bottomCenter,
               child: const Text(
-                  'percentage layout, width: 50% of parent, height: 30% of parent'),
+                  'percentage layout\nwidth: 50% of parent\nheight: 30% of parent'),
             ).applyConstraint(
               width: matchConstraint,
               height: matchConstraint,
