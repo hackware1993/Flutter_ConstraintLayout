@@ -289,8 +289,8 @@ class ExampleState extends State<Example> {
 
 ```dart
 class ExampleState extends State<Example> {
-  ConstraintId left = ConstraintId();
-  ConstraintId right = ConstraintId();
+  ConstraintId topChild = ConstraintId();
+  ConstraintId bottomChild = ConstraintId();
   ConstraintId guideline = ConstraintId();
 
   @override
@@ -302,7 +302,7 @@ class ExampleState extends State<Example> {
             Container(
               color: const Color(0xFF005BBB),
             ).applyConstraint(
-              id: left,
+              id: topChild,
               width: matchParent,
               height: matchConstraint,
               top: parent.top,
@@ -316,7 +316,7 @@ class ExampleState extends State<Example> {
             Container(
               color: const Color(0xFFFFD500),
             ).applyConstraint(
-              id: right,
+              id: bottomChild,
               width: matchParent,
               height: matchConstraint,
               top: guideline.bottom,
