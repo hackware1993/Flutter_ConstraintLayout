@@ -40,11 +40,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// Constraints can be separated from widgets
   final List<Constraint>? childConstraints;
 
-  /// TODO implement debug function
   final bool debugShowGuideline;
-  final bool debugShowPreview;
-
-  /// Already supported
   final bool debugShowClickArea;
   final bool debugPrintConstraints;
   final bool debugPrintLayoutTime;
@@ -58,7 +54,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.childConstraints,
     required List<Widget> children,
     this.debugShowGuideline = false,
-    this.debugShowPreview = false,
     this.debugShowClickArea = false,
     this.debugPrintConstraints = false,
     this.debugPrintLayoutTime = true,
@@ -77,7 +72,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     return _ConstraintRenderBox()
       .._childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
-      .._debugShowPreview = debugShowPreview
       .._debugShowClickArea = debugShowClickArea
       .._debugPrintConstraints = debugPrintConstraints
       .._debugPrintLayoutTime = debugPrintLayoutTime
@@ -96,7 +90,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     (renderObject as _ConstraintRenderBox)
       ..childConstraints = childConstraints
       ..debugShowGuideline = debugShowGuideline
-      ..debugShowPreview = debugShowPreview
       ..debugShowClickArea = debugShowClickArea
       ..debugPrintConstraints = debugPrintConstraints
       ..debugPrintLayoutTime = debugPrintLayoutTime
@@ -146,6 +139,7 @@ extension WidgetsExt on Widget {
     @_baseConstraint _Align? baseline,
     EdgeInsets clickPadding = EdgeInsets.zero,
     CLVisibility visibility = visible,
+    bool percentageMargin = false,
     EdgeInsets margin = EdgeInsets.zero,
     EdgeInsets goneMargin = EdgeInsets.zero,
     TextBaseline textBaseline = TextBaseline.alphabetic,
@@ -184,6 +178,7 @@ extension WidgetsExt on Widget {
         baseline: baseline,
         clickPadding: clickPadding,
         visibility: visibility,
+        percentageMargin: percentageMargin,
         margin: margin,
         goneMargin: goneMargin,
         textBaseline: textBaseline,
@@ -371,6 +366,7 @@ class Constraint {
   final CLVisibility visibility;
 
   /// both margin and goneMargin can be negative
+  final bool percentageMargin;
   final EdgeInsets margin;
   final EdgeInsets goneMargin;
 
@@ -450,6 +446,7 @@ class Constraint {
     @_baseConstraint this.baseline,
     this.clickPadding = EdgeInsets.zero,
     this.visibility = visible,
+    this.percentageMargin = false,
     this.margin = EdgeInsets.zero,
     this.goneMargin = EdgeInsets.zero,
     this.textBaseline = TextBaseline.alphabetic,
@@ -486,6 +483,7 @@ class Constraint {
           height == other.height &&
           clickPadding == other.clickPadding &&
           visibility == other.visibility &&
+          percentageMargin == other.percentageMargin &&
           margin == other.margin &&
           goneMargin == other.goneMargin &&
           left == other.left &&
@@ -523,6 +521,7 @@ class Constraint {
       height.hashCode ^
       clickPadding.hashCode ^
       visibility.hashCode ^
+      percentageMargin.hashCode ^
       margin.hashCode ^
       goneMargin.hashCode ^
       left.hashCode ^
@@ -584,6 +583,20 @@ class Constraint {
     assert(_debugEnsurePercent('heightPercent', heightPercent));
     assert(_debugEnsurePercent('horizontalBias', horizontalBias));
     assert(_debugEnsurePercent('verticalBias', verticalBias));
+    assert(!percentageMargin || _debugEnsurePercent('leftMargin', margin.left));
+    assert(!percentageMargin || _debugEnsurePercent('topMargin', margin.top));
+    assert(
+        !percentageMargin || _debugEnsurePercent('rightMargin', margin.right));
+    assert(!percentageMargin ||
+        _debugEnsurePercent('bottomMargin', margin.bottom));
+    assert(!percentageMargin ||
+        _debugEnsurePercent('leftGoneMargin', goneMargin.left));
+    assert(!percentageMargin ||
+        _debugEnsurePercent('topGoneMargin', goneMargin.top));
+    assert(!percentageMargin ||
+        _debugEnsurePercent('rightGoneMargin', goneMargin.right));
+    assert(!percentageMargin ||
+        _debugEnsurePercent('bottomGoneMargin', goneMargin.bottom));
     return true;
   }
 
@@ -717,6 +730,11 @@ class Constraint {
       parentData.visibility = visibility;
     }
 
+    if (parentData.percentageMargin != percentageMargin) {
+      parentData.percentageMargin = percentageMargin;
+      needsLayout = true;
+    }
+
     if (parentData.margin != margin) {
       parentData.margin = margin;
       needsLayout = true;
@@ -846,6 +864,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   EdgeInsets? clickPadding;
   CLVisibility? visibility;
   EdgeInsets? margin;
+  bool? percentageMargin;
   EdgeInsets? goneMargin;
   _Align? left;
   _Align? top;
@@ -947,7 +966,6 @@ class _ConstraintRenderBox extends RenderBox
         RenderBoxContainerDefaultsMixin<RenderBox, _ConstraintBoxData> {
   List<Constraint>? _childConstraints;
   late bool _debugShowGuideline;
-  late bool _debugShowPreview;
   late bool _debugShowClickArea;
   late bool _debugPrintConstraints;
   late bool _debugPrintLayoutTime;
@@ -971,13 +989,6 @@ class _ConstraintRenderBox extends RenderBox
   set debugShowGuideline(bool value) {
     if (_debugShowGuideline != value) {
       _debugShowGuideline = value;
-      markNeedsPaint();
-    }
-  }
-
-  set debugShowPreview(bool value) {
-    if (_debugShowPreview != value) {
-      _debugShowPreview = value;
       markNeedsPaint();
     }
   }
@@ -1303,40 +1314,70 @@ class _ConstraintRenderBox extends RenderBox
     }());
   }
 
-  static double _getLeftInsets(EdgeInsets? insets) {
-    if (insets == null) {
-      return 0;
+  static double _getLeftInsets(
+    EdgeInsets insets, [
+    bool percentageMargin = false,
+    double anchorWidth = 0,
+  ]) {
+    if (percentageMargin) {
+      return anchorWidth * insets.left;
+    } else {
+      return insets.left;
     }
-    return insets.left;
   }
 
-  static double _getTopInsets(EdgeInsets? insets) {
-    if (insets == null) {
-      return 0;
+  static double _getTopInsets(
+    EdgeInsets insets, [
+    bool percentageMargin = false,
+    double anchorHeight = 0,
+  ]) {
+    if (percentageMargin) {
+      return anchorHeight * insets.top;
+    } else {
+      return insets.top;
     }
-    return insets.top;
   }
 
-  static double _getRightInsets(EdgeInsets? insets) {
-    if (insets == null) {
-      return 0;
+  static double _getRightInsets(
+    EdgeInsets insets, [
+    bool percentageMargin = false,
+    double anchorWidth = 0,
+  ]) {
+    if (percentageMargin) {
+      return anchorWidth * insets.right;
+    } else {
+      return insets.right;
     }
-    return insets.right;
   }
 
-  static double _getBottomInsets(EdgeInsets? insets) {
-    if (insets == null) {
-      return 0;
+  static double _getBottomInsets(
+    EdgeInsets insets, [
+    bool percentageMargin = false,
+    double anchorHeight = 0,
+  ]) {
+    if (percentageMargin) {
+      return anchorHeight * insets.bottom;
+    } else {
+      return insets.bottom;
     }
-    return insets.bottom;
   }
 
-  static double _getHorizontalInsets(EdgeInsets? insets) {
-    return _getLeftInsets(insets) + _getRightInsets(insets);
+  static double _getHorizontalInsets(
+    EdgeInsets insets, [
+    bool percentageMargin = false,
+    double anchorWidth = 0,
+  ]) {
+    return _getLeftInsets(insets, percentageMargin, anchorWidth) +
+        _getRightInsets(insets, percentageMargin, anchorWidth);
   }
 
-  static double _getVerticalInsets(EdgeInsets? insets) {
-    return _getTopInsets(insets) + _getBottomInsets(insets);
+  static double _getVerticalInsets(
+    EdgeInsets insets, [
+    bool percentageMargin = false,
+    double anchorHeight = 0,
+  ]) {
+    return _getTopInsets(insets, percentageMargin, anchorHeight) +
+        _getBottomInsets(insets, percentageMargin, anchorHeight);
   }
 
   void _layoutByConstrainedNodeTrees(
@@ -1360,7 +1401,9 @@ class _ConstraintRenderBox extends RenderBox
         if (width == wrapContent) {
           maxWidth = size.width;
         } else if (width == matchParent) {
-          minWidth = size.width - _getHorizontalInsets(margin);
+          minWidth = size.width -
+              _getHorizontalInsets(
+                  margin, element.percentageMargin, size.width);
           assert(() {
             if (_debugCheckConstraints) {
               if (minWidth < 0) {
@@ -1379,25 +1422,34 @@ class _ConstraintRenderBox extends RenderBox
             } else {
               left = element.leftConstraint!.getRight(size);
             }
-            if (element.leftConstraint!.isNotLaidOut()) {
-              left += _getLeftInsets(goneMargin);
-            } else {
-              left += _getLeftInsets(margin);
-            }
             double right;
             if (element.rightAlignType == _AlignType.left) {
               right = element.rightConstraint!.getX();
             } else {
               right = element.rightConstraint!.getRight(size);
             }
-            if (element.rightConstraint!.isNotLaidOut()) {
-              right -= _getRightInsets(goneMargin);
+            double leftMargin;
+            if (element.leftConstraint!.isNotLaidOut()) {
+              leftMargin = _getLeftInsets(
+                  goneMargin, element.percentageMargin, right - left);
             } else {
-              right -= _getRightInsets(margin);
+              leftMargin = _getLeftInsets(
+                  margin, element.percentageMargin, right - left);
             }
-            minWidth = (right - left) * element.widthPercent;
+            double rightMargin;
+            if (element.rightConstraint!.isNotLaidOut()) {
+              rightMargin = _getRightInsets(
+                  goneMargin, element.percentageMargin, right - left);
+            } else {
+              rightMargin = _getRightInsets(
+                  margin, element.percentageMargin, right - left);
+            }
+            minWidth = (right - rightMargin - left - leftMargin) *
+                element.widthPercent;
           } else {
-            minWidth = (size.width - _getHorizontalInsets(margin)) *
+            minWidth = (size.width -
+                    _getHorizontalInsets(
+                        margin, element.percentageMargin, size.width)) *
                 element.widthPercent;
           }
           assert(() {
@@ -1420,7 +1472,8 @@ class _ConstraintRenderBox extends RenderBox
         if (height == wrapContent) {
           maxHeight = size.height;
         } else if (height == matchParent) {
-          minHeight = size.height - _getVerticalInsets(margin);
+          minHeight = size.height -
+              _getVerticalInsets(margin, element.percentageMargin, size.height);
           assert(() {
             if (_debugCheckConstraints) {
               if (minHeight < 0) {
@@ -1439,25 +1492,34 @@ class _ConstraintRenderBox extends RenderBox
             } else {
               top = element.topConstraint!.getBottom(size);
             }
-            if (element.topConstraint!.isNotLaidOut()) {
-              top += _getTopInsets(goneMargin);
-            } else {
-              top += _getTopInsets(margin);
-            }
             double bottom;
             if (element.bottomAlignType == _AlignType.top) {
               bottom = element.bottomConstraint!.getY();
             } else {
               bottom = element.bottomConstraint!.getBottom(size);
             }
-            if (element.bottomConstraint!.isNotLaidOut()) {
-              bottom -= _getBottomInsets(goneMargin);
+            double topMargin;
+            if (element.topConstraint!.isNotLaidOut()) {
+              topMargin = _getTopInsets(
+                  goneMargin, element.percentageMargin, bottom - top);
             } else {
-              bottom -= _getBottomInsets(margin);
+              topMargin =
+                  _getTopInsets(margin, element.percentageMargin, bottom - top);
             }
-            minHeight = (bottom - top) * element.heightPercent;
+            double bottomMargin;
+            if (element.bottomConstraint!.isNotLaidOut()) {
+              bottomMargin = _getBottomInsets(
+                  goneMargin, element.percentageMargin, bottom - top);
+            } else {
+              bottomMargin = _getBottomInsets(
+                  margin, element.percentageMargin, bottom - top);
+            }
+            minHeight = (bottom - bottomMargin - top - topMargin) *
+                element.heightPercent;
           } else {
-            minHeight = (size.height - _getVerticalInsets(margin)) *
+            minHeight = (size.height -
+                    _getVerticalInsets(
+                        margin, element.percentageMargin, size.height)) *
                 element.heightPercent;
           }
           assert(() {
@@ -1478,30 +1540,36 @@ class _ConstraintRenderBox extends RenderBox
 
       /// Measure
       if (maxWidth <= 0 || maxHeight <= 0) {
-        element.renderBox!.layout(
-          const BoxConstraints.tightFor(width: 0, height: 0),
-          parentUsesSize: false,
-        );
         element.laidOut = false;
+        if (maxWidth < 0) {
+          minWidth = 0;
+          maxWidth = 0;
+        }
+        if (maxHeight < 0) {
+          minHeight = 0;
+          maxHeight = 0;
+        }
         assert(() {
           if (_debugCheckConstraints) {
-            debugPrint(
-                'Warning: The child element with id ${element.nodeId} has a negative size, will not be laid out and paint.');
+            if (element.renderBox is! _InternalBox) {
+              debugPrint(
+                  'Warning: The child element with id ${element.nodeId} has a negative size, will not be laid out and paint.');
+            }
           }
           return true;
         }());
       } else {
-        element.renderBox!.layout(
-          BoxConstraints(
-            minWidth: minWidth,
-            maxWidth: maxWidth,
-            minHeight: minHeight,
-            maxHeight: maxHeight,
-          ),
-          parentUsesSize: true,
-        );
         element.laidOut = true;
       }
+      element.renderBox!.layout(
+        BoxConstraints(
+          minWidth: minWidth,
+          maxWidth: maxWidth,
+          minHeight: minHeight,
+          maxHeight: maxHeight,
+        ),
+        parentUsesSize: true,
+      );
 
       /// Calculate child x offset
       double offsetX = 0;
@@ -1512,24 +1580,35 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           left = element.leftConstraint!.getRight(size);
         }
-        if (element.leftConstraint!.isNotLaidOut()) {
-          left += _getLeftInsets(goneMargin);
-        } else {
-          left += _getLeftInsets(margin);
-        }
         double right;
         if (element.rightAlignType == _AlignType.left) {
           right = element.rightConstraint!.getX();
         } else {
           right = element.rightConstraint!.getRight(size);
         }
-        if (element.rightConstraint!.isNotLaidOut()) {
-          right -= _getRightInsets(goneMargin);
+        double leftMargin;
+        if (element.leftConstraint!.isNotLaidOut()) {
+          leftMargin = _getLeftInsets(
+              goneMargin, element.percentageMargin, right - left);
         } else {
-          right -= _getRightInsets(margin);
+          leftMargin =
+              _getLeftInsets(margin, element.percentageMargin, right - left);
+        }
+        double rightMargin;
+        if (element.rightConstraint!.isNotLaidOut()) {
+          rightMargin = _getRightInsets(
+              goneMargin, element.percentageMargin, right - left);
+        } else {
+          rightMargin =
+              _getRightInsets(margin, element.percentageMargin, right - left);
         }
         offsetX = left +
-            (right - left - element.getMeasuredWidth(size)) *
+            leftMargin +
+            (right -
+                    rightMargin -
+                    left -
+                    leftMargin -
+                    element.getMeasuredWidth(size)) *
                 element.horizontalBias;
       } else if (element.leftConstraint != null) {
         double left;
@@ -1539,9 +1618,10 @@ class _ConstraintRenderBox extends RenderBox
           left = element.leftConstraint!.getRight(size);
         }
         if (element.leftConstraint!.isNotLaidOut()) {
-          left += _getLeftInsets(goneMargin);
+          left +=
+              _getLeftInsets(goneMargin, element.percentageMargin, size.width);
         } else {
-          left += _getLeftInsets(margin);
+          left += _getLeftInsets(margin, element.percentageMargin, size.width);
         }
         offsetX = left;
       } else if (element.rightConstraint != null) {
@@ -1552,9 +1632,11 @@ class _ConstraintRenderBox extends RenderBox
           right = element.rightConstraint!.getRight(size);
         }
         if (element.rightConstraint!.isNotLaidOut()) {
-          right -= _getRightInsets(goneMargin);
+          right -=
+              _getRightInsets(goneMargin, element.percentageMargin, size.width);
         } else {
-          right -= _getRightInsets(margin);
+          right -=
+              _getRightInsets(margin, element.percentageMargin, size.width);
         }
         offsetX = right - element.getMeasuredWidth(size);
       } else {
@@ -1570,25 +1652,36 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           top = element.topConstraint!.getBottom(size);
         }
-        if (element.topConstraint!.isNotLaidOut()) {
-          top += _getTopInsets(goneMargin);
-        } else {
-          top += _getTopInsets(margin);
-        }
         double bottom;
         if (element.bottomAlignType == _AlignType.top) {
           bottom = element.bottomConstraint!.getY();
         } else {
           bottom = element.bottomConstraint!.getBottom(size);
         }
-        if (element.bottomConstraint!.isNotLaidOut()) {
-          bottom -= _getBottomInsets(goneMargin);
+        double topMargin;
+        if (element.topConstraint!.isNotLaidOut()) {
+          topMargin =
+              _getTopInsets(goneMargin, element.percentageMargin, bottom - top);
         } else {
-          bottom -= _getBottomInsets(margin);
+          topMargin =
+              _getTopInsets(margin, element.percentageMargin, bottom - top);
         }
-        double verticalBias = element.verticalBias;
+        double bottomMargin;
+        if (element.bottomConstraint!.isNotLaidOut()) {
+          bottomMargin = _getBottomInsets(
+              goneMargin, element.percentageMargin, bottom - top);
+        } else {
+          bottomMargin =
+              _getBottomInsets(margin, element.percentageMargin, bottom - top);
+        }
         offsetY = top +
-            (bottom - top - element.getMeasuredHeight(size)) * verticalBias;
+            topMargin +
+            (bottom -
+                    bottomMargin -
+                    top -
+                    topMargin -
+                    element.getMeasuredHeight(size)) *
+                element.verticalBias;
       } else if (element.topConstraint != null) {
         double top;
         if (element.topAlignType == _AlignType.top) {
@@ -1597,9 +1690,10 @@ class _ConstraintRenderBox extends RenderBox
           top = element.topConstraint!.getBottom(size);
         }
         if (element.topConstraint!.isNotLaidOut()) {
-          top += _getTopInsets(goneMargin);
+          top +=
+              _getTopInsets(goneMargin, element.percentageMargin, size.height);
         } else {
-          top += _getTopInsets(margin);
+          top += _getTopInsets(margin, element.percentageMargin, size.height);
         }
         offsetY = top;
       } else if (element.bottomConstraint != null) {
@@ -1610,9 +1704,11 @@ class _ConstraintRenderBox extends RenderBox
           bottom = element.bottomConstraint!.getBottom(size);
         }
         if (element.bottomConstraint!.isNotLaidOut()) {
-          bottom -= _getBottomInsets(goneMargin);
+          bottom -= _getBottomInsets(
+              goneMargin, element.percentageMargin, size.height);
         } else {
-          bottom -= _getBottomInsets(margin);
+          bottom -=
+              _getBottomInsets(margin, element.percentageMargin, size.height);
         }
         offsetY = bottom - element.getMeasuredHeight(size);
       } else if (element.baselineConstraint != null) {
@@ -1628,9 +1724,15 @@ class _ConstraintRenderBox extends RenderBox
               element.getDistanceToBaseline(element.textBaseline, false);
         }
         if (element.baselineConstraint!.isNotLaidOut()) {
-          offsetY += _getTopInsets(goneMargin);
+          offsetY +=
+              _getTopInsets(goneMargin, element.percentageMargin, size.height);
+          offsetY -= _getBottomInsets(
+              goneMargin, element.percentageMargin, size.height);
         } else {
-          offsetY += _getTopInsets(margin);
+          offsetY +=
+              _getTopInsets(margin, element.percentageMargin, size.height);
+          offsetY -=
+              _getBottomInsets(margin, element.percentageMargin, size.height);
         }
       } else {
         /// It is not possible to execute this branch
@@ -1791,6 +1893,21 @@ class _ConstraintRenderBox extends RenderBox
       }());
     }
 
+    assert(() {
+      if (_debugShowGuideline) {
+        for (final element in _paintingOrderList) {
+          if (element.renderBox is _InternalBox) {
+            Paint paint = Paint();
+            paint.color = Colors.green;
+            paint.strokeWidth = 2;
+            context.canvas.drawLine(element.offset,
+                Offset(element.getRight(size), element.getBottom(size)), paint);
+          }
+        }
+      }
+      return true;
+    }());
+
     if (_releasePrintLayoutTime && kReleaseMode) {
       print(
           'ConstraintLayout@${_debugName ?? hashCode} paint time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is release mode).');
@@ -1859,6 +1976,8 @@ class _ConstrainedNode {
 
   double get heightPercent => parentData.heightPercent!;
 
+  bool get percentageMargin => parentData.percentageMargin!;
+
   PercentageAnchor get widthPercentageAnchor =>
       parentData.widthPercentageAnchor!;
 
@@ -1918,9 +2037,6 @@ class _ConstrainedNode {
     if (isParent()) {
       return size.width;
     }
-    if (!laidOut) {
-      return 0;
-    }
     return renderBox!.size.width;
   }
 
@@ -1928,18 +2044,12 @@ class _ConstrainedNode {
     if (isParent()) {
       return size.height;
     }
-    if (!laidOut) {
-      return 0;
-    }
     return renderBox!.size.height;
   }
 
   double getDistanceToBaseline(TextBaseline textBaseline, bool absolute) {
     if (isParent()) {
       return 0;
-    }
-    if (!laidOut) {
-      return getY();
     }
     double? baseline;
     if (kDebugMode) {
@@ -2064,7 +2174,7 @@ class _InternalBox extends RenderBox {
   @mustCallSuper
   void updateParentData() {
     _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
-    constraintBoxData.visibility = gone;
+    constraintBoxData.visibility = invisible;
     constraintBoxData.translate = Offset.zero;
     constraintBoxData.translateConstraint = false;
     constraintBoxData.goneMargin = EdgeInsets.zero;
@@ -2072,11 +2182,6 @@ class _InternalBox extends RenderBox {
     constraintBoxData.verticalBias = 0.5;
     constraintBoxData.clickPadding = EdgeInsets.zero;
     constraintBoxData.textBaseline = TextBaseline.alphabetic;
-  }
-
-  @override
-  void performLayout() {
-    size = Size.zero;
   }
 }
 
@@ -2193,32 +2298,75 @@ class _GuidelineRenderBox extends _InternalBox {
     constraintBoxData.id = _id;
     if (_horizontal) {
       if (_guidelineBegin != null) {
+        constraintBoxData.left = parent.left;
         constraintBoxData.top = parent.top;
+        constraintBoxData.right = parent.right;
         constraintBoxData.bottom = null;
         constraintBoxData.width = matchParent;
         constraintBoxData.height = 0;
         constraintBoxData.margin = EdgeInsets.only(top: _guidelineBegin!);
+        constraintBoxData.percentageMargin = false;
       } else if (_guidelineEnd != null) {
-        constraintBoxData.bottom = parent.bottom;
+        constraintBoxData.left = parent.left;
         constraintBoxData.top = null;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.bottom = parent.bottom;
         constraintBoxData.width = matchParent;
         constraintBoxData.height = 0;
         constraintBoxData.margin = EdgeInsets.only(bottom: _guidelineEnd!);
-      } else {}
+        constraintBoxData.percentageMargin = false;
+      } else {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.bottom = null;
+        constraintBoxData.width = matchParent;
+        constraintBoxData.height = 0;
+        constraintBoxData.margin = EdgeInsets.only(
+          top: _guidelinePercent!,
+        );
+        constraintBoxData.percentageMargin = true;
+      }
     } else {
       if (_guidelineBegin != null) {
         constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
         constraintBoxData.right = null;
+        constraintBoxData.bottom = parent.bottom;
         constraintBoxData.width = 0;
         constraintBoxData.height = matchParent;
         constraintBoxData.margin = EdgeInsets.only(left: _guidelineBegin!);
+        constraintBoxData.percentageMargin = false;
       } else if (_guidelineEnd != null) {
-        constraintBoxData.right = parent.right;
         constraintBoxData.left = null;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.bottom = parent.bottom;
         constraintBoxData.width = 0;
         constraintBoxData.height = matchParent;
         constraintBoxData.margin = EdgeInsets.only(right: _guidelineEnd!);
-      } else {}
+        constraintBoxData.percentageMargin = false;
+      } else {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.right = null;
+        constraintBoxData.bottom = parent.bottom;
+        constraintBoxData.width = 0;
+        constraintBoxData.height = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(
+          left: _guidelinePercent!,
+        );
+        constraintBoxData.percentageMargin = true;
+      }
+    }
+  }
+
+  @override
+  void performLayout() {
+    if (_horizontal) {
+      size = Size(constraints.minWidth, 0);
+    } else {
+      size = Size(0, constraints.minHeight);
     }
   }
 }
