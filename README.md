@@ -35,7 +35,8 @@ Coming soon:
 1. barrier
 2. constraints visualization
 3. chain
-4. more...
+4. dimension ratio
+5. more...
 
 Support platform:
 
@@ -278,6 +279,67 @@ class ExampleState extends State<Example> {
 ```
 
 ![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
+
+# Advanced usage
+
+1. guideline
+
+```dart
+class ExampleState extends State<Example> {
+  ConstraintId left = ConstraintId();
+  ConstraintId right = ConstraintId();
+  ConstraintId guideline = ConstraintId();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: ConstraintLayout(
+          children: [
+            Container(
+              color: const Color(0xFF005BBB),
+            ).applyConstraint(
+              id: left,
+              width: matchParent,
+              height: matchConstraint,
+              top: parent.top,
+              bottom: guideline.top,
+            ),
+            Guideline(
+              id: guideline,
+              horizontal: true,
+              guidelinePercent: 0.5,
+            ),
+            Container(
+              color: const Color(0xFFFFD500),
+            ).applyConstraint(
+              id: right,
+              width: matchParent,
+              height: matchConstraint,
+              top: guideline.bottom,
+              bottom: parent.bottom,
+            ),
+            const Text(
+              'Stand with the people of Ukraine',
+              style: TextStyle(
+                fontSize: 40,
+                color: Colors.white,
+              ),
+            ).applyConstraint(
+              width: wrapContent,
+              height: wrapContent,
+              centerHorizontalTo: parent,
+              bottom: guideline.bottom,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+![guideline.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/guideline.webp?raw=true)
 
 # Support me
 
