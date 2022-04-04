@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
 
-class Example extends StatefulWidget {
-  const Example({Key? key}) : super(key: key);
-
-  @override
-  State createState() => ExampleState();
-}
-
-class ExampleState extends State<Example> {
-  ConstraintId guideline = ConstraintId();
+class GuidelineExample extends StatelessWidget {
+  const GuidelineExample({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    ConstraintId guideline = ConstraintId();
     return MaterialApp(
       home: Scaffold(
         body: ConstraintLayout(

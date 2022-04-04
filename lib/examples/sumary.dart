@@ -1,71 +1,3 @@
-# Flutter ConstraintLayout
-
-Build flexible layouts with constraints, Similar to Android ConstraintLayout.
-
-No matter how complex the layout is and how deep the constraints are, it has almost the same
-performance as Flex and Stack. When facing complex layouts, it provides better performance,
-flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
-
-Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to rule
-him.
-
-# Feature
-
-1. build flexible layouts with constraints
-    1. leftToLeft
-    2. leftToRight
-    3. rightToLeft
-    4. rightToRight
-    5. topToTop
-    6. topToBottom
-    7. bottomToTop
-    8. bottomToBottom
-    9. baselineToTop
-    10. baselineToBottom
-    11. baselineToBaseline
-2. margin and goneMargin
-3. clickPadding (quickly expand the click area of child elements without changing their actual size)
-4. visibility control
-5. constraint integrity hint
-6. bias
-7. z-index
-8. translate
-9. percentage layout
-10. guideline
-11. constraints and widgets separation
-
-Coming soon:
-
-1. barrier
-2. constraints visualization
-3. chain
-4. dimension ratio
-5. more...
-
-Support platform:
-
-1. Android
-2. iOS
-3. Mac
-4. Windows
-5. Linux
-6. Web
-
-# Import
-
-Null-safety
-
-```yaml
-dependencies:
-  flutter_constraintlayout:
-    git:
-      url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.7-beta'
-```
-
-# Example
-
-```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
 
@@ -92,6 +24,7 @@ class ExampleState extends State<Example> {
   ConstraintId box9 = ConstraintId();
   ConstraintId box10 = ConstraintId();
   ConstraintId box11 = ConstraintId();
+  ConstraintId barrier = ConstraintId();
 
   @override
   Widget build(BuildContext context) {
@@ -274,108 +207,14 @@ class ExampleState extends State<Example> {
               verticalBias: 0,
               centerTo: parent,
             ),
+            Barrier(
+              id: barrier,
+              direction: BarrierDirection.bottom,
+              referencedIds: [box3, box5],
+            ),
           ],
         ),
       ),
     );
   }
 }
-```
-
-![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
-
-# Advanced usage
-
-1. guideline
-
-```dart
-class ExampleState extends State<Example> {
-  ConstraintId guideline = ConstraintId();
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: ConstraintLayout(
-          children: [
-            Container(
-              color: const Color(0xFF005BBB),
-            ).applyConstraint(
-              width: matchParent,
-              height: matchConstraint,
-              top: parent.top,
-              bottom: guideline.top,
-            ),
-            Guideline(
-              id: guideline,
-              horizontal: true,
-              guidelinePercent: 0.5,
-            ),
-            Container(
-              color: const Color(0xFFFFD500),
-            ).applyConstraint(
-              width: matchParent,
-              height: matchConstraint,
-              top: guideline.bottom,
-              bottom: parent.bottom,
-            ),
-            const Text(
-              'Stand with the people of Ukraine',
-              style: TextStyle(
-                fontSize: 40,
-                color: Colors.white,
-              ),
-            ).applyConstraint(
-              width: wrapContent,
-              height: wrapContent,
-              centerHorizontalTo: parent,
-              bottom: guideline.bottom,
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-```
-
-![guideline.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/guideline.webp?raw=true)
-
-# Support me
-
-If it helps you a lot, consider sponsoring me a cup of milk tea.
-<br/>
-[Paypal](https://www.paypal.com/paypalme/hackware1993)
-<br/>
-<br/>
-![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
-
-# Contact
-
-hackware1993@gmail.com
-
-# License
-
-```
-MIT License
-
-Copyright (c) 2022 hackware1993
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
