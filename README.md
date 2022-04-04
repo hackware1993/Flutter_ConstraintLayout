@@ -9,7 +9,8 @@ flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nest
 Warning:
 For layout performance considerations, constraints are always one-way, and there is no two child
 elements that directly or indirectly restrain each other. Each constraint should describe exactly
-where the child elements are located.
+where the child elements are located. Although constraints can only be one-way, you can still better
+handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
 
 Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to rule
 him.
