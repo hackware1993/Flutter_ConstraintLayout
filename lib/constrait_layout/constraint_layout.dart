@@ -1130,6 +1130,9 @@ class _ConstraintRenderBox extends RenderBox
       if (childParentData.baseline != null) {
         constraintsIdSet.add(childParentData.baseline!.id!);
       }
+      if (child is _BarrierRenderBox) {
+        constraintsIdSet.addAll(childParentData._referencedIds!);
+      }
       child = childParentData.nextSibling;
     }
     Set<ConstraintId> illegalIdSet = constraintsIdSet.difference(idSet);
