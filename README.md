@@ -33,14 +33,14 @@ him.
 9. percentage layout
 10. guideline
 11. constraints and widgets separation
+12. barrier
 
 Coming soon:
 
-1. barrier
-2. constraints visualization
-3. chain
-4. dimension ratio
-5. more...
+1. constraints visualization
+2. chain
+3. dimension ratio
+4. more...
 
 Support platform:
 
@@ -289,11 +289,15 @@ class ExampleState extends State<Example> {
 1. guideline
 
 ```dart
-class ExampleState extends State<Example> {
-  ConstraintId guideline = ConstraintId();
+import 'package:flutter/material.dart';
+import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+
+class GuidelineExample extends StatelessWidget {
+  const GuidelineExample({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    ConstraintId guideline = ConstraintId();
     return MaterialApp(
       home: Scaffold(
         body: ConstraintLayout(
@@ -340,6 +344,74 @@ class ExampleState extends State<Example> {
 ```
 
 ![guideline.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/guideline.webp?raw=true)
+
+2. barrier
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+
+class BarrierExample extends StatelessWidget {
+  const BarrierExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    ConstraintId leftChild = ConstraintId();
+    ConstraintId rightChild = ConstraintId();
+    ConstraintId barrier = ConstraintId();
+    return MaterialApp(
+      home: Scaffold(
+        body: ConstraintLayout(
+          debugShowGuideline: true,
+          children: [
+            Container(
+              color: const Color(0xFF005BBB),
+            ).applyConstraint(
+              id: leftChild,
+              width: 200,
+              height: 200,
+              top: parent.top,
+              left: parent.left,
+            ),
+            Container(
+              color: const Color(0xFFFFD500),
+            ).applyConstraint(
+              id: rightChild,
+              width: 200,
+              height: matchConstraint,
+              right: parent.right,
+              top: parent.top,
+              bottom: parent.bottom,
+              heightPercent: 0.5,
+              verticalBias: 0,
+            ),
+            Barrier(
+              id: barrier,
+              direction: BarrierDirection.bottom,
+              referencedIds: [leftChild, rightChild],
+            ),
+            const Text(
+              'Align to barrier',
+              style: TextStyle(
+                fontSize: 40,
+                color: Colors.blue,
+              ),
+            ).applyConstraint(
+              width: wrapContent,
+              height: wrapContent,
+              centerHorizontalTo: parent,
+              top: barrier.bottom,
+              goneMargin: const EdgeInsets.only(top: 20),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+![barrier.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/barrier.gif?raw=true)
 
 # Support me
 

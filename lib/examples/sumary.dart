@@ -32,6 +32,7 @@ class ExampleState extends State<Example> {
       home: Scaffold(
         backgroundColor: Colors.black,
         body: ConstraintLayout(
+          debugShowGuideline: true,
           // Constraints can be separated from widgets
           childConstraints: [
             Constraint(
@@ -168,31 +169,6 @@ class ExampleState extends State<Example> {
               baseline: box7.baseline,
               left: box7.left,
             ),
-            ...horizontalChain(
-              centerHorizontalTo: parent,
-              hChainList: [
-                Container(
-                  color: Colors.redAccent,
-                  alignment: Alignment.center,
-                  child: const Text('chain item 1'),
-                ).applyConstraint(
-                  id: box10,
-                  width: matchConstraint,
-                  height: 200,
-                  top: parent.top,
-                ),
-                Container(
-                  color: Colors.redAccent,
-                  alignment: Alignment.center,
-                  child: const Text('chain item 2'),
-                ).applyConstraint(
-                  id: box11,
-                  width: matchConstraint,
-                  height: 200,
-                  top: parent.top,
-                ),
-              ],
-            ),
             Container(
               color: Colors.yellow,
               alignment: Alignment.bottomCenter,
@@ -209,9 +185,19 @@ class ExampleState extends State<Example> {
             ),
             Barrier(
               id: barrier,
-              direction: BarrierDirection.bottom,
-              referencedIds: [box3, box5],
+              direction: BarrierDirection.left,
+              referencedIds: [box6, box5],
             ),
+            Container(
+              color: const Color(0xFFFFD500),
+              alignment: Alignment.center,
+              child: const Text('align to barrier'),
+            ).applyConstraint(
+              width: 100,
+              height: 200,
+              top: box5.top,
+              right: barrier.left,
+            )
           ],
         ),
       ),
