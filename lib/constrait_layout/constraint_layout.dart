@@ -17,22 +17,6 @@ import 'package:flutter/rendering.dart';
 /// indirectly restrain each other. Each constraint should describe
 /// exactly where the child elements are located.
 ///
-/// features:
-///   1. build flexible layouts with constraints
-///   2. margin and goneMargin
-///   3. clickPadding (quickly expand the click area of child elements without changing their actual size)
-///   4. visibility control
-///   5. constraint integrity hint
-///   6. bias
-///   7. z-index
-///   8. percentage layout
-///   9. guideline
-///
-///  not implement
-///   . barrier
-///   . constraints visualization
-///   . chain
-///
 /// author: hackware
 /// home page: https:///github.com/hackware1993
 /// email: hackware1993@gmail.com

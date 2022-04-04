@@ -6,6 +6,11 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
+Warning:
+For layout performance considerations, constraints are always one-way, and there is no two child
+elements that directly or indirectly restrain each other. Each constraint should describe exactly
+where the child elements are located.
+
 Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to rule
 him.
 
@@ -60,7 +65,7 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.7-beta'
+      ref: 'v0.8-beta'
 ```
 
 # Example
