@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout.dart';
 
 class Example extends StatefulWidget {
   const Example({Key? key}) : super(key: key);

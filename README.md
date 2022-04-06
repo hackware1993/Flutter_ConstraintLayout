@@ -6,9 +6,10 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
-## It is recommended to use ConstraintLayout at the top level. For moderately complex pages, max 500 FPS performance is promised
+**It is recommended to use ConstraintLayout at the top level. For moderately complex pages, frame
+rate up to 500 fps.**
 
-## If not necessary, try to be relative to the parent layout, so that you can define less id
+**If not necessary, try to be relative to the parent layout, so that you can define less id.**
 
 Warning:
 For layout performance considerations, constraints are always one-way, and there is no two child
@@ -78,7 +79,7 @@ dependencies:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
 
 class Example extends StatefulWidget {
   const Example({Key? key}) : super(key: key);
@@ -301,7 +302,7 @@ class ExampleState extends State<Example> {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
 
 class GuidelineExample extends StatelessWidget {
   const GuidelineExample({Key? key}) : super(key: key);
@@ -360,7 +361,7 @@ class GuidelineExample extends StatelessWidget {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
 
 class BarrierExample extends StatelessWidget {
   const BarrierExample({Key? key}) : super(key: key);
@@ -428,7 +429,7 @@ class BarrierExample extends StatelessWidget {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
 
 class BadgeExample extends StatelessWidget {
   const BadgeExample({Key? key}) : super(key: key);

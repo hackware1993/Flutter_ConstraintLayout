@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/constrait_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout.dart';
 
 class GuidelineExample extends StatelessWidget {
   const GuidelineExample({Key? key}) : super(key: key);

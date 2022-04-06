@@ -149,8 +149,8 @@ extension WidgetsExt on Widget {
   Constrained applyConstraint({
     Key? key,
     ConstraintId? id,
-    required double width,
-    required double height,
+    double width = wrapContent,
+    double height = wrapContent,
     @_baseConstraint _Align? left,
     @_baseConstraint _Align? top,
     @_baseConstraint _Align? right,
@@ -468,8 +468,8 @@ class Constraint {
 
   Constraint({
     this.id,
-    required this.width,
-    required this.height,
+    this.width = wrapContent,
+    this.height = wrapContent,
     @_baseConstraint this.left,
     @_baseConstraint this.top,
     @_baseConstraint this.right,
