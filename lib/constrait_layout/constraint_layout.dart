@@ -184,6 +184,7 @@ extension WidgetsExt on Widget {
     @_wrapperConstraint ConstraintId? centerVerticalTo,
     OnLayoutCallback? callback,
     double chainWeight = 1,
+    bool percentageTranslate = false,
   }) {
     return Constrained(
       key: key,
@@ -224,6 +225,7 @@ extension WidgetsExt on Widget {
         centerVerticalTo: centerVerticalTo,
         callback: callback,
         chainWeight: chainWeight,
+        percentageTranslate: percentageTranslate,
       ),
       child: this,
     );
@@ -262,7 +264,14 @@ bool _debugEnsureNotEmptyString(String name, String? value) {
 
 bool _debugEnsurePercent(String name, double? percent) {
   if (percent == null || percent < 0 || percent > 1) {
-    throw ConstraintLayoutException('$name is between [0-1].');
+    throw ConstraintLayoutException('$name is between [0,1].');
+  }
+  return true;
+}
+
+bool _debugEnsureNegativePercent(String name, double? percent) {
+  if (percent == null || percent < -1 || percent > 1) {
+    throw ConstraintLayoutException('$name is between [-1,1].');
   }
   return true;
 }
@@ -455,6 +464,7 @@ class Constraint {
 
   final OnLayoutCallback? callback;
   final double chainWeight;
+  final bool percentageTranslate;
 
   Constraint({
     this.id,
@@ -493,6 +503,7 @@ class Constraint {
     @_wrapperConstraint this.centerVerticalTo,
     this.callback,
     this.chainWeight = 1,
+    this.percentageTranslate = false,
   });
 
   @override
@@ -534,7 +545,8 @@ class Constraint {
           bottomRightTo == other.bottomRightTo &&
           centerHorizontalTo == other.centerHorizontalTo &&
           centerVerticalTo == other.centerVerticalTo &&
-          callback == other.callback;
+          callback == other.callback &&
+          percentageTranslate == other.percentageTranslate;
 
   @override
   int get hashCode =>
@@ -572,7 +584,8 @@ class Constraint {
       bottomRightTo.hashCode ^
       centerHorizontalTo.hashCode ^
       centerVerticalTo.hashCode ^
-      callback.hashCode;
+      callback.hashCode ^
+      percentageTranslate.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -605,20 +618,26 @@ class Constraint {
     assert(_debugEnsurePercent('heightPercent', heightPercent));
     assert(_debugEnsurePercent('horizontalBias', horizontalBias));
     assert(_debugEnsurePercent('verticalBias', verticalBias));
-    assert(!percentageMargin || _debugEnsurePercent('leftMargin', margin.left));
-    assert(!percentageMargin || _debugEnsurePercent('topMargin', margin.top));
-    assert(
-        !percentageMargin || _debugEnsurePercent('rightMargin', margin.right));
     assert(!percentageMargin ||
-        _debugEnsurePercent('bottomMargin', margin.bottom));
+        _debugEnsureNegativePercent('leftMargin', margin.left));
     assert(!percentageMargin ||
-        _debugEnsurePercent('leftGoneMargin', goneMargin.left));
+        _debugEnsureNegativePercent('topMargin', margin.top));
     assert(!percentageMargin ||
-        _debugEnsurePercent('topGoneMargin', goneMargin.top));
+        _debugEnsureNegativePercent('rightMargin', margin.right));
     assert(!percentageMargin ||
-        _debugEnsurePercent('rightGoneMargin', goneMargin.right));
+        _debugEnsureNegativePercent('bottomMargin', margin.bottom));
     assert(!percentageMargin ||
-        _debugEnsurePercent('bottomGoneMargin', goneMargin.bottom));
+        _debugEnsureNegativePercent('leftGoneMargin', goneMargin.left));
+    assert(!percentageMargin ||
+        _debugEnsureNegativePercent('topGoneMargin', goneMargin.top));
+    assert(!percentageMargin ||
+        _debugEnsureNegativePercent('rightGoneMargin', goneMargin.right));
+    assert(!percentageMargin ||
+        _debugEnsureNegativePercent('bottomGoneMargin', goneMargin.bottom));
+    assert(!percentageTranslate ||
+        _debugEnsureNegativePercent('xTranslate', translate.dx));
+    assert(!percentageTranslate ||
+        _debugEnsureNegativePercent('yTranslate', translate.dy));
     return true;
   }
 
@@ -849,6 +868,11 @@ class Constraint {
 
     parentData.callback = callback;
 
+    if (parentData.percentageTranslate != percentageTranslate) {
+      parentData.percentageTranslate = percentageTranslate;
+      needsPaint = true;
+    }
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
@@ -904,6 +928,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? horizontalBias;
   double? verticalBias;
   OnLayoutCallback? callback;
+  bool? percentageTranslate;
 
   // for internal use
   late Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes;
@@ -2028,7 +2053,15 @@ class _ConstrainedNode {
     }
   }
 
-  Offset get translate => parentData.translate!;
+  Offset get translate {
+    if (!percentageTranslate) {
+      return parentData.translate!;
+    } else {
+      double dx = renderBox!.size.width * parentData.translate!.dx;
+      double dy = renderBox!.size.height * parentData.translate!.dy;
+      return Offset(dx, dy);
+    }
+  }
 
   bool get translateConstraint => parentData.translateConstraint!;
 
@@ -2063,6 +2096,8 @@ class _ConstrainedNode {
   List<ConstraintId>? get referencedIds => parentData._referencedIds;
 
   BarrierDirection? get direction => parentData._direction;
+
+  bool get percentageTranslate => parentData.percentageTranslate!;
 
   set offset(Offset value) {
     parentData.offset = value;
@@ -2286,6 +2321,7 @@ class _InternalBox extends RenderBox {
     constraintBoxData.callback = null;
     constraintBoxData._direction = null;
     constraintBoxData._referencedIds = null;
+    constraintBoxData.percentageTranslate = false;
   }
 }
 
