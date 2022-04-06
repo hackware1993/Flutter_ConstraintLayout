@@ -6,9 +6,9 @@ class BarrierExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ConstraintId leftChild = ConstraintId();
-    ConstraintId rightChild = ConstraintId();
-    ConstraintId barrier = ConstraintId();
+    ConstraintId leftChild = ConstraintId('leftChild');
+    ConstraintId rightChild = ConstraintId('rightChild');
+    ConstraintId barrier = ConstraintId('barrier');
     return MaterialApp(
       home: Scaffold(
         body: ConstraintLayout(

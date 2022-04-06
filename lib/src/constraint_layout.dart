@@ -22,7 +22,7 @@ import 'package:flutter/rendering.dart';
 /// email: hackware1993@gmail.com
 class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// Constraints can be separated from widgets
-  final List<Constraint>? childConstraints;
+  final List<Constraint> childConstraints;
 
   final bool debugShowGuideline;
   final bool debugShowClickArea;
@@ -35,7 +35,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   ConstraintLayout({
     Key? key,
-    this.childConstraints,
+    this.childConstraints = const [],
     required List<Widget> children,
     this.debugShowGuideline = false,
     this.debugShowClickArea = false,
@@ -113,7 +113,8 @@ List<Widget> horizontalChain({
         // packed
       }
 
-      ConstraintId guidelineId = ConstraintId();
+      ConstraintId guidelineId = ConstraintId(
+          'internal_horizontal_chain_guideline_$i@${chainList[0].constraint.hashCode}');
       Guideline guideline = Guideline(
         id: guidelineId,
         horizontal: false,
@@ -276,7 +277,7 @@ bool _debugEnsureNegativePercent(String name, double? percent) {
   return true;
 }
 
-ConstraintId parent = ConstraintId();
+ConstraintId parent = ConstraintId('parent');
 const double matchConstraint = -3.1415926;
 const double matchParent = -2.7182818;
 const double wrapContent = -0.6180339;
@@ -309,9 +310,9 @@ enum PercentageAnchor {
 }
 
 class ConstraintId {
-  String? name;
+  String id;
 
-  ConstraintId({this.name}) {
+  ConstraintId(this.id) {
     left.id = this;
     top.id = this;
     right.id = this;
@@ -340,24 +341,17 @@ class ConstraintId {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    if ((other).name == null && name == null) {
-      return false;
-    }
-    return (other).name == name;
+    return (other).id == id;
   }
 
   @override
   int get hashCode {
-    if (name == null) {
-      return super.hashCode;
-    } else {
-      return name.hashCode;
-    }
+    return id.hashCode;
   }
 
   @override
   String toString() {
-    return 'ConstraintId{name: $name}';
+    return 'ConstraintId{name: $id}';
   }
 }
 
@@ -992,12 +986,10 @@ class UnConstrained extends ParentDataWidget<_ConstraintBoxData> {
   @override
   void applyParentData(RenderObject renderObject) {
     assert(renderObject.parent is _ConstraintRenderBox);
-    List<Constraint>? childConstraints =
+    List<Constraint> childConstraints =
         (renderObject.parent as _ConstraintRenderBox)._childConstraints;
-    assert(childConstraints != null,
-        'Can not find Constraint for child with id $id.');
     Iterable<Constraint> constraintIterable =
-        childConstraints!.where((element) => element.id == id);
+        childConstraints.where((element) => element.id == id);
     assert(constraintIterable.isNotEmpty,
         'Can not find Constraint for child with id $id.');
     assert(constraintIterable.length == 1, 'Duplicate id in childConstraints.');
@@ -1016,7 +1008,7 @@ class _ConstraintRenderBox extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ConstraintBoxData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ConstraintBoxData> {
-  List<Constraint>? _childConstraints;
+  late List<Constraint> _childConstraints;
   late bool _debugShowGuideline;
   late bool _debugShowClickArea;
   late bool _debugPrintConstraints;
@@ -1031,8 +1023,19 @@ class _ConstraintRenderBox extends RenderBox
   final Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes = HashMap();
   late List<_ConstrainedNode> _paintingOrderList;
 
-  set childConstraints(List<Constraint>? value) {
-    if (_childConstraints != value) {
+  set childConstraints(List<Constraint> value) {
+    bool isSameList = true;
+    if (_childConstraints.length != value.length) {
+      isSameList = false;
+    } else {
+      for (int i = 0; i < _childConstraints.length; i++) {
+        if (_childConstraints[i] != value[i]) {
+          isSameList = false;
+          break;
+        }
+      }
+    }
+    if (!isSameList) {
       _childConstraints = value;
       markNeedsLayout();
     }
@@ -1255,8 +1258,7 @@ class _ConstraintRenderBox extends RenderBox
           child,
           childParentData.id ??
               ConstraintId(
-                  name:
-                      'child[$childIndex]@${child.runtimeType}@${child.hashCode}'));
+                  'child[$childIndex]@${child.runtimeType}@${child.hashCode}'));
       currentNode.parentData = childParentData;
       currentNode.index = childIndex;
 
@@ -2583,7 +2585,18 @@ class _BarrierRenderBox extends _InternalBox {
   }
 
   set referencedIds(List<ConstraintId> value) {
-    if (_referencedIds != value) {
+    bool isSameList = true;
+    if (_referencedIds.length != value.length) {
+      isSameList = false;
+    } else {
+      for (int i = 0; i < _referencedIds.length; i++) {
+        if (_referencedIds[i] != value[i]) {
+          isSameList = false;
+          break;
+        }
+      }
+    }
+    if (!isSameList) {
       _referencedIds = value;
       updateParentData();
       markParentNeedsLayout();

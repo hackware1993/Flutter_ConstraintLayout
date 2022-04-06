@@ -6,7 +6,7 @@ class BadgeExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ConstraintId anchor = ConstraintId();
+    ConstraintId anchor = ConstraintId('anchor');
     return MaterialApp(
       home: Scaffold(
         body: ConstraintLayout(
