@@ -8,6 +8,8 @@ flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nest
 
 ## It is recommended to use ConstraintLayout at the top level. For moderately complex pages, 500 FPS performance is promised
 
+## If not necessary, try to be relative to the parent layout, so that you can define less id
+
 Warning:
 For layout performance considerations, constraints are always one-way, and there is no two child
 elements that directly or indirectly restrain each other. Each constraint should describe exactly
