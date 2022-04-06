@@ -6,17 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-/// No matter how complex the layout is and how deep the constraints
-/// are, each child element of ConstraintLayout will only be measured once
-/// This results in extremely high layout performance.
-///
-/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-/// Warning:
-/// For layout performance considerations, constraints are always
-/// one-way, and there is no two child elements that directly or
-/// indirectly restrain each other. Each constraint should describe
-/// exactly where the child elements are located.
-///
 /// author: hackware
 /// home page: https:///github.com/hackware1993
 /// email: hackware1993@gmail.com
