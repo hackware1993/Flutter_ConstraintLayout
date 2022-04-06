@@ -6,8 +6,10 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
-**It is recommended to use ConstraintLayout at the top level. For medium complex layout, layout and
-drawing total time within 5 milliseconds, the frame rate can be easily reached 200 fps.**
+**It is recommended to use ConstraintLayout at the top level. For extremely complex layout(A
+thousand child elements, a thousand constraints), layout and drawing total time within 5
+milliseconds（debug mode on Windows 10，release mode take less time）, the frame rate can be easily
+reached 200 fps.**
 
 **If not necessary, try to be relative to the parent layout, so that you can define less id.**
 
