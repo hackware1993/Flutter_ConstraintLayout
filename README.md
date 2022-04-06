@@ -6,7 +6,7 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
-## It is recommended to use ConstraintLayout at the top level. For moderately complex pages, 500 FPS performance is promised
+## It is recommended to use ConstraintLayout at the top level. For moderately complex pages, max 500 FPS performance is promised
 
 ## If not necessary, try to be relative to the parent layout, so that you can define less id
 
