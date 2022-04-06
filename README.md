@@ -6,16 +6,20 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
-**It is recommended to use ConstraintLayout at the top level. For moderately complex pages, frame
-rate up to 500 fps.**
+**It is recommended to use ConstraintLayout at the top level. For medium complex layout, layout and
+drawing total time within 5 milliseconds, the frame rate can be easily reached 200 fps.**
 
 **If not necessary, try to be relative to the parent layout, so that you can define less id.**
 
-Warning:
+**Warning**:
 For layout performance considerations, constraints are always one-way, and there is no two child
 elements that directly or indirectly restrain each other. Each constraint should describe exactly
 where the child elements are located. Although constraints can only be one-way, you can still better
 handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
+
+**Warning**:
+When the layout is complex, if the child elements need to be repainted frequently, it is recommended
+to use RepaintBoundary to improve performance.
 
 Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to rule
 him.
