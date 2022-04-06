@@ -1607,7 +1607,8 @@ class _ConstraintRenderBox extends RenderBox
         }
         assert(() {
           if (_debugCheckConstraints) {
-            if (element.renderBox is! _InternalBox) {
+            if (element.renderBox is! _InternalBox &&
+                element.visibility != gone) {
               debugPrint(
                   'Warning: The child element with id ${element.nodeId} has a negative size, will not be laid out and paint.');
             }
