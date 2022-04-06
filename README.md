@@ -23,8 +23,7 @@ handle things that were previously (Android ConstraintLayout) two-way constraint
 When the layout is complex, if the child elements need to be repainted frequently, it is recommended
 to use RepaintBoundary to improve performance.
 
-Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to rule
-him.
+Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to insult him.
 
 # Feature
 
