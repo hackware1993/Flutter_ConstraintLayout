@@ -1012,6 +1012,10 @@ class _ConstraintRenderBox extends RenderBox
   final Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes = HashMap();
   late List<_ConstrainedNode> _paintingOrderList;
 
+  static const int maxTimeUsage = 20;
+  Queue<int> layoutTimeUsage = Queue();
+  Queue<int> paintTimeUsage = Queue();
+
   set childConstraints(List<Constraint> value) {
     bool isSameList = true;
     if (_childConstraints.length != value.length) {
@@ -1349,13 +1353,15 @@ class _ConstraintRenderBox extends RenderBox
     _layoutByConstrainedNodeTrees(constrainedNodeTrees);
 
     if (_releasePrintLayoutTime && kReleaseMode) {
-      print(
-          'ConstraintLayout@${_debugName ?? hashCode} layout time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is release mode).');
+      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+      if (layoutTimeUsage.length > maxTimeUsage) {
+        layoutTimeUsage.removeFirst();
+      }
     }
     assert(() {
-      if (_debugPrintLayoutTime) {
-        debugPrint(
-            'ConstraintLayout@${_debugName ?? hashCode} layout time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is debug mode, release mode may take less time).');
+      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+      if (layoutTimeUsage.length > maxTimeUsage) {
+        layoutTimeUsage.removeFirst();
       }
       return true;
     }());
@@ -2000,16 +2006,68 @@ class _ConstraintRenderBox extends RenderBox
     }());
 
     if (_releasePrintLayoutTime && kReleaseMode) {
-      print(
-          'ConstraintLayout@${_debugName ?? hashCode} paint time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is release mode).');
+      paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+      if (paintTimeUsage.length > maxTimeUsage) {
+        paintTimeUsage.removeFirst();
+      }
+      _debugShowPerformance(context, offset);
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        debugPrint(
-            'ConstraintLayout@${_debugName ?? hashCode} paint time = ${DateTime.now().millisecondsSinceEpoch - startTime} ms(current is debug mode, release mode may take less time).');
+        paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+        if (paintTimeUsage.length > maxTimeUsage) {
+          paintTimeUsage.removeFirst();
+        }
+        _debugShowPerformance(context, offset);
       }
       return true;
     }());
+  }
+
+  void _debugShowPerformance(
+    PaintingContext context,
+    Offset offset,
+  ) {
+    Iterator<int> layoutIterator = layoutTimeUsage.iterator;
+    Iterator<int> paintIterator = paintTimeUsage.iterator;
+    double heightOffset = 0;
+    while (layoutIterator.moveNext() && paintIterator.moveNext()) {
+      int layoutTime = layoutIterator.current;
+      int paintTime = paintIterator.current;
+      ui.ParagraphBuilder paragraphBuilder =
+          ui.ParagraphBuilder(ui.ParagraphStyle(
+        textAlign: TextAlign.center,
+        fontSize: 8,
+      ));
+      if (layoutTime > 5 || paintTime > 5) {
+        paragraphBuilder.pushStyle(ui.TextStyle(
+          color: Colors.red,
+        ));
+      } else {
+        paragraphBuilder.pushStyle(ui.TextStyle(
+          color: Colors.green,
+        ));
+      }
+      paragraphBuilder.addText("layout $layoutTime ms, draw $paintTime ms");
+      ui.Paragraph paragraph = paragraphBuilder.build();
+      paragraph.layout(const ui.ParagraphConstraints(
+        width: 200,
+      ));
+      context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
+      heightOffset += 10;
+    }
+
+    ui.ParagraphBuilder paragraphBuilder =
+        ui.ParagraphBuilder(ui.ParagraphStyle(
+      textAlign: TextAlign.center,
+      fontSize: 8,
+    ));
+    paragraphBuilder.addText('The bottom one is the latest');
+    ui.Paragraph paragraph = paragraphBuilder.build();
+    paragraph.layout(const ui.ParagraphConstraints(
+      width: 200,
+    ));
+    context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
   }
 }
 
