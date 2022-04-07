@@ -1,11 +1,11 @@
 name: flutter_constraintlayout
 description: Build flexible layouts with constraints, Similar to Android ConstraintLayout.
-version: 0.8.1-beta
+version: 0.8.4-stable
 anthor: hackware
 homepage: https://github.com/hackware1993/Flutter-ConstraintLayout
 
 environment:
-  sdk: ">=2.16.1 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
