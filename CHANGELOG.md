@@ -1,4 +1,4 @@
-0.8.5-stable:
+0.8.6-stable:
 The first version published to pub.dev.
 
 The following functions are supported:
