@@ -29,7 +29,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.debugShowGuideline = false,
     this.debugShowClickArea = false,
     this.debugPrintConstraints = false,
-    this.debugPrintLayoutTime = true,
+    this.debugPrintLayoutTime = false,
     this.debugCheckConstraints = true,
     this.releasePrintLayoutTime = false,
     this.debugName,
@@ -2088,6 +2088,9 @@ class _ConstraintRenderBox extends RenderBox
         ui.ParagraphBuilder(ui.ParagraphStyle(
       textAlign: TextAlign.center,
       fontSize: 8,
+    ));
+    paragraphBuilder.pushStyle(ui.TextStyle(
+      color: Colors.green,
     ));
     paragraphBuilder.addText('The bottom one is the latest');
     ui.Paragraph paragraph = paragraphBuilder.build();
