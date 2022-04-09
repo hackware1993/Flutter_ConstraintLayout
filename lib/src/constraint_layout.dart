@@ -73,6 +73,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   }
 }
 
+/// Not completed
 List<Widget> horizontalChain({
   required _Align left,
   required _Align right,
@@ -120,6 +121,7 @@ List<Widget> horizontalChain({
   return widgetList;
 }
 
+/// Not completed
 List<Widget> verticalChain({
   _Align? top,
   _Align? bottom,
@@ -391,6 +393,7 @@ class Constraint {
   final EdgeInsets goneMargin;
 
   /// These are the base constraints constraint on sibling id or parent
+  /// The essence of constraints is alignment
   @_baseConstraint
   _Align? left;
   @_baseConstraint
@@ -728,7 +731,7 @@ class Constraint {
 
     /// Convert wrapper constraints finish
 
-    /// Constraint priority: match_parent > wrapper constraints > base constraints
+    /// Constraint priority: matchParent > wrapper constraints > base constraints
     if (width == matchParent) {
       assert(() {
         if (left != null || right != null) {
@@ -1681,6 +1684,9 @@ class _ConstraintRenderBox extends RenderBox
       } else {
         element.laidOut = true;
       }
+
+      /// Due to the design of the Flutter framework, even if a child element is gone, it still has to be laid out
+      /// I don't understand why the official design is this way
       element.renderBox!.layout(
         BoxConstraints(
           minWidth: minWidth,
@@ -2477,9 +2483,9 @@ class _InternalBox extends RenderBox {
     constraintBoxData._referencedIds = null;
     constraintBoxData.percentageTranslate = false;
     constraintBoxData.minWidth = 0;
-    constraintBoxData.maxWidth = double.infinity;
+    constraintBoxData.maxWidth = matchParent;
     constraintBoxData.minHeight = 0;
-    constraintBoxData.maxHeight = double.infinity;
+    constraintBoxData.maxHeight = matchParent;
   }
 }
 

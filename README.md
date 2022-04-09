@@ -14,8 +14,8 @@ reached 200 fps.**
 **If not necessary, try to be relative to the parent layout, so that you can define less id.**
 
 **Warning**:
-For layout performance considerations, constraints are always one-way, and there is no two child
-elements that directly or indirectly restrain each other. Each constraint should describe exactly
+For layout performance considerations, constraints are always one-way, and there should be no two
+child elements directly or indirectly restrain each other. Each constraint should describe exactly
 where the child elements are located. Although constraints can only be one-way, you can still better
 handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
 
