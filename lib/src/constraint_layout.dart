@@ -175,6 +175,10 @@ extension WidgetsExt on Widget {
     OnLayoutCallback? callback,
     double chainWeight = 1,
     bool percentageTranslate = false,
+    double minWidth = 0,
+    double maxWidth = matchParent,
+    double minHeight = 0,
+    double maxHeight = matchParent,
   }) {
     return Constrained(
       key: key,
@@ -216,6 +220,10 @@ extension WidgetsExt on Widget {
         callback: callback,
         chainWeight: chainWeight,
         percentageTranslate: percentageTranslate,
+        minWidth: minWidth,
+        maxWidth: maxWidth,
+        minHeight: minHeight,
+        maxHeight: maxHeight,
       ),
       child: this,
     );
@@ -449,6 +457,14 @@ class Constraint {
   final double chainWeight;
   final bool percentageTranslate;
 
+  /// Only takes effect when width is wrapContent
+  final double minWidth;
+  final double maxWidth;
+
+  /// Only takes effect when height is wrapContent
+  final double minHeight;
+  final double maxHeight;
+
   Constraint({
     this.id,
     this.width = wrapContent,
@@ -487,6 +503,10 @@ class Constraint {
     this.callback,
     this.chainWeight = 1,
     this.percentageTranslate = false,
+    this.minWidth = 0,
+    this.maxWidth = matchParent,
+    this.minHeight = 0,
+    this.maxHeight = matchParent,
   });
 
   @override
@@ -529,7 +549,11 @@ class Constraint {
           centerHorizontalTo == other.centerHorizontalTo &&
           centerVerticalTo == other.centerVerticalTo &&
           callback == other.callback &&
-          percentageTranslate == other.percentageTranslate;
+          percentageTranslate == other.percentageTranslate &&
+          minWidth == other.minWidth &&
+          maxWidth == other.maxWidth &&
+          minHeight == other.minHeight &&
+          maxHeight == other.maxHeight;
 
   @override
   int get hashCode =>
@@ -568,7 +592,11 @@ class Constraint {
       centerHorizontalTo.hashCode ^
       centerVerticalTo.hashCode ^
       callback.hashCode ^
-      percentageTranslate.hashCode;
+      percentageTranslate.hashCode ^
+      minWidth.hashCode ^
+      maxWidth.hashCode ^
+      minHeight.hashCode ^
+      maxHeight.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -621,6 +649,10 @@ class Constraint {
         _debugEnsureNegativePercent('xTranslate', translate.dx));
     assert(!percentageTranslate ||
         _debugEnsureNegativePercent('yTranslate', translate.dy));
+    assert(minWidth >= 0);
+    assert(maxWidth == matchParent || maxWidth >= minWidth);
+    assert(minHeight >= 0);
+    assert(maxHeight == matchParent || maxHeight >= minHeight);
     return true;
   }
 
@@ -856,6 +888,26 @@ class Constraint {
       needsPaint = true;
     }
 
+    if (parentData.minWidth != minWidth) {
+      parentData.minWidth = minWidth;
+      needsLayout = true;
+    }
+
+    if (parentData.maxWidth != maxWidth) {
+      parentData.maxWidth = maxWidth;
+      needsLayout = true;
+    }
+
+    if (parentData.minHeight != minHeight) {
+      parentData.minHeight = minHeight;
+      needsLayout = true;
+    }
+
+    if (parentData.maxHeight != maxHeight) {
+      parentData.maxHeight = maxHeight;
+      needsLayout = true;
+    }
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
@@ -912,6 +964,10 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? verticalBias;
   OnLayoutCallback? callback;
   bool? percentageTranslate;
+  double? minWidth;
+  double? maxWidth;
+  double? minHeight;
+  double? maxHeight;
 
   // for internal use
   late Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes;
@@ -1440,19 +1496,24 @@ class _ConstraintRenderBox extends RenderBox
       EdgeInsets goneMargin = element.goneMargin;
 
       /// Calculate child width
-      double minWidth = 0;
-      double maxWidth = double.infinity;
-      double minHeight = 0;
-      double maxHeight = double.infinity;
+      double minWidth;
+      double maxWidth;
+      double minHeight;
+      double maxHeight;
       if (element.visibility == gone) {
         minWidth = 0;
         maxWidth = 0;
-        minWidth = 0;
+        minHeight = 0;
         maxHeight = 0;
       } else {
         double width = element.width;
         if (width == wrapContent) {
-          maxWidth = size.width;
+          minWidth = element.minWidth;
+          if (element.maxWidth == matchParent) {
+            maxWidth = size.width;
+          } else {
+            maxWidth = element.maxWidth;
+          }
         } else if (width == matchParent) {
           minWidth = size.width -
               _getHorizontalInsets(
@@ -1523,7 +1584,12 @@ class _ConstraintRenderBox extends RenderBox
         /// Calculate child height
         double height = element.height;
         if (height == wrapContent) {
-          maxHeight = size.height;
+          minHeight = element.minHeight;
+          if (element.maxHeight == matchParent) {
+            maxHeight = size.height;
+          } else {
+            maxHeight = element.maxHeight;
+          }
         } else if (height == matchParent) {
           minHeight = size.height -
               _getVerticalInsets(margin, element.percentageMargin, size.height);
@@ -2165,6 +2231,14 @@ class _ConstrainedNode {
 
   bool get percentageMargin => parentData.percentageMargin!;
 
+  double get minWidth => parentData.minWidth!;
+
+  double get maxWidth => parentData.maxWidth!;
+
+  double get minHeight => parentData.minHeight!;
+
+  double get maxHeight => parentData.maxHeight!;
+
   PercentageAnchor get widthPercentageAnchor =>
       parentData.widthPercentageAnchor!;
 
@@ -2402,6 +2476,10 @@ class _InternalBox extends RenderBox {
     constraintBoxData._direction = null;
     constraintBoxData._referencedIds = null;
     constraintBoxData.percentageTranslate = false;
+    constraintBoxData.minWidth = 0;
+    constraintBoxData.maxWidth = double.infinity;
+    constraintBoxData.minHeight = 0;
+    constraintBoxData.maxHeight = double.infinity;
   }
 }
 

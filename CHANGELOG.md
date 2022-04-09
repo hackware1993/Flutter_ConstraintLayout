@@ -1,3 +1,6 @@
+v.0.8.9-stable:
+support min、max size set.
+
 v.0.8.8-stable:
 make parent final.
 
