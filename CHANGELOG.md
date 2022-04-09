@@ -17,7 +17,8 @@ The following functions are supported:
     11. baselineToBaseline
 2. margin and goneMargin
 3. clickPadding (quickly expand the click area of child elements without changing their actual size.
-   This means that the click area can be shared between child elements without increasing nesting.)
+   This means that the click area can be shared between child elements without increasing nesting.
+   Sometimes it may be necessary to combine with z-index)
 4. visibility control
 5. constraint integrity hint
 6. bias

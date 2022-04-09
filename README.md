@@ -8,7 +8,7 @@ flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nest
 
 **It is recommended to use ConstraintLayout at the top level. For extremely complex layout(One
 thousand child elements, two thousand constraints), layout and drawing total time within 5
-milliseconds（debug mode on Windows 10，release mode take less time）, the frame rate can be easily
+milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be easily
 reached 200 fps.**
 
 **If not necessary, try to be relative to the parent layout, so that you can define less id.**
@@ -23,7 +23,8 @@ handle things that were previously (Android ConstraintLayout) two-way constraint
 When the layout is complex, if the child elements need to be repainted frequently, it is recommended
 to use RepaintBoundary to improve performance.
 
-Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to insult him.
+Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to
+insult him.
 
 # Feature
 
@@ -41,7 +42,8 @@ Anyone who sends you a harassing message, you can send him Flutter code and use 
     11. baselineToBaseline
 2. margin and goneMargin
 3. clickPadding (quickly expand the click area of child elements without changing their actual size.
-   This means that the click area can be shared between child elements without increasing nesting. Sometimes it may be necessary to combine with z-index)
+   This means that the click area can be shared between child elements without increasing nesting.
+   Sometimes it may be necessary to combine with z-index)
 4. visibility control
 5. constraint integrity hint
 6. bias
@@ -80,11 +82,20 @@ dependencies:
       ref: 'v0.8.6-stable'
 ```
 
+```yaml
+dependencies:
+  flutter_constraintlayout: ^0.8.6-stable
+```
+
+```dart
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
+```
+
 # Example
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 class Example extends StatefulWidget {
   const Example({Key? key}) : super(key: key);
@@ -307,7 +318,7 @@ class ExampleState extends State<Example> {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 class GuidelineExample extends StatelessWidget {
   const GuidelineExample({Key? key}) : super(key: key);
@@ -366,7 +377,7 @@ class GuidelineExample extends StatelessWidget {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 class BarrierExample extends StatelessWidget {
   const BarrierExample({Key? key}) : super(key: key);
@@ -434,7 +445,7 @@ class BarrierExample extends StatelessWidget {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout/constraint_layout.dart';
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 class BadgeExample extends StatelessWidget {
   const BadgeExample({Key? key}) : super(key: key);
@@ -484,17 +495,12 @@ class BadgeExample extends StatelessWidget {
 # Support me
 
 If it helps you a lot, consider sponsoring me a cup of milk tea.
-<br/>
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
-<br/>
-<br/>
 ![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
 
 # Contact
 
 hackware1993@gmail.com
-<br/>
-<br/>
 ![communication.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/communication.webp?raw=true)
 
 # License
