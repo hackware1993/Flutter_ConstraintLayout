@@ -266,7 +266,7 @@ bool _debugEnsureNegativePercent(String name, double? percent) {
   return true;
 }
 
-ConstraintId parent = ConstraintId('parent');
+final ConstraintId parent = ConstraintId('parent');
 const double matchConstraint = -3.1415926;
 const double matchParent = -2.7182818;
 const double wrapContent = -0.6180339;

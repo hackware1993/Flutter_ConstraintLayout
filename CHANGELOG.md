@@ -1,3 +1,6 @@
+v.0.8.8-stable:
+make parent final.
+
 v.0.8.7-stable:
 just update readme.
 
