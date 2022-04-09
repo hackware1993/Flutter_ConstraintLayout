@@ -1,4 +1,7 @@
-0.8.6-stable:
+v.0.8.7-stable:
+just update readme.
+
+v0.8.6-stable:
 The first version published to pub.dev.
 
 The following functions are supported:
