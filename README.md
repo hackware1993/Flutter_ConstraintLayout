@@ -573,7 +573,6 @@ If it helps you a lot, consider sponsoring me a cup of milk tea.
 # Contact
 
 hackware1993@gmail.com
-![communication.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/communication.webp?raw=true)
 
 # License
 
