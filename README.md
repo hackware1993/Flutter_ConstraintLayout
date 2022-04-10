@@ -561,8 +561,8 @@ class OffBuildExample extends StatelessWidget {
 3. Child elements will automatically become RelayoutBoundary unless width or height is wrapContent.
    The use of wrapContent can be reasonably reduced, because after the size of ConstraintLayout
    changes (usually the size of the window changes), all child elements whose width or height is
-   wrapContent will be re-layout. And other child elements will not change due to constraints and
-   will not trigger the real re-layout.
+   wrapContent will be re-layout. And since the constraints passed to other child elements won't
+   change, no real re-layout will be triggered.
 
 # Support me
 
