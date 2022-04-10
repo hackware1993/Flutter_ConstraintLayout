@@ -1,13 +1,21 @@
-v.0.8.9-stable:
+# v0.9.0-stable
+
+support dimension ratio.
+
+# v.0.8.9-stable
+
 support min、max size set.
 
-v.0.8.8-stable:
+# v.0.8.8-stable
+
 make parent final.
 
-v.0.8.7-stable:
+# v.0.8.7-stable:
+
 just update readme.
 
-v0.8.6-stable:
+# v0.8.6-stable:
+
 The first version published to pub.dev.
 
 The following functions are supported:

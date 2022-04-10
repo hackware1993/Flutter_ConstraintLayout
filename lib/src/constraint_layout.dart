@@ -137,7 +137,7 @@ List<Widget> verticalChain({
 const Object _wrapperConstraint = Object();
 const Object _baseConstraint = Object();
 
-extension WidgetsExt on Widget {
+extension ConstrainedWidgetsExt on Widget {
   Constrained applyConstraint({
     Key? key,
     ConstraintId? id,
@@ -181,6 +181,7 @@ extension WidgetsExt on Widget {
     double maxWidth = matchParent,
     double minHeight = 0,
     double maxHeight = matchParent,
+    double? widthHeightRatio,
   }) {
     return Constrained(
       key: key,
@@ -226,6 +227,7 @@ extension WidgetsExt on Widget {
         maxWidth: maxWidth,
         minHeight: minHeight,
         maxHeight: maxHeight,
+        widthHeightRatio: widthHeightRatio,
       ),
       child: this,
     );
@@ -249,6 +251,15 @@ extension WidgetsExt on Widget {
     return UnConstrained(
       key: key,
       id: id,
+      child: this,
+    );
+  }
+
+  /// When the layout is complex, if the child elements need to be repainted frequently, it
+  /// is recommended to use RepaintBoundary to improve performance.
+  RepaintBoundary offPaint({Key? key}) {
+    return RepaintBoundary(
+      key: key,
       child: this,
     );
   }
@@ -468,6 +479,10 @@ class Constraint {
   final double minHeight;
   final double maxHeight;
 
+  /// Only takes effect if the size of one side is matchConstraint and the size of the other side can be
+  /// inferred (fixed size, matchParent, matchConstraint with two constraints)
+  final double? widthHeightRatio;
+
   Constraint({
     this.id,
     this.width = wrapContent,
@@ -510,6 +525,7 @@ class Constraint {
     this.maxWidth = matchParent,
     this.minHeight = 0,
     this.maxHeight = matchParent,
+    this.widthHeightRatio,
   });
 
   @override
@@ -556,7 +572,8 @@ class Constraint {
           minWidth == other.minWidth &&
           maxWidth == other.maxWidth &&
           minHeight == other.minHeight &&
-          maxHeight == other.maxHeight;
+          maxHeight == other.maxHeight &&
+          widthHeightRatio == other.widthHeightRatio;
 
   @override
   int get hashCode =>
@@ -599,7 +616,8 @@ class Constraint {
       minWidth.hashCode ^
       maxWidth.hashCode ^
       minHeight.hashCode ^
-      maxHeight.hashCode;
+      maxHeight.hashCode ^
+      widthHeightRatio.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -656,6 +674,7 @@ class Constraint {
     assert(maxWidth == matchParent || maxWidth >= minWidth);
     assert(minHeight >= 0);
     assert(maxHeight == matchParent || maxHeight >= minHeight);
+    assert(widthHeightRatio == null || widthHeightRatio! > 0);
     return true;
   }
 
@@ -911,6 +930,11 @@ class Constraint {
       needsLayout = true;
     }
 
+    if (parentData.widthHeightRatio != widthHeightRatio) {
+      parentData.widthHeightRatio = widthHeightRatio;
+      needsLayout = true;
+    }
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (targetParent is RenderObject) {
@@ -971,6 +995,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? maxWidth;
   double? minHeight;
   double? maxHeight;
+  double? widthHeightRatio;
 
   // for internal use
   late Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes;
@@ -1244,9 +1269,18 @@ class _ConstraintRenderBox extends RenderBox
               'Need to set a left or right constraint for ${element.nodeId}.');
         }
       } else if (element.width == matchConstraint) {
-        if (element.leftConstraint == null || element.rightConstraint == null) {
-          throw ConstraintLayoutException(
-              'Need to set left and right constraints for ${element.nodeId}.');
+        if (element.widthHeightRatio == null) {
+          if (element.leftConstraint == null ||
+              element.rightConstraint == null) {
+            throw ConstraintLayoutException(
+                'Need to set left and right constraints for ${element.nodeId}.');
+          }
+        } else {
+          if (element.leftConstraint == null &&
+              element.rightConstraint == null) {
+            throw ConstraintLayoutException(
+                'Need to set a left or right constraint for ${element.nodeId}.');
+          }
         }
       }
 
@@ -1267,15 +1301,44 @@ class _ConstraintRenderBox extends RenderBox
           throw ConstraintLayoutException(
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
-        if (element.topConstraint == null || element.bottomConstraint == null) {
-          throw ConstraintLayoutException(
-              'Need to set both top and bottom constraints for ${element.nodeId}.');
+        if (element.widthHeightRatio == null) {
+          if (element.topConstraint == null ||
+              element.bottomConstraint == null) {
+            throw ConstraintLayoutException(
+                'Need to set both top and bottom constraints for ${element.nodeId}.');
+          }
+        } else {
+          if (element.topConstraint == null &&
+              element.bottomConstraint == null) {
+            throw ConstraintLayoutException(
+                'Need to set top or bottom constraints for ${element.nodeId}.');
+          }
         }
       } else {
         /// match_parent
         if (element.baselineConstraint != null) {
           throw ConstraintLayoutException(
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
+        }
+      }
+
+      if (element.widthHeightRatio != null) {
+        if (element.widthIsExact && element.heightIsExact) {
+          throw ConstraintLayoutException(
+              'When setting widthHeightRatio for ${element.nodeId}, full constraints cannot be set on both sides at the same time.');
+        } else if (!element.widthIsExact && !element.heightIsExact) {
+          throw ConstraintLayoutException(
+              'When setting widthHeightRatio for ${element.nodeId}, one side needs full constraints.');
+        } else if (element.widthIsExact) {
+          if (element.height != matchConstraint) {
+            throw ConstraintLayoutException(
+                'When setting widthHeightRatio for ${element.nodeId}, width is exact, height must be matchConstraint.');
+          }
+        } else {
+          if (element.width != matchConstraint) {
+            throw ConstraintLayoutException(
+                'When setting widthHeightRatio for ${element.nodeId}, height is exact, width must be matchConstraint.');
+          }
         }
       }
     }
@@ -1532,53 +1595,60 @@ class _ConstraintRenderBox extends RenderBox
           }());
           maxWidth = minWidth;
         } else if (width == matchConstraint) {
-          if (element.widthPercentageAnchor == PercentageAnchor.constraint) {
-            double left;
-            if (element.leftAlignType == _AlignType.left) {
-              left = element.leftConstraint!.getX();
-            } else {
-              left = element.leftConstraint!.getRight(size);
-            }
-            double right;
-            if (element.rightAlignType == _AlignType.left) {
-              right = element.rightConstraint!.getX();
-            } else {
-              right = element.rightConstraint!.getRight(size);
-            }
-            double leftMargin;
-            if (element.leftConstraint!.isNotLaidOut()) {
-              leftMargin = _getLeftInsets(
-                  goneMargin, element.percentageMargin, right - left);
-            } else {
-              leftMargin = _getLeftInsets(
-                  margin, element.percentageMargin, right - left);
-            }
-            double rightMargin;
-            if (element.rightConstraint!.isNotLaidOut()) {
-              rightMargin = _getRightInsets(
-                  goneMargin, element.percentageMargin, right - left);
-            } else {
-              rightMargin = _getRightInsets(
-                  margin, element.percentageMargin, right - left);
-            }
-            minWidth = (right - rightMargin - left - leftMargin) *
-                element.widthPercent;
+          if (element.widthHeightRatio != null && !element.widthIsExact) {
+            /// The width needs to be calculated later based on the height
+            element.widthBasedHeight = true;
+            minWidth = 0;
+            maxWidth = double.infinity;
           } else {
-            minWidth = (size.width -
-                    _getHorizontalInsets(
-                        margin, element.percentageMargin, size.width)) *
-                element.widthPercent;
-          }
-          assert(() {
-            if (_debugCheckConstraints) {
-              if (minWidth < 0) {
-                debugPrint(
-                    'Warning: The child element with id ${element.nodeId} has a negative width');
+            if (element.widthPercentageAnchor == PercentageAnchor.constraint) {
+              double left;
+              if (element.leftAlignType == _AlignType.left) {
+                left = element.leftConstraint!.getX();
+              } else {
+                left = element.leftConstraint!.getRight(size);
               }
+              double right;
+              if (element.rightAlignType == _AlignType.left) {
+                right = element.rightConstraint!.getX();
+              } else {
+                right = element.rightConstraint!.getRight(size);
+              }
+              double leftMargin;
+              if (element.leftConstraint!.isNotLaidOut()) {
+                leftMargin = _getLeftInsets(
+                    goneMargin, element.percentageMargin, right - left);
+              } else {
+                leftMargin = _getLeftInsets(
+                    margin, element.percentageMargin, right - left);
+              }
+              double rightMargin;
+              if (element.rightConstraint!.isNotLaidOut()) {
+                rightMargin = _getRightInsets(
+                    goneMargin, element.percentageMargin, right - left);
+              } else {
+                rightMargin = _getRightInsets(
+                    margin, element.percentageMargin, right - left);
+              }
+              minWidth = (right - rightMargin - left - leftMargin) *
+                  element.widthPercent;
+            } else {
+              minWidth = (size.width -
+                      _getHorizontalInsets(
+                          margin, element.percentageMargin, size.width)) *
+                  element.widthPercent;
             }
-            return true;
-          }());
-          maxWidth = minWidth;
+            assert(() {
+              if (_debugCheckConstraints) {
+                if (minWidth < 0) {
+                  debugPrint(
+                      'Warning: The child element with id ${element.nodeId} has a negative width');
+                }
+              }
+              return true;
+            }());
+            maxWidth = minWidth;
+          }
         } else {
           minWidth = width;
           maxWidth = width;
@@ -1607,57 +1677,71 @@ class _ConstraintRenderBox extends RenderBox
           }());
           maxHeight = minHeight;
         } else if (height == matchConstraint) {
-          if (element.heightPercentageAnchor == PercentageAnchor.constraint) {
-            double top;
-            if (element.topAlignType == _AlignType.top) {
-              top = element.topConstraint!.getY();
-            } else {
-              top = element.topConstraint!.getBottom(size);
-            }
-            double bottom;
-            if (element.bottomAlignType == _AlignType.top) {
-              bottom = element.bottomConstraint!.getY();
-            } else {
-              bottom = element.bottomConstraint!.getBottom(size);
-            }
-            double topMargin;
-            if (element.topConstraint!.isNotLaidOut()) {
-              topMargin = _getTopInsets(
-                  goneMargin, element.percentageMargin, bottom - top);
-            } else {
-              topMargin =
-                  _getTopInsets(margin, element.percentageMargin, bottom - top);
-            }
-            double bottomMargin;
-            if (element.bottomConstraint!.isNotLaidOut()) {
-              bottomMargin = _getBottomInsets(
-                  goneMargin, element.percentageMargin, bottom - top);
-            } else {
-              bottomMargin = _getBottomInsets(
-                  margin, element.percentageMargin, bottom - top);
-            }
-            minHeight = (bottom - bottomMargin - top - topMargin) *
-                element.heightPercent;
+          if (element.widthHeightRatio != null && element.widthIsExact) {
+            /// The height needs to be calculated later based on the width
+            /// minWidth == maxWidth
+            minHeight = minWidth / element.widthHeightRatio!;
+            maxHeight = minHeight;
           } else {
-            minHeight = (size.height -
-                    _getVerticalInsets(
-                        margin, element.percentageMargin, size.height)) *
-                element.heightPercent;
-          }
-          assert(() {
-            if (_debugCheckConstraints) {
-              if (minHeight < 0) {
-                debugPrint(
-                    'Warning: The child element with id ${element.nodeId} has a negative height');
+            if (element.heightPercentageAnchor == PercentageAnchor.constraint) {
+              double top;
+              if (element.topAlignType == _AlignType.top) {
+                top = element.topConstraint!.getY();
+              } else {
+                top = element.topConstraint!.getBottom(size);
               }
+              double bottom;
+              if (element.bottomAlignType == _AlignType.top) {
+                bottom = element.bottomConstraint!.getY();
+              } else {
+                bottom = element.bottomConstraint!.getBottom(size);
+              }
+              double topMargin;
+              if (element.topConstraint!.isNotLaidOut()) {
+                topMargin = _getTopInsets(
+                    goneMargin, element.percentageMargin, bottom - top);
+              } else {
+                topMargin = _getTopInsets(
+                    margin, element.percentageMargin, bottom - top);
+              }
+              double bottomMargin;
+              if (element.bottomConstraint!.isNotLaidOut()) {
+                bottomMargin = _getBottomInsets(
+                    goneMargin, element.percentageMargin, bottom - top);
+              } else {
+                bottomMargin = _getBottomInsets(
+                    margin, element.percentageMargin, bottom - top);
+              }
+              minHeight = (bottom - bottomMargin - top - topMargin) *
+                  element.heightPercent;
+            } else {
+              minHeight = (size.height -
+                      _getVerticalInsets(
+                          margin, element.percentageMargin, size.height)) *
+                  element.heightPercent;
             }
-            return true;
-          }());
-          maxHeight = minHeight;
+            assert(() {
+              if (_debugCheckConstraints) {
+                if (minHeight < 0) {
+                  debugPrint(
+                      'Warning: The child element with id ${element.nodeId} has a negative height');
+                }
+              }
+              return true;
+            }());
+            maxHeight = minHeight;
+          }
         } else {
           minHeight = height;
           maxHeight = height;
         }
+      }
+
+      /// The width needs to be calculated based on the height
+      if (element.widthBasedHeight) {
+        /// minHeight == maxHeight
+        minWidth = minHeight * element.widthHeightRatio!;
+        maxWidth = minWidth;
       }
 
       /// Measure
@@ -2190,6 +2274,7 @@ class _ConstrainedNode {
   late bool laidOut;
   late _ConstraintBoxData parentData;
   late int index;
+  bool widthBasedHeight = false;
 
   double get width => parentData.width!;
 
@@ -2259,6 +2344,21 @@ class _ConstrainedNode {
 
   bool get percentageTranslate => parentData.percentageTranslate!;
 
+  double? get widthHeightRatio => parentData.widthHeightRatio;
+
+  /// fixed size, matchParent, matchConstraint with two constraints
+  bool get widthIsExact =>
+      width >= 0 ||
+      (width != wrapContent &&
+          leftConstraint != null &&
+          rightConstraint != null);
+
+  /// fixed size, matchParent, matchConstraint with two constraints
+  bool get heightIsExact =>
+      height >= 0 ||
+      (height != wrapContent &&
+          (topConstraint != null && bottomConstraint != null));
+
   set offset(Offset value) {
     parentData.offset = value;
   }
@@ -2324,13 +2424,8 @@ class _ConstrainedNode {
     if (isParent()) {
       return 0;
     }
-    double? baseline;
-    if (kDebugMode) {
-      baseline = renderBox!.getDistanceToBaseline(textBaseline, onlyReal: true);
-    } else {
-      /// ignore: invalid_use_of_protected_member
-      baseline = renderBox!.computeDistanceToActualBaseline(textBaseline);
-    }
+    double? baseline =
+        renderBox!.getDistanceToBaseline(textBaseline, onlyReal: true);
     if (baseline == null) {
       baseline = getY();
     } else {
@@ -2486,6 +2581,7 @@ class _InternalBox extends RenderBox {
     constraintBoxData.maxWidth = matchParent;
     constraintBoxData.minHeight = 0;
     constraintBoxData.maxHeight = matchParent;
+    constraintBoxData.widthHeightRatio = null;
   }
 }
 
