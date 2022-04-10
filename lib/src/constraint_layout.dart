@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_override_of_non_virtual_member
+
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -263,6 +265,45 @@ extension ConstrainedWidgetsExt on Widget {
       child: this,
     );
   }
+
+  /// If you can't declare a child element as const and it won't change, you can use OffBuildWidget
+  /// to avoid the rebuilding of the child element.
+  OffBuildWidget offBuild({
+    Key? key,
+    required String id,
+  }) {
+    return OffBuildWidget(
+      key: key,
+      id: id,
+      child: this,
+    );
+  }
+}
+
+class OffBuildWidget extends StatelessWidget {
+  final String id;
+  final Widget child;
+
+  const OffBuildWidget({
+    Key? key,
+    required this.id,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return child;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OffBuildWidget &&
+          runtimeType == other.runtimeType &&
+          id == (other).id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 bool _debugEnsureNotEmptyString(String name, String? value) {

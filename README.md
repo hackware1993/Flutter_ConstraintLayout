@@ -20,10 +20,6 @@ child elements directly or indirectly restrain each other. Each constraint shoul
 where the child elements are located. Although constraints can only be one-way, you can still better
 handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
 
-**Warning**:
-When the layout is complex, if the child elements need to be repainted frequently, it is recommended
-to use RepaintBoundary to improve performance.
-
 Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to
 insult him.
 
@@ -496,6 +492,78 @@ class BadgeExample extends StatelessWidget {
 
 ![badge.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/badge.webp?raw=true)
 
+# Performance optimization
+
+1. When the layout is complex, if the child elements need to be repainted frequently, it is
+   recommended to use RepaintBoundary to improve performance.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout.dart';
+
+class OffPaintExample extends StatelessWidget {
+  const OffPaintExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: ConstraintLayout(
+          children: [
+            Container(
+              color: Colors.orangeAccent,
+            ).offPaint().applyConstraint(
+              width: 200,
+              height: 200,
+              topRightTo: parent,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+2. Try to use const Widget. If you can't declare a child element as const and it won't change, you
+   can use OffBuildWidget to avoid the rebuilding of the child element.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_constraintlayout/src/constraint_layout.dart';
+
+class OffBuildExample extends StatelessWidget {
+  const OffBuildExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: ConstraintLayout(
+          children: [
+
+            /// subtrees that do not change
+            Container(
+              color: Colors.orangeAccent,
+            ).offBuild(id: 'id').applyConstraint(
+              width: 200,
+              height: 200,
+              topRightTo: parent,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+3. Child elements will automatically become RelayoutBoundary unless width or height is wrapContent.
+   The use of wrapContent can be reasonably reduced, because after the size of ConstraintLayout
+   changes (usually the size of the window changes), all child elements whose width or height is
+   wrapContent will be re-layout. And other child elements will not change due to constraints and
+   will not trigger the real re-layout.
+
 # Support me
 
 If it helps you a lot, consider sponsoring me a cup of milk tea.
@@ -514,21 +582,18 @@ MIT License
 
 Copyright (c) 2022 hackware1993
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
