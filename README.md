@@ -23,9 +23,6 @@ handle things that were previously (Android ConstraintLayout) two-way constraint
 Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to
 insult him.
 
-Most people in this world are good at making simple things complicated, and very few minimalists are
-good at making complex things simple.
-
 # Feature
 
 1. build flexible layouts with constraints
