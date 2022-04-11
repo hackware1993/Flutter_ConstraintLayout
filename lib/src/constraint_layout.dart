@@ -3,6 +3,7 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1467,7 +1468,16 @@ class _ConstraintRenderBox extends RenderBox
 
     /// Always fill the parent layout
     /// TODO will support wrap_content in the future
-    size = constraints.constrain(const Size(double.infinity, double.infinity));
+
+    double consMaxWidth = constraints.maxWidth;
+    if (consMaxWidth == double.infinity) {
+      consMaxWidth = window.physicalSize.width;
+    }
+    double consMaxHeight = constraints.maxHeight;
+    if (consMaxHeight == double.infinity) {
+      consMaxHeight = window.physicalSize.height;
+    }
+    size = constraints.constrain(Size(consMaxWidth, consMaxHeight));
 
     assert(() {
       if (_debugCheckConstraints) {
