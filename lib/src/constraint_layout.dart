@@ -823,19 +823,23 @@ class Constraint {
     bool needsLayout = false;
     bool needsPaint = false;
     bool needsReorderChildren = false;
+    bool needsRecalculateConstraints = false;
 
     if (parentData.id != id) {
       parentData.id = id;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
     if (parentData.width != width) {
       parentData.width = width;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
     if (parentData.height != height) {
       parentData.height = height;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
@@ -867,26 +871,31 @@ class Constraint {
 
     if (parentData.left != left) {
       parentData.left = left;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
     if (parentData.right != right) {
       parentData.right = right;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
     if (parentData.top != top) {
       parentData.top = top;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
     if (parentData.bottom != bottom) {
       parentData.bottom = bottom;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
     if (parentData.baseline != baseline) {
       parentData.baseline = baseline;
+      needsRecalculateConstraints = true;
       needsLayout = true;
     }
 
@@ -897,8 +906,8 @@ class Constraint {
 
     if (parentData.zIndex != zIndex) {
       parentData.zIndex = zIndex;
-      needsPaint = true;
       needsReorderChildren = true;
+      needsPaint = true;
     }
 
     if (parentData.translateConstraint != translateConstraint) {
@@ -979,6 +988,11 @@ class Constraint {
 
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
+      if (needsRecalculateConstraints) {
+        if (targetParent is _ConstraintRenderBox) {
+          targetParent.markNeedsRecalculateConstraints();
+        }
+      }
       if (targetParent is RenderObject) {
         targetParent.markNeedsLayout();
       }
@@ -1134,8 +1148,14 @@ class _ConstraintRenderBox extends RenderBox
   late bool _debugShowZIndex;
   late bool _needsReorderChildren;
 
+  bool _needsRecalculateConstraints = true;
   final Map<RenderBox, _ConstrainedNode> _constrainedNodes = HashMap();
   final Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes = HashMap();
+
+  /// For layout
+  late List<_ConstrainedNode> _layoutOrderList;
+
+  /// for paint
   late List<_ConstrainedNode> _paintingOrderList;
 
   static const int maxTimeUsage = 20;
@@ -1156,6 +1176,7 @@ class _ConstraintRenderBox extends RenderBox
     }
     if (!isSameList) {
       _childConstraints = value;
+      markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
   }
@@ -1177,6 +1198,7 @@ class _ConstraintRenderBox extends RenderBox
   set debugPrintConstraints(bool value) {
     if (_debugPrintConstraints != value) {
       _debugPrintConstraints = value;
+      markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
   }
@@ -1191,6 +1213,7 @@ class _ConstraintRenderBox extends RenderBox
   set debugCheckConstraints(bool value) {
     if (_debugCheckConstraints != value) {
       _debugCheckConstraints = value;
+      markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
   }
@@ -1205,6 +1228,7 @@ class _ConstraintRenderBox extends RenderBox
   set debugName(String? value) {
     if (_debugName != value) {
       _debugName = value;
+      markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
   }
@@ -1454,6 +1478,22 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   @override
+  void adoptChild(covariant RenderObject child) {
+    super.adoptChild(child);
+    markNeedsRecalculateConstraints();
+  }
+
+  @override
+  void dropChild(covariant RenderObject child) {
+    super.dropChild(child);
+    markNeedsRecalculateConstraints();
+  }
+
+  void markNeedsRecalculateConstraints() {
+    _needsRecalculateConstraints = true;
+  }
+
+  @override
   void performLayout() {
     int startTime = 0;
     if (_releasePrintLayoutTime && kReleaseMode) {
@@ -1468,7 +1508,6 @@ class _ConstraintRenderBox extends RenderBox
 
     /// Always fill the parent layout
     /// TODO will support wrap_content in the future
-
     double consMaxWidth = constraints.maxWidth;
     if (consMaxWidth == double.infinity) {
       consMaxWidth = window.physicalSize.width / window.devicePixelRatio;
@@ -1479,51 +1518,57 @@ class _ConstraintRenderBox extends RenderBox
     }
     size = constraints.constrain(Size(consMaxWidth, consMaxHeight));
 
-    assert(() {
-      if (_debugCheckConstraints) {
-        _debugCheckIds();
-      }
-      return true;
-    }());
+    if (_needsRecalculateConstraints) {
+      assert(() {
+        if (_debugCheckConstraints) {
+          _debugCheckIds();
+        }
+        return true;
+      }());
 
-    /// Traverse once, building the constrained node tree for each child element
-    _buildConstrainedNodeTrees();
+      /// Traverse once, building the constrained node tree for each child element
+      _buildConstrainedNodeTrees();
 
-    assert(() {
-      if (_debugCheckConstraints) {
-        _debugCheckConstraintsIntegrity();
-        _debugCheckLoopConstraints();
-      }
-      return true;
-    }());
+      assert(() {
+        if (_debugCheckConstraints) {
+          _debugCheckConstraintsIntegrity();
+          _debugCheckLoopConstraints();
+        }
+        return true;
+      }());
 
-    /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
-    List<_ConstrainedNode> constrainedNodeTrees =
-        _constrainedNodes.values.toList();
-    constrainedNodeTrees.sort((left, right) {
-      return left.getDepth() - right.getDepth();
-    });
+      /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
+      _layoutOrderList = _constrainedNodes.values.toList();
+      _paintingOrderList = _constrainedNodes.values.toList();
+      _constrainedNodes.clear();
 
-    _paintingOrderList = _constrainedNodes.values.toList();
-    _paintingOrderList.sort((left, right) {
-      int result = left.zIndex - right.zIndex;
-      if (result == 0) {
-        result = left.index - right.index;
-      }
-      return result;
-    });
-    _needsReorderChildren = false;
+      _layoutOrderList.sort((left, right) {
+        return left.getDepth() - right.getDepth();
+      });
 
-    assert(() {
-      /// Print constraints
-      if (_debugPrintConstraints) {
-        debugPrint('ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
-            jsonEncode(constrainedNodeTrees.map((e) => e.toJson()).toList()));
-      }
-      return true;
-    }());
+      _paintingOrderList.sort((left, right) {
+        int result = left.zIndex - right.zIndex;
+        if (result == 0) {
+          result = left.index - right.index;
+        }
+        return result;
+      });
 
-    _layoutByConstrainedNodeTrees(constrainedNodeTrees);
+      assert(() {
+        /// Print constraints
+        if (_debugPrintConstraints) {
+          debugPrint(
+              'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
+                  jsonEncode(_layoutOrderList.map((e) => e.toJson()).toList()));
+        }
+        return true;
+      }());
+
+      _needsReorderChildren = false;
+      _needsRecalculateConstraints = false;
+    }
+
+    _layoutByConstrainedNodeTrees();
 
     if (_releasePrintLayoutTime && kReleaseMode) {
       layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
@@ -1606,9 +1651,8 @@ class _ConstraintRenderBox extends RenderBox
         _getBottomInsets(insets, percentageMargin, anchorHeight);
   }
 
-  void _layoutByConstrainedNodeTrees(
-      List<_ConstrainedNode> constrainedNodeTrees) {
-    for (final element in constrainedNodeTrees) {
+  void _layoutByConstrainedNodeTrees() {
+    for (final element in _layoutOrderList) {
       EdgeInsets margin = element.margin;
       EdgeInsets goneMargin = element.goneMargin;
 
@@ -2706,6 +2750,7 @@ class _GuidelineRenderBox extends _InternalBox {
     if (_id != value) {
       _id = value;
       updateParentData();
+      (this.parent as _ConstraintRenderBox).markNeedsRecalculateConstraints();
       markParentNeedsLayout();
     }
   }
@@ -2880,6 +2925,7 @@ class _BarrierRenderBox extends _InternalBox {
     if (_id != value) {
       _id = value;
       updateParentData();
+      (this.parent as _ConstraintRenderBox).markNeedsRecalculateConstraints();
       markParentNeedsLayout();
     }
   }
@@ -2907,6 +2953,7 @@ class _BarrierRenderBox extends _InternalBox {
     if (!isSameList) {
       _referencedIds = value;
       updateParentData();
+      (this.parent as _ConstraintRenderBox).markNeedsRecalculateConstraints();
       markParentNeedsLayout();
     }
   }
