@@ -1471,11 +1471,11 @@ class _ConstraintRenderBox extends RenderBox
 
     double consMaxWidth = constraints.maxWidth;
     if (consMaxWidth == double.infinity) {
-      consMaxWidth = window.physicalSize.width;
+      consMaxWidth = window.physicalSize.width / window.devicePixelRatio;
     }
     double consMaxHeight = constraints.maxHeight;
     if (consMaxHeight == double.infinity) {
-      consMaxHeight = window.physicalSize.height;
+      consMaxHeight = window.physicalSize.height / window.devicePixelRatio;
     }
     size = constraints.constrain(Size(consMaxWidth, consMaxHeight));
 
