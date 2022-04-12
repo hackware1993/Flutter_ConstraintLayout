@@ -2595,7 +2595,7 @@ class _ConstrainedNode {
     if (nodeId == parent) {
       map['nodeId'] = 'parent';
     } else {
-      map['nodeId'] = nodeId;
+      map['nodeId'] = nodeId.id;
       if (leftConstraint != null) {
         if (leftAlignType == _AlignType.left) {
           map['leftAlignType'] = 'toLeft';
