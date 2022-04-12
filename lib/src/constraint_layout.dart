@@ -831,15 +831,37 @@ class Constraint {
       needsLayout = true;
     }
 
+    int getMinimalConstraintCount(double size) {
+      if (size == matchParent) {
+        return 0;
+      } else if (size == wrapContent || size >= 0) {
+        return 1;
+      } else {
+        return 2;
+      }
+    }
+
     if (parentData.width != width) {
-      parentData.width = width;
       needsRecalculateConstraints = true;
+      if (parentData.width != null) {
+        if (getMinimalConstraintCount(parentData.width!) ==
+            getMinimalConstraintCount(width)) {
+          needsRecalculateConstraints = false;
+        }
+      }
+      parentData.width = width;
       needsLayout = true;
     }
 
     if (parentData.height != height) {
-      parentData.height = height;
       needsRecalculateConstraints = true;
+      if (parentData.height != null) {
+        if (getMinimalConstraintCount(parentData.height!) ==
+            getMinimalConstraintCount(height)) {
+          needsRecalculateConstraints = false;
+        }
+      }
+      parentData.height = height;
       needsLayout = true;
     }
 
@@ -1155,7 +1177,7 @@ class _ConstraintRenderBox extends RenderBox
   /// For layout
   late List<_ConstrainedNode> _layoutOrderList;
 
-  /// for paint
+  /// For paint
   late List<_ConstrainedNode> _paintingOrderList;
 
   static const int maxTimeUsage = 20;
@@ -1198,7 +1220,9 @@ class _ConstraintRenderBox extends RenderBox
   set debugPrintConstraints(bool value) {
     if (_debugPrintConstraints != value) {
       _debugPrintConstraints = value;
-      markNeedsRecalculateConstraints();
+      if (value) {
+        markNeedsRecalculateConstraints();
+      }
       markNeedsLayout();
     }
   }
@@ -1213,7 +1237,9 @@ class _ConstraintRenderBox extends RenderBox
   set debugCheckConstraints(bool value) {
     if (_debugCheckConstraints != value) {
       _debugCheckConstraints = value;
-      markNeedsRecalculateConstraints();
+      if (value) {
+        markNeedsRecalculateConstraints();
+      }
       markNeedsLayout();
     }
   }
@@ -1228,7 +1254,9 @@ class _ConstraintRenderBox extends RenderBox
   set debugName(String? value) {
     if (_debugName != value) {
       _debugName = value;
-      markNeedsRecalculateConstraints();
+      if (value != null) {
+        markNeedsRecalculateConstraints();
+      }
       markNeedsLayout();
     }
   }
@@ -1271,15 +1299,10 @@ class _ConstraintRenderBox extends RenderBox
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
 
-      assert(() {
-        if (_debugCheckConstraints) {
-          if (childParentData.width == null) {
-            throw ConstraintLayoutException(
-                'Must provide Constraint for child elements, try use Constrained widget.');
-          }
-        }
-        return true;
-      }());
+      if (childParentData.width == null) {
+        throw ConstraintLayoutException(
+            'Must provide Constraint for child elements, try use Constrained widget.');
+      }
 
       if (childParentData.id != null) {
         if (!idSet.add(childParentData.id!)) {
