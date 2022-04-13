@@ -25,6 +25,12 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final String? debugName;
   final bool debugShowZIndex;
 
+  /// Using preprocessed constraints can improve performance, especially when
+  /// the ListView is swiping quickly, constraints are no longer calculated during
+  /// layout. Need to be used in conjunction with childConstraints.
+  final ProcessedChildConstraints? processedChildConstraints;
+  final bool preprocessChildConstraints;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints = const [],
@@ -37,6 +43,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.releasePrintLayoutTime = false,
     this.debugName,
     this.debugShowZIndex = false,
+    this.preprocessChildConstraints = false,
+    this.processedChildConstraints,
   }) : super(
           key: key,
           children: children,
@@ -45,6 +53,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
+    assert(preprocessChildConstraints == false ||
+        (processedChildConstraints != null));
     return _ConstraintRenderBox()
       .._childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
@@ -54,7 +64,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugCheckConstraints = debugCheckConstraints
       .._releasePrintLayoutTime = releasePrintLayoutTime
       .._debugName = debugName
-      .._debugShowZIndex = debugShowZIndex;
+      .._debugShowZIndex = debugShowZIndex
+      .._preprocessChildConstraints = preprocessChildConstraints
+      .._processedChildConstraints = processedChildConstraints;
   }
 
   @override
@@ -72,7 +84,168 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugCheckConstraints = debugCheckConstraints
       ..releasePrintLayoutTime = releasePrintLayoutTime
       ..debugName = debugName
-      ..debugShowZIndex = debugShowZIndex;
+      ..debugShowZIndex = debugShowZIndex
+      ..preprocessChildConstraints = preprocessChildConstraints
+      ..processedChildConstraints = processedChildConstraints;
+  }
+
+  static ProcessedChildConstraints preprocess(
+      List<Constraint> childConstraints) {
+    ProcessedChildConstraints processedChildConstraints =
+        ProcessedChildConstraints();
+    processedChildConstraints._processedNodesMap = {};
+
+    _ConstrainedNode _getConstrainedNodeForChild(
+      RenderBox? child,
+      ConstraintId id,
+    ) {
+      return processedChildConstraints._processedNodesMap
+          .putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
+    }
+
+    for (final element in childConstraints) {
+      assert(() {
+        element.validate();
+        return true;
+      }());
+
+      Constraint constraint = Constraint(id: element.id!);
+      constraint.left = element.left;
+      constraint.top = element.top;
+      constraint.right = element.right;
+      constraint.bottom = element.bottom;
+      constraint.baseline = element.baseline;
+
+      _ConstrainedNode currentNode =
+          _getConstrainedNodeForChild(null, constraint.id!);
+
+      if (element.topLeftTo != null) {
+        constraint.left = element.topLeftTo!.left;
+        constraint.top = element.topLeftTo!.top;
+      }
+
+      if (element.topCenterTo != null) {
+        constraint.left = element.topCenterTo!.left;
+        constraint.right = element.topCenterTo!.right;
+        constraint.top = element.topCenterTo!.top;
+      }
+
+      if (element.topRightTo != null) {
+        constraint.top = element.topRightTo!.top;
+        constraint.right = element.topRightTo!.right;
+      }
+
+      if (element.centerLeftTo != null) {
+        constraint.left = element.centerLeftTo!.left;
+        constraint.top = element.centerLeftTo!.top;
+        constraint.bottom = element.centerLeftTo!.bottom;
+      }
+
+      if (element.centerTo != null) {
+        constraint.left = element.centerTo!.left;
+        constraint.right = element.centerTo!.right;
+        constraint.top = element.centerTo!.top;
+        constraint.bottom = element.centerTo!.bottom;
+      }
+
+      if (element.centerRightTo != null) {
+        constraint.right = element.centerRightTo!.right;
+        constraint.top = element.centerRightTo!.top;
+        constraint.bottom = element.centerRightTo!.bottom;
+      }
+
+      if (element.bottomLeftTo != null) {
+        constraint.left = element.bottomLeftTo!.left;
+        constraint.bottom = element.bottomLeftTo!.bottom;
+      }
+
+      if (element.bottomCenterTo != null) {
+        constraint.left = element.bottomCenterTo!.left;
+        constraint.right = element.bottomCenterTo!.right;
+        constraint.bottom = element.bottomCenterTo!.bottom;
+      }
+
+      if (element.bottomRightTo != null) {
+        constraint.right = element.bottomRightTo!.right;
+        constraint.bottom = element.bottomRightTo!.bottom;
+      }
+
+      if (element.centerHorizontalTo != null) {
+        constraint.left = element.centerHorizontalTo!.left;
+        constraint.right = element.centerHorizontalTo!.right;
+      }
+
+      if (element.centerVerticalTo != null) {
+        constraint.top = element.centerVerticalTo!.top;
+        constraint.bottom = element.centerVerticalTo!.bottom;
+      }
+
+      if (element.width == matchParent) {
+        assert(() {
+          if (element.left != null || element.right != null) {
+            throw ConstraintLayoutException(
+                'When setting the width to match_parent for child with id ${element.id}, there is no need to set left or right constraint.');
+          }
+          return true;
+        }());
+        constraint.left = parent.left;
+        constraint.right = parent.right;
+      }
+
+      if (element.height == matchParent) {
+        assert(() {
+          if (element.top != null ||
+              element.bottom != null ||
+              element.baseline != null) {
+            throw ConstraintLayoutException(
+                'When setting the height to match_parent for child with id ${element.id}, there is no need to set top or bottom or baseline constraint.');
+          }
+          return true;
+        }());
+        constraint.top = parent.top;
+        constraint.bottom = parent.bottom;
+        constraint.baseline = null;
+      }
+
+      if (constraint.left != null) {
+        currentNode.leftConstraint =
+            _getConstrainedNodeForChild(null, constraint.left!.id!);
+        currentNode.leftAlignType = constraint.left!.type;
+      }
+
+      if (constraint.top != null) {
+        currentNode.topConstraint =
+            _getConstrainedNodeForChild(null, constraint.top!.id!);
+        currentNode.topAlignType = constraint.top!.type;
+      }
+
+      if (constraint.right != null) {
+        currentNode.rightConstraint =
+            _getConstrainedNodeForChild(null, constraint.right!.id!);
+        currentNode.rightAlignType = constraint.right!.type;
+      }
+
+      if (constraint.bottom != null) {
+        currentNode.bottomConstraint =
+            _getConstrainedNodeForChild(null, constraint.bottom!.id!);
+        currentNode.bottomAlignType = constraint.bottom!.type;
+      }
+
+      if (constraint.baseline != null) {
+        currentNode.baselineConstraint =
+            _getConstrainedNodeForChild(null, constraint.baseline!.id!);
+        currentNode.baselineAlignType = constraint.baseline!.type;
+      }
+
+      processedChildConstraints._processedNodesMap[constraint.id!] =
+          currentNode;
+    }
+
+    processedChildConstraints._processedNodesMap.remove(parent);
+    processedChildConstraints._processedNodes =
+        processedChildConstraints._processedNodesMap.values.toList();
+
+    return processedChildConstraints;
   }
 }
 
@@ -456,7 +629,7 @@ class Constraint {
   @_baseConstraint
   _Align? bottom;
   @_baseConstraint
-  final _Align? baseline;
+  _Align? baseline;
 
   /// When setting baseline alignment, height must be wrap_content or fixed size, other vertical constraints will be illegal.
   /// Warning: Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
@@ -1076,7 +1249,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? widthHeightRatio;
 
   // for internal use
-  late Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes;
+  late Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap;
   BarrierDirection? _direction;
   List<ConstraintId>? _referencedIds;
 }
@@ -1168,11 +1341,13 @@ class _ConstraintRenderBox extends RenderBox
   late bool _releasePrintLayoutTime;
   String? _debugName;
   late bool _debugShowZIndex;
-  late bool _needsReorderChildren;
+  late bool _preprocessChildConstraints;
+  ProcessedChildConstraints? _processedChildConstraints;
 
   bool _needsRecalculateConstraints = true;
-  final Map<RenderBox, _ConstrainedNode> _constrainedNodes = HashMap();
-  final Map<ConstraintId, _ConstrainedNode> _tempConstrainedNodes = HashMap();
+  bool _needsReorderChildren = true;
+  final Map<RenderBox, _ConstrainedNode> _tempConstrainedNodeMap = HashMap();
+  final Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap = HashMap();
 
   /// For layout
   late List<_ConstrainedNode> _layoutOrderList;
@@ -1275,6 +1450,22 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
+  set preprocessChildConstraints(bool value) {
+    if (_preprocessChildConstraints != value) {
+      _preprocessChildConstraints = value;
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
+    }
+  }
+
+  set processedChildConstraints(ProcessedChildConstraints? value) {
+    if (_processedChildConstraints != value) {
+      _processedChildConstraints = value;
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
+    }
+  }
+
   @override
   void setupParentData(covariant RenderObject child) {
     if (child.parentData is! _ConstraintBoxData) {
@@ -1337,8 +1528,8 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   /// There should be no loop constraints
-  void _debugCheckLoopConstraints() {
-    for (final element in _constrainedNodes.values) {
+  static void _debugCheckLoopConstraints(List<_ConstrainedNode> nodeList) {
+    for (final element in nodeList) {
       try {
         element.getDepth();
       } on StackOverflowError catch (_) {
@@ -1349,8 +1540,8 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   /// Each child element must have complete constraints both horizontally and vertically
-  void _debugCheckConstraintsIntegrity() {
-    for (final element in _constrainedNodes.values) {
+  static void _debugCheckConstraintsIntegrity(List<_ConstrainedNode> nodeList) {
+    for (final element in nodeList) {
       /// Check constraint integrity in the horizontal direction
       if (element.width == wrapContent || element.width >= 0) {
         if (element.leftConstraint == null && element.rightConstraint == null) {
@@ -1437,18 +1628,18 @@ class _ConstraintRenderBox extends RenderBox
     RenderBox? child,
     ConstraintId id,
   ) {
-    _ConstrainedNode node = _tempConstrainedNodes.putIfAbsent(
+    _ConstrainedNode node = _constrainedNodeMap.putIfAbsent(
         id, () => _ConstrainedNode()..nodeId = id);
     if (child != null && node.renderBox == null) {
       node.renderBox = child;
-      _constrainedNodes[child] = node;
+      _tempConstrainedNodeMap[child] = node;
     }
     return node;
   }
 
   void _buildConstrainedNodeTrees() {
-    _constrainedNodes.clear();
-    _tempConstrainedNodes.clear();
+    _tempConstrainedNodeMap.clear();
+    _constrainedNodeMap.clear();
     RenderBox? child = firstChild;
     int childIndex = -1;
 
@@ -1456,7 +1647,7 @@ class _ConstraintRenderBox extends RenderBox
       childIndex++;
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
-      childParentData._tempConstrainedNodes = _tempConstrainedNodes;
+      childParentData._constrainedNodeMap = _constrainedNodeMap;
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
           child,
@@ -1514,17 +1705,18 @@ class _ConstraintRenderBox extends RenderBox
 
   void markNeedsRecalculateConstraints() {
     _needsRecalculateConstraints = true;
+    _needsReorderChildren = true;
   }
 
   @override
   void performLayout() {
     int startTime = 0;
     if (_releasePrintLayoutTime && kReleaseMode) {
-      startTime = DateTime.now().millisecondsSinceEpoch;
+      startTime = DateTime.now().microsecondsSinceEpoch;
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        startTime = DateTime.now().millisecondsSinceEpoch;
+        startTime = DateTime.now().microsecondsSinceEpoch;
       }
       return true;
     }());
@@ -1549,58 +1741,146 @@ class _ConstraintRenderBox extends RenderBox
         return true;
       }());
 
-      /// Traverse once, building the constrained node tree for each child element
-      _buildConstrainedNodeTrees();
-
-      assert(() {
-        if (_debugCheckConstraints) {
-          _debugCheckConstraintsIntegrity();
-          _debugCheckLoopConstraints();
+      if (_preprocessChildConstraints) {
+        List<_ConstrainedNode> layoutList = [];
+        List<_ConstrainedNode> paintList = [];
+        for (final element in _processedChildConstraints!._processedNodes) {
+          _ConstrainedNode constrainedNode = _ConstrainedNode()
+            ..nodeId = element.nodeId
+            ..leftConstraint = element.leftConstraint
+            ..leftAlignType = element.leftAlignType
+            ..topConstraint = element.topConstraint
+            ..topAlignType = element.topAlignType
+            ..rightConstraint = element.rightConstraint
+            ..rightAlignType = element.rightAlignType
+            ..bottomConstraint = element.bottomConstraint
+            ..bottomAlignType = element.bottomAlignType
+            ..baselineConstraint = element.baselineConstraint
+            ..baselineAlignType = element.baselineAlignType;
+          layoutList.add(constrainedNode);
+          paintList.add(constrainedNode);
         }
-        return true;
-      }());
 
-      /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
-      _layoutOrderList = _constrainedNodes.values.toList();
-      _paintingOrderList = _constrainedNodes.values.toList();
-      _constrainedNodes.clear();
-
-      _layoutOrderList.sort((left, right) {
-        return left.getDepth() - right.getDepth();
-      });
-
-      _paintingOrderList.sort((left, right) {
-        int result = left.zIndex - right.zIndex;
-        if (result == 0) {
-          result = left.index - right.index;
+        _layoutOrderList = layoutList;
+        RenderBox? child = firstChild;
+        int childIndex = -1;
+        while (child != null) {
+          childIndex++;
+          _ConstraintBoxData childParentData =
+              child.parentData as _ConstraintBoxData;
+          childParentData._constrainedNodeMap =
+              _processedChildConstraints!._processedNodesMap;
+          _layoutOrderList[childIndex].parentData = childParentData;
+          _layoutOrderList[childIndex].index = childIndex;
+          _layoutOrderList[childIndex].renderBox = child;
+          child = childParentData.nextSibling;
         }
-        return result;
-      });
+        _layoutOrderList.sort((left, right) {
+          return left.getDepth() - right.getDepth();
+        });
 
-      assert(() {
-        /// Print constraints
-        if (_debugPrintConstraints) {
-          debugPrint(
-              'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
-                  jsonEncode(_layoutOrderList.map((e) => e.toJson()).toList()));
+        assert(() {
+          if (_debugCheckConstraints) {
+            _debugCheckConstraintsIntegrity(layoutList);
+            _debugCheckLoopConstraints(layoutList);
+          }
+          return true;
+        }());
+
+        assert(() {
+          /// Print constraints
+          if (_debugPrintConstraints) {
+            debugPrint(
+                'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
+                    jsonEncode(
+                        _layoutOrderList.map((e) => e.toJson()).toList()));
+          }
+          return true;
+        }());
+
+        if (_needsReorderChildren) {
+          _paintingOrderList = paintList;
+          RenderBox? child = firstChild;
+          int childIndex = -1;
+          while (child != null) {
+            childIndex++;
+            _ConstraintBoxData childParentData =
+                child.parentData as _ConstraintBoxData;
+            childParentData._constrainedNodeMap =
+                _processedChildConstraints!._processedNodesMap;
+            _paintingOrderList[childIndex].parentData = childParentData;
+            _paintingOrderList[childIndex].index = childIndex;
+            _paintingOrderList[childIndex].renderBox = child;
+            child = childParentData.nextSibling;
+          }
+          _paintingOrderList.sort((left, right) {
+            int result = left.zIndex - right.zIndex;
+            if (result == 0) {
+              result = left.index - right.index;
+            }
+            return result;
+          });
+          _needsReorderChildren = false;
         }
-        return true;
-      }());
 
-      _needsReorderChildren = false;
-      _needsRecalculateConstraints = false;
+        _needsRecalculateConstraints = false;
+      } else {
+        /// Traverse once, building the constrained node tree for each child element
+        _buildConstrainedNodeTrees();
+
+        assert(() {
+          if (_debugCheckConstraints) {
+            List<_ConstrainedNode> nodeList =
+                _tempConstrainedNodeMap.values.toList();
+            _debugCheckConstraintsIntegrity(nodeList);
+            _debugCheckLoopConstraints(nodeList);
+          }
+          return true;
+        }());
+
+        /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
+        _layoutOrderList = _tempConstrainedNodeMap.values.toList();
+        _paintingOrderList = _tempConstrainedNodeMap.values.toList();
+        _tempConstrainedNodeMap.clear();
+
+        _layoutOrderList.sort((left, right) {
+          return left.getDepth() - right.getDepth();
+        });
+
+        _paintingOrderList.sort((left, right) {
+          int result = left.zIndex - right.zIndex;
+          if (result == 0) {
+            result = left.index - right.index;
+          }
+          return result;
+        });
+
+        assert(() {
+          /// Print constraints
+          if (_debugPrintConstraints) {
+            debugPrint(
+                'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
+                    jsonEncode(
+                        _layoutOrderList.map((e) => e.toJson()).toList()));
+          }
+          return true;
+        }());
+
+        _needsRecalculateConstraints = false;
+        _needsReorderChildren = false;
+      }
     }
 
     _layoutByConstrainedNodeTrees();
 
     if (_releasePrintLayoutTime && kReleaseMode) {
-      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+      layoutTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
       if (layoutTimeUsage.length > maxTimeUsage) {
         layoutTimeUsage.removeFirst();
       }
     }
     assert(() {
-      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+      layoutTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
       if (layoutTimeUsage.length > maxTimeUsage) {
         layoutTimeUsage.removeFirst();
       }
@@ -1906,13 +2186,13 @@ class _ConstraintRenderBox extends RenderBox
         List<double> list = [];
         for (final id in element.referencedIds!) {
           if (direction == BarrierDirection.left) {
-            list.add(_tempConstrainedNodes[id]!.getX());
+            list.add(_constrainedNodeMap[id]!.getX());
           } else if (direction == BarrierDirection.top) {
-            list.add(_tempConstrainedNodes[id]!.getY());
+            list.add(_constrainedNodeMap[id]!.getY());
           } else if (direction == BarrierDirection.right) {
-            list.add(_tempConstrainedNodes[id]!.getRight(size));
+            list.add(_constrainedNodeMap[id]!.getRight(size));
           } else {
-            list.add(_tempConstrainedNodes[id]!.getBottom(size));
+            list.add(_constrainedNodeMap[id]!.getBottom(size));
           }
         }
         list.sort((left, right) {
@@ -2175,11 +2455,11 @@ class _ConstraintRenderBox extends RenderBox
   ) {
     int startTime = 0;
     if (_releasePrintLayoutTime && kReleaseMode) {
-      startTime = DateTime.now().millisecondsSinceEpoch;
+      startTime = DateTime.now().microsecondsSinceEpoch;
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        startTime = DateTime.now().millisecondsSinceEpoch;
+        startTime = DateTime.now().microsecondsSinceEpoch;
       }
       return true;
     }());
@@ -2280,7 +2560,7 @@ class _ConstraintRenderBox extends RenderBox
     }());
 
     if (_releasePrintLayoutTime && kReleaseMode) {
-      paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+      paintTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
       if (paintTimeUsage.length > maxTimeUsage) {
         paintTimeUsage.removeFirst();
       }
@@ -2288,7 +2568,7 @@ class _ConstraintRenderBox extends RenderBox
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+        paintTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
         if (paintTimeUsage.length > maxTimeUsage) {
           paintTimeUsage.removeFirst();
         }
@@ -2311,7 +2591,7 @@ class _ConstraintRenderBox extends RenderBox
         textAlign: TextAlign.center,
         fontSize: 8,
       ));
-      if (layoutTime > 5) {
+      if (layoutTime > 5000) {
         paragraphBuilder.pushStyle(ui.TextStyle(
           color: Colors.red,
         ));
@@ -2320,7 +2600,7 @@ class _ConstraintRenderBox extends RenderBox
           color: Colors.green,
         ));
       }
-      paragraphBuilder.addText("layout $layoutTime ms");
+      paragraphBuilder.addText("layout $layoutTime us");
       ui.Paragraph paragraph = paragraphBuilder.build();
       paragraph.layout(const ui.ParagraphConstraints(
         width: 80,
@@ -2339,7 +2619,7 @@ class _ConstraintRenderBox extends RenderBox
         textAlign: TextAlign.left,
         fontSize: 8,
       ));
-      if (paintTime > 5) {
+      if (paintTime > 5000) {
         paragraphBuilder.pushStyle(ui.TextStyle(
           color: Colors.red,
         ));
@@ -2348,7 +2628,7 @@ class _ConstraintRenderBox extends RenderBox
           color: Colors.green,
         ));
       }
-      paragraphBuilder.addText("paint $paintTime ms");
+      paragraphBuilder.addText("paint $paintTime us");
       ui.Paragraph paragraph = paragraphBuilder.build();
       paragraph.layout(const ui.ParagraphConstraints(
         width: 80,
@@ -2373,6 +2653,11 @@ class _ConstraintRenderBox extends RenderBox
     ));
     context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
   }
+}
+
+class ProcessedChildConstraints {
+  late List<_ConstrainedNode> _processedNodes;
+  late Map<ConstraintId, _ConstrainedNode> _processedNodesMap;
 }
 
 class _ConstrainedNode {
@@ -2566,7 +2851,7 @@ class _ConstrainedNode {
       if (renderBox is _BarrierRenderBox) {
         List<int> list = [];
         for (final id in referencedIds!) {
-          list.add(parentData._tempConstrainedNodes[id]!.getDepth());
+          list.add(parentData._constrainedNodeMap[id]!.getDepth());
         }
         list.sort((left, right) => left - right);
         depth = list.last + 1;
