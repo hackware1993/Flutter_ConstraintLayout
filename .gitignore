@@ -10,9 +10,8 @@
 .svn/
 
 lib/main.dart
-lib/src
+lib/src/example
 buildweb.sh
-pubspec.yaml
 
 # IntelliJ related
 *.iml
