@@ -9,6 +9,11 @@
 .history
 .svn/
 
+lib/main.dart
+lib/src
+buildweb.sh
+pubspec.yaml
+
 # IntelliJ related
 *.iml
 *.ipr

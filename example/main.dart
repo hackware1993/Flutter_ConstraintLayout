@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'sumary.dart';
+import 'home.dart';
 
 void main() {
-  runApp(const Example());
+  runApp(const MaterialApp(
+    home: ExampleHome(),
+  ));
 }

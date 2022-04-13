@@ -2551,8 +2551,11 @@ class _ConstraintRenderBox extends RenderBox
               paint.color = Colors.purple;
             }
             paint.strokeWidth = 5;
-            context.canvas.drawLine(element.offset,
-                Offset(element.getRight(size), element.getBottom(size)), paint);
+            context.canvas.drawLine(
+                element.offset + offset,
+                Offset(element.getRight(size), element.getBottom(size)) +
+                    offset,
+                paint);
           }
         }
       }
