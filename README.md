@@ -6,6 +6,8 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
+See [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+
 **Flutter ConstraintLayout has extremely high layout performance because it does not require linear
 equations to solve. It is recommended to use ConstraintLayout at the top level. For extremely
 complex layout(One thousand child elements, two thousand constraints), layout and drawing total time
@@ -76,12 +78,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.6-stable'
+      ref: 'v0.9.7-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.6-stable
+  flutter_constraintlayout: ^0.9.7-stable
 ```
 
 ```dart
