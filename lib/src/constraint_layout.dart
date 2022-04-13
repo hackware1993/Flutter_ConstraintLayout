@@ -1712,11 +1712,11 @@ class _ConstraintRenderBox extends RenderBox
   void performLayout() {
     int startTime = 0;
     if (_releasePrintLayoutTime && kReleaseMode) {
-      startTime = DateTime.now().microsecondsSinceEpoch;
+      startTime = DateTime.now().millisecondsSinceEpoch;
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        startTime = DateTime.now().microsecondsSinceEpoch;
+        startTime = DateTime.now().millisecondsSinceEpoch;
       }
       return true;
     }());
@@ -1874,13 +1874,13 @@ class _ConstraintRenderBox extends RenderBox
     _layoutByConstrainedNodeTrees();
 
     if (_releasePrintLayoutTime && kReleaseMode) {
-      layoutTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
+      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
       if (layoutTimeUsage.length > maxTimeUsage) {
         layoutTimeUsage.removeFirst();
       }
     }
     assert(() {
-      layoutTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
+      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
       if (layoutTimeUsage.length > maxTimeUsage) {
         layoutTimeUsage.removeFirst();
       }
@@ -2455,11 +2455,11 @@ class _ConstraintRenderBox extends RenderBox
   ) {
     int startTime = 0;
     if (_releasePrintLayoutTime && kReleaseMode) {
-      startTime = DateTime.now().microsecondsSinceEpoch;
+      startTime = DateTime.now().millisecondsSinceEpoch;
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        startTime = DateTime.now().microsecondsSinceEpoch;
+        startTime = DateTime.now().millisecondsSinceEpoch;
       }
       return true;
     }());
@@ -2560,7 +2560,7 @@ class _ConstraintRenderBox extends RenderBox
     }());
 
     if (_releasePrintLayoutTime && kReleaseMode) {
-      paintTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
+      paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
       if (paintTimeUsage.length > maxTimeUsage) {
         paintTimeUsage.removeFirst();
       }
@@ -2568,7 +2568,7 @@ class _ConstraintRenderBox extends RenderBox
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        paintTimeUsage.add(DateTime.now().microsecondsSinceEpoch - startTime);
+        paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
         if (paintTimeUsage.length > maxTimeUsage) {
           paintTimeUsage.removeFirst();
         }
@@ -2600,7 +2600,7 @@ class _ConstraintRenderBox extends RenderBox
           color: Colors.green,
         ));
       }
-      paragraphBuilder.addText("layout $layoutTime us");
+      paragraphBuilder.addText("layout $layoutTime ms");
       ui.Paragraph paragraph = paragraphBuilder.build();
       paragraph.layout(const ui.ParagraphConstraints(
         width: 80,
@@ -2628,7 +2628,7 @@ class _ConstraintRenderBox extends RenderBox
           color: Colors.green,
         ));
       }
-      paragraphBuilder.addText("paint $paintTime us");
+      paragraphBuilder.addText("paint $paintTime ms");
       ui.Paragraph paragraph = paragraphBuilder.build();
       paragraph.layout(const ui.ParagraphConstraints(
         width: 80,
