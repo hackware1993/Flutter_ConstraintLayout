@@ -1,6 +1,6 @@
 name: flutter_constraintlayout
 description: Build flexible layouts with constraints, Similar to Android ConstraintLayout.
-version: 0.9.6-stable
+version: 0.9.7-stable
 anthor: hackware
 homepage: https://github.com/hackware1993/Flutter-ConstraintLayout
 
@@ -19,5 +19,6 @@ dev_dependencies:
 flutter:
   uses-material-design: false
   assets:
-    - assets/test.png
-    - assets/test2.png
+    - assets/test.webp
+    - assets/test2.webp
+    - assets/icon_back.webp
