@@ -70,14 +70,14 @@ class ExampleHome extends StatelessWidget {
 
   Widget button(String title, GestureTapCallback callback) {
     return SizedBox(
-      height: 100,
+      height: 40,
       width: double.infinity,
       child: TextButton(
         onPressed: callback,
         child: Text(
           title,
           style: const TextStyle(
-            fontSize: 30,
+            fontSize: 20,
           ),
         ),
       ),
