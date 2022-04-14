@@ -27,14 +27,17 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   ///By default, constraints are not recalculated during layout if the constraints of
   ///child elements do not change. Even the constraint computation is extremely fast.
-  //
-  // But when the ListView is swiped quickly, constraints are calculated for each item
-  // layout process, even though the constraints of these items may not change. This is
-  // not necessary. At this point ChildConstraintsCache can be used to optimize it so that
-  // constraints for entries of the same type are computed only once. Refer to example/complex_list.dart
-  //
-  // Constraints can also be calculated ahead of time so that they don't need to be
-  // calculated during layout. Refer to example/preprocess_complex_list.dart
+  ///
+  /// But when the ListView is swiped quickly, constraints are calculated for each item
+  /// layout process, even though the constraints of these items may not change. This is
+  /// not necessary. At this point ChildConstraintsCache can be used to optimize it so that
+  /// constraints for entries of the same type are computed only once. Refer to example/complex_list.dart
+  ///
+  /// Constraints can also be calculated ahead of time so that they don't need to be
+  /// calculated during layout. Refer to example/preprocess_complex_list.dart
+  ///
+  /// Warning: Can only be used when the constraints of child elements do not change.
+  /// Warning: It doesn't make sense to use outside of ListView.
   final ChildConstraintsCache? childConstraintsCache;
   final bool useCacheConstraints;
 
@@ -1763,7 +1766,10 @@ class _ConstraintRenderBox extends RenderBox
       if (_useCacheConstraints &&
           _childConstraintsCache!._processedNodes != null) {
         List<_ConstrainedNode> layoutList = [];
-        List<_ConstrainedNode> paintList = [];
+        List<_ConstrainedNode>? paintList;
+        if (_needsReorderChildren) {
+          paintList = [];
+        }
         for (final element in _childConstraintsCache!._processedNodes!) {
           _ConstrainedNode constrainedNode = _ConstrainedNode()
             ..nodeId = element.nodeId
@@ -1778,10 +1784,14 @@ class _ConstraintRenderBox extends RenderBox
             ..baselineConstraint = element.baselineConstraint
             ..baselineAlignType = element.baselineAlignType;
           layoutList.add(constrainedNode);
-          paintList.add(constrainedNode);
+          paintList?.add(constrainedNode);
         }
 
         _layoutOrderList = layoutList;
+        if (_needsReorderChildren) {
+          _paintingOrderList = paintList!;
+        }
+
         RenderBox? child = firstChild;
         int childIndex = -1;
         while (child != null) {
@@ -1793,11 +1803,13 @@ class _ConstraintRenderBox extends RenderBox
           _layoutOrderList[childIndex].parentData = childParentData;
           _layoutOrderList[childIndex].index = childIndex;
           _layoutOrderList[childIndex].renderBox = child;
+          if (_needsReorderChildren) {
+            _paintingOrderList[childIndex].parentData = childParentData;
+            _paintingOrderList[childIndex].index = childIndex;
+            _paintingOrderList[childIndex].renderBox = child;
+          }
           child = childParentData.nextSibling;
         }
-        _layoutOrderList.sort((left, right) {
-          return left.getDepth() - right.getDepth();
-        });
 
         assert(() {
           if (_debugCheckConstraints) {
@@ -1806,6 +1818,21 @@ class _ConstraintRenderBox extends RenderBox
           }
           return true;
         }());
+
+        _layoutOrderList.sort((left, right) {
+          return left.getDepth() - right.getDepth();
+        });
+
+        if (_needsReorderChildren) {
+          _paintingOrderList.sort((left, right) {
+            int result = left.zIndex - right.zIndex;
+            if (result == 0) {
+              result = left.index - right.index;
+            }
+            return result;
+          });
+          _needsReorderChildren = false;
+        }
 
         assert(() {
           /// Print constraints
@@ -1817,31 +1844,6 @@ class _ConstraintRenderBox extends RenderBox
           }
           return true;
         }());
-
-        if (_needsReorderChildren) {
-          _paintingOrderList = paintList;
-          RenderBox? child = firstChild;
-          int childIndex = -1;
-          while (child != null) {
-            childIndex++;
-            _ConstraintBoxData childParentData =
-                child.parentData as _ConstraintBoxData;
-            childParentData._constrainedNodeMap =
-                _childConstraintsCache!._processedNodesMap!;
-            _paintingOrderList[childIndex].parentData = childParentData;
-            _paintingOrderList[childIndex].index = childIndex;
-            _paintingOrderList[childIndex].renderBox = child;
-            child = childParentData.nextSibling;
-          }
-          _paintingOrderList.sort((left, right) {
-            int result = left.zIndex - right.zIndex;
-            if (result == 0) {
-              result = left.index - right.index;
-            }
-            return result;
-          });
-          _needsReorderChildren = false;
-        }
 
         _needsRecalculateConstraints = false;
       } else {
