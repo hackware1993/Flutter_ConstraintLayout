@@ -12,6 +12,7 @@ class BadgeExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Badge',
+        codePath: 'example/badge.dart',
       ),
       body: ConstraintLayout(
         children: [
@@ -33,8 +34,6 @@ class BadgeExample extends StatelessWidget {
               ),
             ),
           ).applyConstraint(
-            width: wrapContent,
-            height: wrapContent,
             left: anchor.right,
             bottom: anchor.top,
             translate: const Offset(-0.5, 0.5),

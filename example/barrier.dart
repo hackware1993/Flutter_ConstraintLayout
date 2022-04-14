@@ -14,9 +14,9 @@ class BarrierExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Barrier',
+        codePath: 'example/barrier.dart',
       ),
       body: ConstraintLayout(
-        debugShowGuideline: true,
         children: [
           Container(
             color: const Color(0xFF005BBB),
@@ -24,8 +24,7 @@ class BarrierExample extends StatelessWidget {
             id: leftChild,
             width: 200,
             height: 200,
-            top: parent.top,
-            left: parent.left,
+            topLeftTo: parent,
           ),
           Container(
             color: const Color(0xFFFFD500),
@@ -33,9 +32,7 @@ class BarrierExample extends StatelessWidget {
             id: rightChild,
             width: 200,
             height: matchConstraint,
-            right: parent.right,
-            top: parent.top,
-            bottom: parent.bottom,
+            centerRightTo: parent,
             heightPercent: 0.5,
             verticalBias: 0,
           ),
@@ -51,11 +48,8 @@ class BarrierExample extends StatelessWidget {
               color: Colors.blue,
             ),
           ).applyConstraint(
-            width: wrapContent,
-            height: wrapContent,
             centerHorizontalTo: parent,
             top: barrier.bottom,
-            goneMargin: const EdgeInsets.only(top: 20),
           )
         ],
       ),

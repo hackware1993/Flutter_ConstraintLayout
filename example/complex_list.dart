@@ -26,6 +26,7 @@ class ComplexListExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'ComplexList',
+        codePath: 'example/complex_list.dart',
       ),
       body: ListView.builder(
         itemBuilder: (context, index) {
@@ -54,7 +55,6 @@ class ComplexListExample extends StatelessWidget {
                 fit: BoxFit.fill,
               ).applyConstraint(
                 width: 100,
-                height: wrapContent,
                 centerLeftTo: parent,
               ),
               Image.asset(
@@ -62,7 +62,6 @@ class ComplexListExample extends StatelessWidget {
                 fit: BoxFit.fill,
               ).applyConstraint(
                 width: 150,
-                height: wrapContent,
                 centerRightTo: parent,
               ),
               Text(

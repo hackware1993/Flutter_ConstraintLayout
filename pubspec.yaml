@@ -22,3 +22,9 @@ flutter:
     - assets/test.webp
     - assets/test2.webp
     - assets/icon_back.webp
+    - example/badge.dart
+    - example/barrier.dart
+    - example/complex_list.dart
+    - example/guideline.dart
+    - example/preprocess_complex_list.dart
+    - example/summary.dart

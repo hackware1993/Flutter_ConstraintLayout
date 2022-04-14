@@ -33,10 +33,10 @@ class SummaryExampleState extends State<SummaryExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Summary',
+        codePath: 'example/summary.dart',
       ),
       backgroundColor: Colors.black,
       body: ConstraintLayout(
-        debugShowGuideline: true,
         // Constraints can be separated from widgets
         childConstraints: [
           Constraint(
@@ -89,8 +89,6 @@ class SummaryExampleState extends State<SummaryExample> {
             child: const Text('box3'),
           ).applyConstraint(
             id: box3,
-            width: wrapContent,
-            height: wrapContent,
             right: box1.left,
             top: box1.bottom,
           ),
@@ -168,8 +166,6 @@ class SummaryExampleState extends State<SummaryExample> {
             ),
           ).applyConstraint(
             id: box9,
-            width: wrapContent,
-            height: wrapContent,
             baseline: box7.baseline,
             left: box7.left,
           ),

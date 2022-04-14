@@ -12,6 +12,7 @@ class GuidelineExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Guideline',
+        codePath: 'example/guideline.dart',
       ),
       body: ConstraintLayout(
         children: [
@@ -42,9 +43,8 @@ class GuidelineExample extends StatelessWidget {
               fontSize: 40,
               color: Colors.white,
             ),
+            textAlign: TextAlign.center,
           ).applyConstraint(
-            width: wrapContent,
-            height: wrapContent,
             centerHorizontalTo: parent,
             bottom: guideline.bottom,
           )

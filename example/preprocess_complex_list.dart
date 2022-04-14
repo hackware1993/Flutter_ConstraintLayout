@@ -42,13 +42,11 @@ class PreprocessComplexListExample extends StatelessWidget {
       ),
       Constraint(
         width: 100,
-        height: wrapContent,
         centerLeftTo: parent,
         id: leftImg,
       ),
       Constraint(
         width: 150,
-        height: wrapContent,
         centerRightTo: parent,
         id: rightImg,
       ),
@@ -96,6 +94,7 @@ class PreprocessComplexListExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'PreprocessComplexList',
+        codePath: 'example/preprocess_complex_list.dart',
       ),
       body: ListView.builder(
         itemBuilder: (context, index) {

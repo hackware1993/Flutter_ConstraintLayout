@@ -5,7 +5,7 @@ import 'barrier.dart';
 import 'complex_list.dart';
 import 'guideline.dart';
 import 'preprocess_complex_list.dart';
-import 'sumary.dart';
+import 'summary.dart';
 
 class ExampleHome extends StatelessWidget {
   const ExampleHome({Key? key}) : super(key: key);
@@ -63,7 +63,7 @@ class ExampleHome extends StatelessWidget {
   }
 
   void push(BuildContext context, Widget widget) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context2) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) {
       return widget;
     }));
   }
