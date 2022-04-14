@@ -101,10 +101,10 @@ class PreprocessComplexListExample extends StatelessWidget {
         itemBuilder: (context, index) {
           if (index == 0) {
             return const Text(
-              """Constraints can also be calculated ahead of time so that they don't need to be calculated during layout.""",
+              """Constraints can also be calculated ahead of time so that they don't need to be calculated during layout""",
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 16,
+                fontSize: 25,
               ),
               textAlign: TextAlign.center,
             );
