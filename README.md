@@ -6,7 +6,7 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nesting hell'.
 
-See [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
 **Flutter ConstraintLayout has extremely high layout performance because it does not require linear
 equations to solve. It is recommended to use ConstraintLayout at the top level. For extremely
@@ -563,9 +563,13 @@ class OffBuildExample extends StatelessWidget {
    wrapContent will be re-layout. And since the constraints passed to other child elements won't
    change, no real re-layout will be triggered.
 
-4. Using preprocessed constraints can improve performance, especially when the ListView is swiping
-   quickly, constraints are no longer calculated during layout. Need to be used in conjunction with
-   childConstraints. see example/preprocess_complex_list.dart
+4. By default, constraints are not recalculated during layout if the constraints of child elements
+   do not change. Even the constraint computation is extremely fast. But when the ListView is swiped
+   quickly, constraints are calculated for each item layout process, even though the constraints of
+   these items may not change. This is not necessary. At this point ChildConstraintsCache can be
+   used to optimize it so that constraints for entries of the same type are computed only once.
+   Refer to example/complex_list.dart. Constraints can also be calculated ahead of time so that they
+   don't need to be calculated during layout. Refer to example/preprocess_complex_list.dart.
 
 # Support me
 

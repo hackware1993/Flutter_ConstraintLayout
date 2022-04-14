@@ -21,6 +21,8 @@ class ComplexListExample extends StatelessWidget {
       Colors.pink,
     ];
 
+    ChildConstraintsCache childConstraintsCache = ChildConstraintsCache();
+
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'ComplexList',
@@ -29,7 +31,7 @@ class ComplexListExample extends StatelessWidget {
         itemBuilder: (context, index) {
           if (index == 0) {
             return const Text(
-              'Very complex item view can also achieve full frame',
+              'Very complex item view can also achieve full fps',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 25,
@@ -38,6 +40,8 @@ class ComplexListExample extends StatelessWidget {
             );
           }
           return ConstraintLayout(
+            useCacheConstraints: true,
+            childConstraintsCache: childConstraintsCache,
             children: [
               Container(
                 color: colors[index % 6],

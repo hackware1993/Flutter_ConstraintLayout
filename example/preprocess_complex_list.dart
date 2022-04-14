@@ -90,11 +90,8 @@ class PreprocessComplexListExample extends StatelessWidget {
       ),
     ];
 
-    /// Using preprocessed constraints can improve performance, especially when
-    /// the ListView is swiping quickly, constraints are no longer calculated during
-    /// layout. Need to be used in conjunction with childConstraints.
-    ProcessedChildConstraints processedChildConstraints =
-        ConstraintLayout.preprocess(childConstraints);
+    ChildConstraintsCache childConstraintsCache =
+        ConstraintLayout.generateCache(childConstraints);
 
     return Scaffold(
       appBar: const CustomAppBar(
@@ -104,9 +101,7 @@ class PreprocessComplexListExample extends StatelessWidget {
         itemBuilder: (context, index) {
           if (index == 0) {
             return const Text(
-              """Using preprocessed constraints can improve performance, especially when
-the ListView is swiping quickly, constraints are no longer calculated during
-layout. Need to be used in conjunction with childConstraints.""",
+              """Constraints can also be calculated ahead of time so that they don't need to be calculated during layout.""",
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 16,
@@ -115,9 +110,9 @@ layout. Need to be used in conjunction with childConstraints.""",
             );
           }
           return ConstraintLayout(
-            preprocessChildConstraints: true,
+            useCacheConstraints: true,
             childConstraints: childConstraints,
-            processedChildConstraints: processedChildConstraints,
+            childConstraintsCache: childConstraintsCache,
             children: [
               Container(
                 color: colors[index % 6],

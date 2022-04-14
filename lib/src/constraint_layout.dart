@@ -25,11 +25,18 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final String? debugName;
   final bool debugShowZIndex;
 
-  /// Using preprocessed constraints can improve performance, especially when
-  /// the ListView is swiping quickly, constraints are no longer calculated during
-  /// layout. Need to be used in conjunction with childConstraints.
-  final ProcessedChildConstraints? processedChildConstraints;
-  final bool preprocessChildConstraints;
+  ///By default, constraints are not recalculated during layout if the constraints of
+  ///child elements do not change. Even the constraint computation is extremely fast.
+  //
+  // But when the ListView is swiped quickly, constraints are calculated for each item
+  // layout process, even though the constraints of these items may not change. This is
+  // not necessary. At this point ChildConstraintsCache can be used to optimize it so that
+  // constraints for entries of the same type are computed only once. Refer to example/complex_list.dart
+  //
+  // Constraints can also be calculated ahead of time so that they don't need to be
+  // calculated during layout. Refer to example/preprocess_complex_list.dart
+  final ChildConstraintsCache? childConstraintsCache;
+  final bool useCacheConstraints;
 
   ConstraintLayout({
     Key? key,
@@ -43,8 +50,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.releasePrintLayoutTime = false,
     this.debugName,
     this.debugShowZIndex = false,
-    this.preprocessChildConstraints = false,
-    this.processedChildConstraints,
+    this.useCacheConstraints = false,
+    this.childConstraintsCache,
   }) : super(
           key: key,
           children: children,
@@ -53,8 +60,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
-    assert(preprocessChildConstraints == false ||
-        (processedChildConstraints != null));
+    assert(useCacheConstraints == false || (childConstraintsCache != null));
     return _ConstraintRenderBox()
       .._childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
@@ -65,8 +71,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._releasePrintLayoutTime = releasePrintLayoutTime
       .._debugName = debugName
       .._debugShowZIndex = debugShowZIndex
-      .._preprocessChildConstraints = preprocessChildConstraints
-      .._processedChildConstraints = processedChildConstraints;
+      .._useCacheConstraints = useCacheConstraints
+      .._childConstraintsCache = childConstraintsCache;
   }
 
   @override
@@ -75,6 +81,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     covariant RenderObject renderObject,
   ) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
+    assert(useCacheConstraints == false || (childConstraintsCache != null));
     (renderObject as _ConstraintRenderBox)
       ..childConstraints = childConstraints
       ..debugShowGuideline = debugShowGuideline
@@ -85,21 +92,20 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..releasePrintLayoutTime = releasePrintLayoutTime
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex
-      ..preprocessChildConstraints = preprocessChildConstraints
-      ..processedChildConstraints = processedChildConstraints;
+      ..useCacheConstraints = useCacheConstraints
+      ..childConstraintsCache = childConstraintsCache;
   }
 
-  static ProcessedChildConstraints preprocess(
+  static ChildConstraintsCache generateCache(
       List<Constraint> childConstraints) {
-    ProcessedChildConstraints processedChildConstraints =
-        ProcessedChildConstraints();
+    ChildConstraintsCache processedChildConstraints = ChildConstraintsCache();
     processedChildConstraints._processedNodesMap = {};
 
     _ConstrainedNode _getConstrainedNodeForChild(
       RenderBox? child,
       ConstraintId id,
     ) {
-      return processedChildConstraints._processedNodesMap
+      return processedChildConstraints._processedNodesMap!
           .putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
     }
 
@@ -237,13 +243,13 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
         currentNode.baselineAlignType = constraint.baseline!.type;
       }
 
-      processedChildConstraints._processedNodesMap[constraint.id!] =
+      processedChildConstraints._processedNodesMap![constraint.id!] =
           currentNode;
     }
 
-    processedChildConstraints._processedNodesMap.remove(parent);
+    processedChildConstraints._processedNodesMap!.remove(parent);
     processedChildConstraints._processedNodes =
-        processedChildConstraints._processedNodesMap.values.toList();
+        processedChildConstraints._processedNodesMap!.values.toList();
 
     return processedChildConstraints;
   }
@@ -1341,12 +1347,11 @@ class _ConstraintRenderBox extends RenderBox
   late bool _releasePrintLayoutTime;
   String? _debugName;
   late bool _debugShowZIndex;
-  late bool _preprocessChildConstraints;
-  ProcessedChildConstraints? _processedChildConstraints;
+  late bool _useCacheConstraints;
+  ChildConstraintsCache? _childConstraintsCache;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
-  final Map<RenderBox, _ConstrainedNode> _tempConstrainedNodeMap = HashMap();
   final Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap = HashMap();
 
   /// For layout
@@ -1450,17 +1455,21 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  set preprocessChildConstraints(bool value) {
-    if (_preprocessChildConstraints != value) {
-      _preprocessChildConstraints = value;
+  set useCacheConstraints(bool value) {
+    if (_useCacheConstraints != value) {
+      _useCacheConstraints = value;
+      if (!value && _childConstraintsCache != null) {
+        _childConstraintsCache!._processedNodes = null;
+        _childConstraintsCache!._processedNodesMap = null;
+      }
       markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
   }
 
-  set processedChildConstraints(ProcessedChildConstraints? value) {
-    if (_processedChildConstraints != value) {
-      _processedChildConstraints = value;
+  set childConstraintsCache(ChildConstraintsCache? value) {
+    if (_childConstraintsCache != value) {
+      _childConstraintsCache = value;
       markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
@@ -1632,17 +1641,18 @@ class _ConstraintRenderBox extends RenderBox
         id, () => _ConstrainedNode()..nodeId = id);
     if (child != null && node.renderBox == null) {
       node.renderBox = child;
-      _tempConstrainedNodeMap[child] = node;
     }
     return node;
   }
 
   void _buildConstrainedNodeTrees() {
-    _tempConstrainedNodeMap.clear();
     _constrainedNodeMap.clear();
+    if (_useCacheConstraints) {
+      _childConstraintsCache!._processedNodes = [];
+    }
+
     RenderBox? child = firstChild;
     int childIndex = -1;
-
     while (child != null) {
       childIndex++;
       _ConstraintBoxData childParentData =
@@ -1687,7 +1697,16 @@ class _ConstraintRenderBox extends RenderBox
         currentNode.baselineAlignType = childParentData.baseline!.type;
       }
 
+      if (_useCacheConstraints) {
+        _childConstraintsCache!._processedNodes!.add(currentNode);
+      }
+
       child = childParentData.nextSibling;
+    }
+
+    _constrainedNodeMap.remove(parent);
+    if (_useCacheConstraints) {
+      _childConstraintsCache!._processedNodesMap = _constrainedNodeMap;
     }
   }
 
@@ -1741,10 +1760,11 @@ class _ConstraintRenderBox extends RenderBox
         return true;
       }());
 
-      if (_preprocessChildConstraints) {
+      if (_useCacheConstraints &&
+          _childConstraintsCache!._processedNodes != null) {
         List<_ConstrainedNode> layoutList = [];
         List<_ConstrainedNode> paintList = [];
-        for (final element in _processedChildConstraints!._processedNodes) {
+        for (final element in _childConstraintsCache!._processedNodes!) {
           _ConstrainedNode constrainedNode = _ConstrainedNode()
             ..nodeId = element.nodeId
             ..leftConstraint = element.leftConstraint
@@ -1769,7 +1789,7 @@ class _ConstraintRenderBox extends RenderBox
           _ConstraintBoxData childParentData =
               child.parentData as _ConstraintBoxData;
           childParentData._constrainedNodeMap =
-              _processedChildConstraints!._processedNodesMap;
+              _childConstraintsCache!._processedNodesMap!;
           _layoutOrderList[childIndex].parentData = childParentData;
           _layoutOrderList[childIndex].index = childIndex;
           _layoutOrderList[childIndex].renderBox = child;
@@ -1807,7 +1827,7 @@ class _ConstraintRenderBox extends RenderBox
             _ConstraintBoxData childParentData =
                 child.parentData as _ConstraintBoxData;
             childParentData._constrainedNodeMap =
-                _processedChildConstraints!._processedNodesMap;
+                _childConstraintsCache!._processedNodesMap!;
             _paintingOrderList[childIndex].parentData = childParentData;
             _paintingOrderList[childIndex].index = childIndex;
             _paintingOrderList[childIndex].renderBox = child;
@@ -1831,7 +1851,7 @@ class _ConstraintRenderBox extends RenderBox
         assert(() {
           if (_debugCheckConstraints) {
             List<_ConstrainedNode> nodeList =
-                _tempConstrainedNodeMap.values.toList();
+                _constrainedNodeMap.values.toList();
             _debugCheckConstraintsIntegrity(nodeList);
             _debugCheckLoopConstraints(nodeList);
           }
@@ -1839,9 +1859,8 @@ class _ConstraintRenderBox extends RenderBox
         }());
 
         /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
-        _layoutOrderList = _tempConstrainedNodeMap.values.toList();
-        _paintingOrderList = _tempConstrainedNodeMap.values.toList();
-        _tempConstrainedNodeMap.clear();
+        _layoutOrderList = _constrainedNodeMap.values.toList();
+        _paintingOrderList = _constrainedNodeMap.values.toList();
 
         _layoutOrderList.sort((left, right) {
           return left.getDepth() - right.getDepth();
@@ -2658,9 +2677,9 @@ class _ConstraintRenderBox extends RenderBox
   }
 }
 
-class ProcessedChildConstraints {
-  late List<_ConstrainedNode> _processedNodes;
-  late Map<ConstraintId, _ConstrainedNode> _processedNodesMap;
+class ChildConstraintsCache {
+  List<_ConstrainedNode>? _processedNodes;
+  Map<ConstraintId, _ConstrainedNode>? _processedNodesMap;
 }
 
 class _ConstrainedNode {
