@@ -4,7 +4,6 @@ import 'badge.dart';
 import 'barrier.dart';
 import 'complex_list.dart';
 import 'guideline.dart';
-import 'preprocess_complex_list.dart';
 import 'summary.dart';
 
 class ExampleHome extends StatelessWidget {
@@ -37,9 +36,6 @@ class ExampleHome extends StatelessWidget {
           }),
           button('ComplexList', () {
             push(context, const ComplexListExample());
-          }),
-          button('PreprocessComplexList', () {
-            push(context, const PreprocessComplexListExample());
           }),
           button('Badge', () {
             push(context, const BadgeExample());

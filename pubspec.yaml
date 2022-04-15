@@ -26,5 +26,4 @@ flutter:
     - example/barrier.dart
     - example/complex_list.dart
     - example/guideline.dart
-    - example/preprocess_complex_list.dart
     - example/summary.dart

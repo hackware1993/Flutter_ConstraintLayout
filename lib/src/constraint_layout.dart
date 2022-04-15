@@ -25,26 +25,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final String? debugName;
   final bool debugShowZIndex;
 
-  ///By default, constraints are not recalculated during layout if the constraints of
-  ///child elements do not change. Even the constraint computation is extremely fast.
-  ///
-  /// But when the ListView is swiped quickly, constraints are calculated for each item
-  /// layout process, even though the constraints of these items may not change. This is
-  /// not necessary. At this point ChildConstraintsCache can be used to optimize it so that
-  /// constraints for entries of the same type are computed only once. Refer to example/complex_list.dart
-  ///
-  /// Constraints can also be calculated ahead of time so that they don't need to be
-  /// calculated during layout. Refer to example/preprocess_complex_list.dart
-  ///
-  /// Warning: Can only be used when the constraints of child elements do not change.
-  /// Warning: It doesn't make sense to use outside of ListView.
-  final ChildConstraintsCache? childConstraintsCache;
-  final bool useCacheConstraints;
-
-  /// When multiple ConstraintLayouts share a ChildConstraintsCache, you need
-  /// to specify a different cacheKey for each ConstraintLayout
-  final String cacheKey;
-
   ConstraintLayout({
     Key? key,
     this.childConstraints = const [],
@@ -57,9 +37,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.releasePrintLayoutTime = false,
     this.debugName,
     this.debugShowZIndex = false,
-    this.useCacheConstraints = false,
-    this.childConstraintsCache,
-    this.cacheKey = 'default',
   }) : super(
           key: key,
           children: children,
@@ -68,7 +45,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
-    assert(useCacheConstraints == false || (childConstraintsCache != null));
     return _ConstraintRenderBox()
       .._childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
@@ -78,10 +54,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugCheckConstraints = debugCheckConstraints
       .._releasePrintLayoutTime = releasePrintLayoutTime
       .._debugName = debugName
-      .._debugShowZIndex = debugShowZIndex
-      .._useCacheConstraints = useCacheConstraints
-      .._childConstraintsCache = childConstraintsCache
-      .._cacheKey = cacheKey;
+      .._debugShowZIndex = debugShowZIndex;
   }
 
   @override
@@ -90,7 +63,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     covariant RenderObject renderObject,
   ) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
-    assert(useCacheConstraints == false || (childConstraintsCache != null));
     (renderObject as _ConstraintRenderBox)
       ..childConstraints = childConstraints
       ..debugShowGuideline = debugShowGuideline
@@ -100,167 +72,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugCheckConstraints = debugCheckConstraints
       ..releasePrintLayoutTime = releasePrintLayoutTime
       ..debugName = debugName
-      ..debugShowZIndex = debugShowZIndex
-      ..useCacheConstraints = useCacheConstraints
-      ..childConstraintsCache = childConstraintsCache
-      ..cacheKey = cacheKey;
-  }
-
-  static ChildConstraintsCache generateCache(
-      List<Constraint> childConstraints) {
-    ChildConstraintsCache processedChildConstraints = ChildConstraintsCache();
-    Map<ConstraintId, _ConstrainedNode> nodesMap = {};
-    processedChildConstraints._nodesMapCache['default'] = nodesMap;
-
-    _ConstrainedNode _getConstrainedNodeForChild(
-      RenderBox? child,
-      ConstraintId id,
-    ) {
-      return nodesMap.putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
-    }
-
-    for (final element in childConstraints) {
-      assert(() {
-        element.validate();
-        return true;
-      }());
-
-      Constraint constraint = Constraint(id: element.id!);
-      constraint.left = element.left;
-      constraint.top = element.top;
-      constraint.right = element.right;
-      constraint.bottom = element.bottom;
-      constraint.baseline = element.baseline;
-
-      _ConstrainedNode currentNode =
-          _getConstrainedNodeForChild(null, constraint.id!);
-
-      if (element.topLeftTo != null) {
-        constraint.left = element.topLeftTo!.left;
-        constraint.top = element.topLeftTo!.top;
-      }
-
-      if (element.topCenterTo != null) {
-        constraint.left = element.topCenterTo!.left;
-        constraint.right = element.topCenterTo!.right;
-        constraint.top = element.topCenterTo!.top;
-      }
-
-      if (element.topRightTo != null) {
-        constraint.top = element.topRightTo!.top;
-        constraint.right = element.topRightTo!.right;
-      }
-
-      if (element.centerLeftTo != null) {
-        constraint.left = element.centerLeftTo!.left;
-        constraint.top = element.centerLeftTo!.top;
-        constraint.bottom = element.centerLeftTo!.bottom;
-      }
-
-      if (element.centerTo != null) {
-        constraint.left = element.centerTo!.left;
-        constraint.right = element.centerTo!.right;
-        constraint.top = element.centerTo!.top;
-        constraint.bottom = element.centerTo!.bottom;
-      }
-
-      if (element.centerRightTo != null) {
-        constraint.right = element.centerRightTo!.right;
-        constraint.top = element.centerRightTo!.top;
-        constraint.bottom = element.centerRightTo!.bottom;
-      }
-
-      if (element.bottomLeftTo != null) {
-        constraint.left = element.bottomLeftTo!.left;
-        constraint.bottom = element.bottomLeftTo!.bottom;
-      }
-
-      if (element.bottomCenterTo != null) {
-        constraint.left = element.bottomCenterTo!.left;
-        constraint.right = element.bottomCenterTo!.right;
-        constraint.bottom = element.bottomCenterTo!.bottom;
-      }
-
-      if (element.bottomRightTo != null) {
-        constraint.right = element.bottomRightTo!.right;
-        constraint.bottom = element.bottomRightTo!.bottom;
-      }
-
-      if (element.centerHorizontalTo != null) {
-        constraint.left = element.centerHorizontalTo!.left;
-        constraint.right = element.centerHorizontalTo!.right;
-      }
-
-      if (element.centerVerticalTo != null) {
-        constraint.top = element.centerVerticalTo!.top;
-        constraint.bottom = element.centerVerticalTo!.bottom;
-      }
-
-      if (element.width == matchParent) {
-        assert(() {
-          if (element.left != null || element.right != null) {
-            throw ConstraintLayoutException(
-                'When setting the width to match_parent for child with id ${element.id}, there is no need to set left or right constraint.');
-          }
-          return true;
-        }());
-        constraint.left = parent.left;
-        constraint.right = parent.right;
-      }
-
-      if (element.height == matchParent) {
-        assert(() {
-          if (element.top != null ||
-              element.bottom != null ||
-              element.baseline != null) {
-            throw ConstraintLayoutException(
-                'When setting the height to match_parent for child with id ${element.id}, there is no need to set top or bottom or baseline constraint.');
-          }
-          return true;
-        }());
-        constraint.top = parent.top;
-        constraint.bottom = parent.bottom;
-        constraint.baseline = null;
-      }
-
-      if (constraint.left != null) {
-        currentNode.leftConstraint =
-            _getConstrainedNodeForChild(null, constraint.left!.id!);
-        currentNode.leftAlignType = constraint.left!.type;
-      }
-
-      if (constraint.top != null) {
-        currentNode.topConstraint =
-            _getConstrainedNodeForChild(null, constraint.top!.id!);
-        currentNode.topAlignType = constraint.top!.type;
-      }
-
-      if (constraint.right != null) {
-        currentNode.rightConstraint =
-            _getConstrainedNodeForChild(null, constraint.right!.id!);
-        currentNode.rightAlignType = constraint.right!.type;
-      }
-
-      if (constraint.bottom != null) {
-        currentNode.bottomConstraint =
-            _getConstrainedNodeForChild(null, constraint.bottom!.id!);
-        currentNode.bottomAlignType = constraint.bottom!.type;
-      }
-
-      if (constraint.baseline != null) {
-        currentNode.baselineConstraint =
-            _getConstrainedNodeForChild(null, constraint.baseline!.id!);
-        currentNode.baselineAlignType = constraint.baseline!.type;
-      }
-
-      nodesMap[constraint.id!] = currentNode;
-    }
-
-    nodesMap.remove(parent);
-    List<_ConstrainedNode> nodes = nodesMap.values.toList();
-    processedChildConstraints._nodesCache['default'] = nodes;
-
-    return processedChildConstraints;
+      ..debugShowZIndex = debugShowZIndex;
   }
 }
 
@@ -1356,9 +1168,6 @@ class _ConstraintRenderBox extends RenderBox
   late bool _releasePrintLayoutTime;
   String? _debugName;
   late bool _debugShowZIndex;
-  late bool _useCacheConstraints;
-  ChildConstraintsCache? _childConstraintsCache;
-  late String _cacheKey;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
@@ -1461,34 +1270,6 @@ class _ConstraintRenderBox extends RenderBox
     if (_needsReorderChildren != value) {
       _needsReorderChildren = value;
       markNeedsPaint();
-    }
-  }
-
-  set useCacheConstraints(bool value) {
-    if (_useCacheConstraints != value) {
-      _useCacheConstraints = value;
-      if (!value && _childConstraintsCache != null) {
-        _childConstraintsCache!._nodesCache[_cacheKey] = null;
-        _childConstraintsCache!._nodesMapCache[_cacheKey] = null;
-      }
-      markNeedsRecalculateConstraints();
-      markNeedsLayout();
-    }
-  }
-
-  set childConstraintsCache(ChildConstraintsCache? value) {
-    if (_childConstraintsCache != value) {
-      _childConstraintsCache = value;
-      markNeedsRecalculateConstraints();
-      markNeedsLayout();
-    }
-  }
-
-  set cacheKey(String value) {
-    if (_cacheKey != value) {
-      _cacheKey = value;
-      markNeedsRecalculateConstraints();
-      markNeedsLayout();
     }
   }
 
@@ -1653,20 +1434,11 @@ class _ConstraintRenderBox extends RenderBox
   Map<ConstraintId, _ConstrainedNode> _buildConstrainedNodeTrees() {
     Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
 
-    List<_ConstrainedNode>? _nodes;
-    if (_useCacheConstraints) {
-      _nodes = [];
-      _childConstraintsCache!._nodesCache[_cacheKey] = _nodes;
-    }
-
-    _ConstrainedNode _getConstrainedNodeForChild(
-      RenderBox? child,
-      ConstraintId id,
-    ) {
-      _ConstrainedNode node =
-          nodesMap.putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
-      if (child != null && node.renderBox == null) {
-        node.renderBox = child;
+    _ConstrainedNode _getConstrainedNodeForChild(ConstraintId id) {
+      _ConstrainedNode? node = nodesMap[id];
+      if (node == null) {
+        node = _ConstrainedNode()..nodeId = id;
+        nodesMap[id] = node;
       }
       return node;
     }
@@ -1680,50 +1452,45 @@ class _ConstraintRenderBox extends RenderBox
       childParentData._constrainedNodeMap = nodesMap;
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
-          child,
-          childParentData.id ??
-              ConstraintId(
-                  'child[$childIndex]@${child.runtimeType}@${child.hashCode}'));
+          childParentData.id ?? ConstraintId('child[$childIndex]'));
       currentNode.parentData = childParentData;
       currentNode.index = childIndex;
+      currentNode.renderBox = child;
 
       if (childParentData.left != null) {
         currentNode.leftConstraint =
-            _getConstrainedNodeForChild(null, childParentData.left!.id!);
+            _getConstrainedNodeForChild(childParentData.left!.id!);
         currentNode.leftAlignType = childParentData.left!.type;
       }
 
       if (childParentData.top != null) {
         currentNode.topConstraint =
-            _getConstrainedNodeForChild(null, childParentData.top!.id!);
+            _getConstrainedNodeForChild(childParentData.top!.id!);
         currentNode.topAlignType = childParentData.top!.type;
       }
 
       if (childParentData.right != null) {
         currentNode.rightConstraint =
-            _getConstrainedNodeForChild(null, childParentData.right!.id!);
+            _getConstrainedNodeForChild(childParentData.right!.id!);
         currentNode.rightAlignType = childParentData.right!.type;
       }
 
       if (childParentData.bottom != null) {
         currentNode.bottomConstraint =
-            _getConstrainedNodeForChild(null, childParentData.bottom!.id!);
+            _getConstrainedNodeForChild(childParentData.bottom!.id!);
         currentNode.bottomAlignType = childParentData.bottom!.type;
       }
 
       if (childParentData.baseline != null) {
         currentNode.baselineConstraint =
-            _getConstrainedNodeForChild(null, childParentData.baseline!.id!);
+            _getConstrainedNodeForChild(childParentData.baseline!.id!);
         currentNode.baselineAlignType = childParentData.baseline!.type;
       }
-
-      _nodes?.add(currentNode);
 
       child = childParentData.nextSibling;
     }
 
     nodesMap.remove(parent);
-    _childConstraintsCache?._nodesMapCache[_cacheKey] = nodesMap;
 
     return nodesMap;
   }
@@ -1778,133 +1545,47 @@ class _ConstraintRenderBox extends RenderBox
         return true;
       }());
 
-      if (_useCacheConstraints &&
-          _childConstraintsCache!._nodesCache[_cacheKey] != null) {
-        List<_ConstrainedNode> layoutList = [];
-        List<_ConstrainedNode>? paintList;
-        if (_needsReorderChildren) {
-          paintList = [];
+      /// Traverse once, building the constrained node tree for each child element
+      Map<ConstraintId, _ConstrainedNode> nodesMap =
+          _buildConstrainedNodeTrees();
+
+      assert(() {
+        if (_debugCheckConstraints) {
+          List<_ConstrainedNode> nodeList = nodesMap.values.toList();
+          _debugCheckConstraintsIntegrity(nodeList);
+          _debugCheckLoopConstraints(nodeList);
         }
-        for (final element in _childConstraintsCache!._nodesCache[_cacheKey]!) {
-          _ConstrainedNode constrainedNode = _ConstrainedNode()
-            ..nodeId = element.nodeId
-            ..leftConstraint = element.leftConstraint
-            ..leftAlignType = element.leftAlignType
-            ..topConstraint = element.topConstraint
-            ..topAlignType = element.topAlignType
-            ..rightConstraint = element.rightConstraint
-            ..rightAlignType = element.rightAlignType
-            ..bottomConstraint = element.bottomConstraint
-            ..bottomAlignType = element.bottomAlignType
-            ..baselineConstraint = element.baselineConstraint
-            ..baselineAlignType = element.baselineAlignType;
-          layoutList.add(constrainedNode);
-          paintList?.add(constrainedNode);
+        return true;
+      }());
+
+      /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
+      _layoutOrderList = nodesMap.values.toList();
+      _paintingOrderList = nodesMap.values.toList();
+
+      _layoutOrderList.sort((left, right) {
+        return left.getDepth() - right.getDepth();
+      });
+
+      _paintingOrderList.sort((left, right) {
+        int result = left.zIndex - right.zIndex;
+        if (result == 0) {
+          result = left.index - right.index;
         }
+        return result;
+      });
 
-        _layoutOrderList = layoutList;
-        if (_needsReorderChildren) {
-          _paintingOrderList = paintList!;
+      assert(() {
+        /// Print constraints
+        if (_debugPrintConstraints) {
+          debugPrint(
+              'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
+                  jsonEncode(_layoutOrderList.map((e) => e.toJson()).toList()));
         }
+        return true;
+      }());
 
-        RenderBox? child = firstChild;
-        int childIndex = -1;
-        while (child != null) {
-          childIndex++;
-          _ConstraintBoxData childParentData =
-              child.parentData as _ConstraintBoxData;
-          childParentData._constrainedNodeMap =
-              _childConstraintsCache!._nodesMapCache[_cacheKey]!;
-          _layoutOrderList[childIndex].parentData = childParentData;
-          _layoutOrderList[childIndex].index = childIndex;
-          _layoutOrderList[childIndex].renderBox = child;
-          if (_needsReorderChildren) {
-            _paintingOrderList[childIndex].parentData = childParentData;
-            _paintingOrderList[childIndex].index = childIndex;
-            _paintingOrderList[childIndex].renderBox = child;
-          }
-          child = childParentData.nextSibling;
-        }
-
-        assert(() {
-          if (_debugCheckConstraints) {
-            _debugCheckConstraintsIntegrity(layoutList);
-            _debugCheckLoopConstraints(layoutList);
-          }
-          return true;
-        }());
-
-        _layoutOrderList.sort((left, right) {
-          return left.getDepth() - right.getDepth();
-        });
-
-        if (_needsReorderChildren) {
-          _paintingOrderList.sort((left, right) {
-            int result = left.zIndex - right.zIndex;
-            if (result == 0) {
-              result = left.index - right.index;
-            }
-            return result;
-          });
-          _needsReorderChildren = false;
-        }
-
-        assert(() {
-          /// Print constraints
-          if (_debugPrintConstraints) {
-            debugPrint(
-                'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
-                    jsonEncode(
-                        _layoutOrderList.map((e) => e.toJson()).toList()));
-          }
-          return true;
-        }());
-
-        _needsRecalculateConstraints = false;
-      } else {
-        /// Traverse once, building the constrained node tree for each child element
-        Map<ConstraintId, _ConstrainedNode> nodesMap =
-            _buildConstrainedNodeTrees();
-
-        assert(() {
-          if (_debugCheckConstraints) {
-            List<_ConstrainedNode> nodeList = nodesMap.values.toList();
-            _debugCheckConstraintsIntegrity(nodeList);
-            _debugCheckLoopConstraints(nodeList);
-          }
-          return true;
-        }());
-
-        /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
-        _layoutOrderList = nodesMap.values.toList();
-        _paintingOrderList = nodesMap.values.toList();
-
-        _layoutOrderList.sort((left, right) {
-          return left.getDepth() - right.getDepth();
-        });
-
-        _paintingOrderList.sort((left, right) {
-          int result = left.zIndex - right.zIndex;
-          if (result == 0) {
-            result = left.index - right.index;
-          }
-          return result;
-        });
-
-        assert(() {
-          /// Print constraints
-          if (_debugPrintConstraints) {
-            debugPrint(
-                'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
-                    jsonEncode(
-                        _layoutOrderList.map((e) => e.toJson()).toList()));
-          }
-          return true;
-        }());
-
-        _needsRecalculateConstraints = false;
-        _needsReorderChildren = false;
-      }
+      _needsRecalculateConstraints = false;
+      _needsReorderChildren = false;
     }
 
     _layoutByConstrainedNodeTrees();
@@ -2694,12 +2375,6 @@ class _ConstraintRenderBox extends RenderBox
     ));
     context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
   }
-}
-
-class ChildConstraintsCache {
-  final Map<String, List<_ConstrainedNode>?> _nodesCache = HashMap();
-  final Map<String, Map<ConstraintId, _ConstrainedNode>?> _nodesMapCache =
-      HashMap();
 }
 
 class _ConstrainedNode {

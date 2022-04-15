@@ -563,14 +563,6 @@ class OffBuildExample extends StatelessWidget {
    wrapContent will be re-layout. And since the constraints passed to other child elements won't
    change, no real re-layout will be triggered.
 
-4. By default, constraints are not recalculated during layout if the constraints of child elements
-   do not change. Even the constraint computation is extremely fast. But when the ListView is swiped
-   quickly, constraints are calculated for each item layout process, even though the constraints of
-   these items may not change. This is not necessary. At this point ChildConstraintsCache can be
-   used to optimize it so that constraints for entries of the same type are computed only once.
-   Refer to example/complex_list.dart. Constraints can also be calculated ahead of time so that they
-   don't need to be calculated during layout. Refer to example/preprocess_complex_list.dart.
-
 # Support me
 
 If it helps you a lot, consider sponsoring me a cup of milk tea.

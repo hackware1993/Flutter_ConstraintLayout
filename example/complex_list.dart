@@ -21,8 +21,6 @@ class ComplexListExample extends StatelessWidget {
       Colors.pink,
     ];
 
-    ChildConstraintsCache childConstraintsCache = ChildConstraintsCache();
-
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'ComplexList',
@@ -41,8 +39,6 @@ class ComplexListExample extends StatelessWidget {
             );
           }
           return ConstraintLayout(
-            useCacheConstraints: true,
-            childConstraintsCache: childConstraintsCache,
             children: [
               Container(
                 color: colors[index % 6],
