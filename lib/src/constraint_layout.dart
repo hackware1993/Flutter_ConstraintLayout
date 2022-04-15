@@ -41,6 +41,10 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final ChildConstraintsCache? childConstraintsCache;
   final bool useCacheConstraints;
 
+  /// When multiple ConstraintLayouts share a ChildConstraintsCache, you need
+  /// to specify a different cacheKey for each ConstraintLayout
+  final String cacheKey;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints = const [],
@@ -55,6 +59,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.debugShowZIndex = false,
     this.useCacheConstraints = false,
     this.childConstraintsCache,
+    this.cacheKey = 'default',
   }) : super(
           key: key,
           children: children,
@@ -75,7 +80,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugName = debugName
       .._debugShowZIndex = debugShowZIndex
       .._useCacheConstraints = useCacheConstraints
-      .._childConstraintsCache = childConstraintsCache;
+      .._childConstraintsCache = childConstraintsCache
+      .._cacheKey = cacheKey;
   }
 
   @override
@@ -96,20 +102,21 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex
       ..useCacheConstraints = useCacheConstraints
-      ..childConstraintsCache = childConstraintsCache;
+      ..childConstraintsCache = childConstraintsCache
+      ..cacheKey = cacheKey;
   }
 
   static ChildConstraintsCache generateCache(
       List<Constraint> childConstraints) {
     ChildConstraintsCache processedChildConstraints = ChildConstraintsCache();
-    processedChildConstraints._processedNodesMap = {};
+    Map<ConstraintId, _ConstrainedNode> nodesMap = {};
+    processedChildConstraints._nodesMapCache['default'] = nodesMap;
 
     _ConstrainedNode _getConstrainedNodeForChild(
       RenderBox? child,
       ConstraintId id,
     ) {
-      return processedChildConstraints._processedNodesMap!
-          .putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
+      return nodesMap.putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
     }
 
     for (final element in childConstraints) {
@@ -246,13 +253,12 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
         currentNode.baselineAlignType = constraint.baseline!.type;
       }
 
-      processedChildConstraints._processedNodesMap![constraint.id!] =
-          currentNode;
+      nodesMap[constraint.id!] = currentNode;
     }
 
-    processedChildConstraints._processedNodesMap!.remove(parent);
-    processedChildConstraints._processedNodes =
-        processedChildConstraints._processedNodesMap!.values.toList();
+    nodesMap.remove(parent);
+    List<_ConstrainedNode> nodes = nodesMap.values.toList();
+    processedChildConstraints._nodesCache['default'] = nodes;
 
     return processedChildConstraints;
   }
@@ -1352,6 +1358,7 @@ class _ConstraintRenderBox extends RenderBox
   late bool _debugShowZIndex;
   late bool _useCacheConstraints;
   ChildConstraintsCache? _childConstraintsCache;
+  late String _cacheKey;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
@@ -1462,8 +1469,8 @@ class _ConstraintRenderBox extends RenderBox
     if (_useCacheConstraints != value) {
       _useCacheConstraints = value;
       if (!value && _childConstraintsCache != null) {
-        _childConstraintsCache!._processedNodes = null;
-        _childConstraintsCache!._processedNodesMap = null;
+        _childConstraintsCache!._nodesCache[_cacheKey] = null;
+        _childConstraintsCache!._nodesMapCache[_cacheKey] = null;
       }
       markNeedsRecalculateConstraints();
       markNeedsLayout();
@@ -1473,6 +1480,14 @@ class _ConstraintRenderBox extends RenderBox
   set childConstraintsCache(ChildConstraintsCache? value) {
     if (_childConstraintsCache != value) {
       _childConstraintsCache = value;
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
+    }
+  }
+
+  set cacheKey(String value) {
+    if (_cacheKey != value) {
+      _cacheKey = value;
       markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
@@ -1650,8 +1665,10 @@ class _ConstraintRenderBox extends RenderBox
 
   void _buildConstrainedNodeTrees() {
     _constrainedNodeMap.clear();
+    List<_ConstrainedNode>? _nodes;
     if (_useCacheConstraints) {
-      _childConstraintsCache!._processedNodes = [];
+      _nodes = [];
+      _childConstraintsCache!._nodesCache[_cacheKey] = _nodes;
     }
 
     RenderBox? child = firstChild;
@@ -1700,17 +1717,13 @@ class _ConstraintRenderBox extends RenderBox
         currentNode.baselineAlignType = childParentData.baseline!.type;
       }
 
-      if (_useCacheConstraints) {
-        _childConstraintsCache!._processedNodes!.add(currentNode);
-      }
+      _nodes?.add(currentNode);
 
       child = childParentData.nextSibling;
     }
 
     _constrainedNodeMap.remove(parent);
-    if (_useCacheConstraints) {
-      _childConstraintsCache!._processedNodesMap = _constrainedNodeMap;
-    }
+    _childConstraintsCache?._nodesMapCache[_cacheKey] = _constrainedNodeMap;
   }
 
   @override
@@ -1764,13 +1777,13 @@ class _ConstraintRenderBox extends RenderBox
       }());
 
       if (_useCacheConstraints &&
-          _childConstraintsCache!._processedNodes != null) {
+          _childConstraintsCache!._nodesCache[_cacheKey] != null) {
         List<_ConstrainedNode> layoutList = [];
         List<_ConstrainedNode>? paintList;
         if (_needsReorderChildren) {
           paintList = [];
         }
-        for (final element in _childConstraintsCache!._processedNodes!) {
+        for (final element in _childConstraintsCache!._nodesCache[_cacheKey]!) {
           _ConstrainedNode constrainedNode = _ConstrainedNode()
             ..nodeId = element.nodeId
             ..leftConstraint = element.leftConstraint
@@ -1799,7 +1812,7 @@ class _ConstraintRenderBox extends RenderBox
           _ConstraintBoxData childParentData =
               child.parentData as _ConstraintBoxData;
           childParentData._constrainedNodeMap =
-              _childConstraintsCache!._processedNodesMap!;
+              _childConstraintsCache!._nodesMapCache[_cacheKey]!;
           _layoutOrderList[childIndex].parentData = childParentData;
           _layoutOrderList[childIndex].index = childIndex;
           _layoutOrderList[childIndex].renderBox = child;
@@ -2680,8 +2693,9 @@ class _ConstraintRenderBox extends RenderBox
 }
 
 class ChildConstraintsCache {
-  List<_ConstrainedNode>? _processedNodes;
-  Map<ConstraintId, _ConstrainedNode>? _processedNodesMap;
+  final Map<String, List<_ConstrainedNode>?> _nodesCache = HashMap();
+  final Map<String, Map<ConstraintId, _ConstrainedNode>?> _nodesMapCache =
+      HashMap();
 }
 
 class _ConstrainedNode {
