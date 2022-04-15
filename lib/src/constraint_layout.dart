@@ -1362,7 +1362,6 @@ class _ConstraintRenderBox extends RenderBox
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
-  final Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap = HashMap();
 
   /// For layout
   late List<_ConstrainedNode> _layoutOrderList;
@@ -1651,24 +1650,25 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  _ConstrainedNode _getConstrainedNodeForChild(
-    RenderBox? child,
-    ConstraintId id,
-  ) {
-    _ConstrainedNode node = _constrainedNodeMap.putIfAbsent(
-        id, () => _ConstrainedNode()..nodeId = id);
-    if (child != null && node.renderBox == null) {
-      node.renderBox = child;
-    }
-    return node;
-  }
+  Map<ConstraintId, _ConstrainedNode> _buildConstrainedNodeTrees() {
+    Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
 
-  void _buildConstrainedNodeTrees() {
-    _constrainedNodeMap.clear();
     List<_ConstrainedNode>? _nodes;
     if (_useCacheConstraints) {
       _nodes = [];
       _childConstraintsCache!._nodesCache[_cacheKey] = _nodes;
+    }
+
+    _ConstrainedNode _getConstrainedNodeForChild(
+      RenderBox? child,
+      ConstraintId id,
+    ) {
+      _ConstrainedNode node =
+          nodesMap.putIfAbsent(id, () => _ConstrainedNode()..nodeId = id);
+      if (child != null && node.renderBox == null) {
+        node.renderBox = child;
+      }
+      return node;
     }
 
     RenderBox? child = firstChild;
@@ -1677,7 +1677,7 @@ class _ConstraintRenderBox extends RenderBox
       childIndex++;
       _ConstraintBoxData childParentData =
           child.parentData as _ConstraintBoxData;
-      childParentData._constrainedNodeMap = _constrainedNodeMap;
+      childParentData._constrainedNodeMap = nodesMap;
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
           child,
@@ -1722,8 +1722,10 @@ class _ConstraintRenderBox extends RenderBox
       child = childParentData.nextSibling;
     }
 
-    _constrainedNodeMap.remove(parent);
-    _childConstraintsCache?._nodesMapCache[_cacheKey] = _constrainedNodeMap;
+    nodesMap.remove(parent);
+    _childConstraintsCache?._nodesMapCache[_cacheKey] = nodesMap;
+
+    return nodesMap;
   }
 
   @override
@@ -1861,12 +1863,12 @@ class _ConstraintRenderBox extends RenderBox
         _needsRecalculateConstraints = false;
       } else {
         /// Traverse once, building the constrained node tree for each child element
-        _buildConstrainedNodeTrees();
+        Map<ConstraintId, _ConstrainedNode> nodesMap =
+            _buildConstrainedNodeTrees();
 
         assert(() {
           if (_debugCheckConstraints) {
-            List<_ConstrainedNode> nodeList =
-                _constrainedNodeMap.values.toList();
+            List<_ConstrainedNode> nodeList = nodesMap.values.toList();
             _debugCheckConstraintsIntegrity(nodeList);
             _debugCheckLoopConstraints(nodeList);
           }
@@ -1874,8 +1876,8 @@ class _ConstraintRenderBox extends RenderBox
         }());
 
         /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
-        _layoutOrderList = _constrainedNodeMap.values.toList();
-        _paintingOrderList = _constrainedNodeMap.values.toList();
+        _layoutOrderList = nodesMap.values.toList();
+        _paintingOrderList = nodesMap.values.toList();
 
         _layoutOrderList.sort((left, right) {
           return left.getDepth() - right.getDepth();
@@ -2220,13 +2222,15 @@ class _ConstraintRenderBox extends RenderBox
         List<double> list = [];
         for (final id in element.referencedIds!) {
           if (direction == BarrierDirection.left) {
-            list.add(_constrainedNodeMap[id]!.getX());
+            list.add(element.parentData._constrainedNodeMap[id]!.getX());
           } else if (direction == BarrierDirection.top) {
-            list.add(_constrainedNodeMap[id]!.getY());
+            list.add(element.parentData._constrainedNodeMap[id]!.getY());
           } else if (direction == BarrierDirection.right) {
-            list.add(_constrainedNodeMap[id]!.getRight(size));
+            list.add(
+                element.parentData._constrainedNodeMap[id]!.getRight(size));
           } else {
-            list.add(_constrainedNodeMap[id]!.getBottom(size));
+            list.add(
+                element.parentData._constrainedNodeMap[id]!.getBottom(size));
           }
         }
         list.sort((left, right) {
