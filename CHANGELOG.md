@@ -1,3 +1,7 @@
+# v0.9.12-stable
+
+optimize constraints calculate.
+
 # v0.9.11-stable
 
 remove cache support.
