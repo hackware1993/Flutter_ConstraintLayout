@@ -330,6 +330,7 @@ bool _debugEnsureNegativePercent(String name, double? percent) {
 }
 
 final ConstraintId parent = ConstraintId('parent');
+final _ConstrainedNode _parentNode = _ConstrainedNode()..nodeId = parent;
 const double matchConstraint = -3.1415926;
 const double matchParent = -2.7182818;
 const double wrapContent = -0.6180339;
@@ -1435,6 +1436,9 @@ class _ConstraintRenderBox extends RenderBox
     Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
 
     _ConstrainedNode _getConstrainedNodeForChild(ConstraintId id) {
+      if (id == parent) {
+        return _parentNode;
+      }
       _ConstrainedNode? node = nodesMap[id];
       if (node == null) {
         node = _ConstrainedNode()..nodeId = id;
@@ -1452,7 +1456,8 @@ class _ConstraintRenderBox extends RenderBox
       childParentData._constrainedNodeMap = nodesMap;
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
-          childParentData.id ?? ConstraintId('child[$childIndex]'));
+          childParentData.id ??
+              ConstraintId('child[$childIndex]@${child.runtimeType}'));
       currentNode.parentData = childParentData;
       currentNode.index = childIndex;
       currentNode.renderBox = child;
