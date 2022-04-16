@@ -48,6 +48,7 @@ class ExampleHome extends StatelessWidget {
           button('DimensionRatio', () {
             push(context, const DimensionRatioExample());
           }),
+          button('Chain (Coming soon)', null),
           const Spacer(),
           const Text(
             'Powered by Flutter Web & ConstraintLayout',
@@ -72,7 +73,7 @@ class ExampleHome extends StatelessWidget {
     }));
   }
 
-  Widget button(String title, GestureTapCallback callback) {
+  Widget button(String title, GestureTapCallback? callback) {
     return SizedBox(
       height: 40,
       width: double.infinity,
