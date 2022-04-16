@@ -38,6 +38,16 @@ class BadgeExample extends StatelessWidget {
             bottom: anchor.top,
             translate: const Offset(-0.5, 0.5),
             percentageTranslate: true,
+          ),
+          Container(
+            color: Colors.green,
+          ).applyConstraint(
+            width: 100,
+            height: 100,
+            left: anchor.right,
+            right: anchor.right,
+            top: anchor.bottom,
+            bottom: anchor.bottom,
           )
         ],
       ),
