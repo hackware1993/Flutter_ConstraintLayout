@@ -27,3 +27,5 @@ flutter:
     - example/complex_list.dart
     - example/guideline.dart
     - example/summary.dart
+    - example/percentage_layout.dart
+    - example/dimension_ratio.dart

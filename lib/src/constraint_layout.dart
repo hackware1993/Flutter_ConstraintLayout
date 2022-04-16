@@ -185,6 +185,7 @@ extension ConstrainedWidgetsExt on Widget {
     double minHeight = 0,
     double maxHeight = matchParent,
     double? widthHeightRatio,
+    bool? ratioBaseOnWidth,
   }) {
     return Constrained(
       key: key,
@@ -231,6 +232,7 @@ extension ConstrainedWidgetsExt on Widget {
         minHeight: minHeight,
         maxHeight: maxHeight,
         widthHeightRatio: widthHeightRatio,
+        ratioBaseOnWidth: ratioBaseOnWidth,
       ),
       child: this,
     );
@@ -526,6 +528,12 @@ class Constraint {
   /// inferred (fixed size, matchParent, matchConstraint with two constraints)
   final double? widthHeightRatio;
 
+  /// By default, ConstraintLayout will automatically decide which side to base on and
+  /// calculate the size of the other side based on widthHeightRatio. But if both sides
+  /// are matchConstraint, it cannot be determined automatically. At this point, you need
+  /// to specify the ratioBaseOnWidth parameter. The default value of null means automatically decide
+  final bool? ratioBaseOnWidth;
+
   Constraint({
     this.id,
     this.width = wrapContent,
@@ -569,6 +577,7 @@ class Constraint {
     this.minHeight = 0,
     this.maxHeight = matchParent,
     this.widthHeightRatio,
+    this.ratioBaseOnWidth,
   });
 
   @override
@@ -616,7 +625,8 @@ class Constraint {
           maxWidth == other.maxWidth &&
           minHeight == other.minHeight &&
           maxHeight == other.maxHeight &&
-          widthHeightRatio == other.widthHeightRatio;
+          widthHeightRatio == other.widthHeightRatio &&
+          ratioBaseOnWidth == other.ratioBaseOnWidth;
 
   @override
   int get hashCode =>
@@ -660,7 +670,8 @@ class Constraint {
       maxWidth.hashCode ^
       minHeight.hashCode ^
       maxHeight.hashCode ^
-      widthHeightRatio.hashCode;
+      widthHeightRatio.hashCode ^
+      ratioBaseOnWidth.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -1009,6 +1020,11 @@ class Constraint {
       needsLayout = true;
     }
 
+    if (parentData.ratioBaseOnWidth != ratioBaseOnWidth) {
+      parentData.ratioBaseOnWidth = ratioBaseOnWidth;
+      needsLayout = true;
+    }
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (needsRecalculateConstraints) {
@@ -1075,6 +1091,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? minHeight;
   double? maxHeight;
   double? widthHeightRatio;
+  bool? ratioBaseOnWidth;
 
   // for internal use
   late Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap;
@@ -1412,8 +1429,13 @@ class _ConstraintRenderBox extends RenderBox
 
       if (element.widthHeightRatio != null) {
         if (element.widthIsExact && element.heightIsExact) {
-          throw ConstraintLayoutException(
-              'When setting widthHeightRatio for ${element.nodeId}, full constraints cannot be set on both sides at the same time.');
+          if (element.width == matchConstraint &&
+              element.height == matchConstraint) {
+            if (element.ratioBaseOnWidth == null) {
+              throw ConstraintLayoutException(
+                  'When setting widthHeightRatio for ${element.nodeId}, ratioBaseOnWidth is required.');
+            }
+          }
         } else if (!element.widthIsExact && !element.heightIsExact) {
           throw ConstraintLayoutException(
               'When setting widthHeightRatio for ${element.nodeId}, one side needs full constraints.');
@@ -1715,7 +1737,9 @@ class _ConstraintRenderBox extends RenderBox
           }());
           maxWidth = minWidth;
         } else if (width == matchConstraint) {
-          if (element.widthHeightRatio != null && !element.widthIsExact) {
+          if (element.widthHeightRatio != null &&
+              element.heightIsExact &&
+              element.ratioBaseOnWidth != true) {
             /// The width needs to be calculated later based on the height
             element.widthBasedHeight = true;
             minWidth = 0;
@@ -1797,7 +1821,9 @@ class _ConstraintRenderBox extends RenderBox
           }());
           maxHeight = minHeight;
         } else if (height == matchConstraint) {
-          if (element.widthHeightRatio != null && element.widthIsExact) {
+          if (element.widthHeightRatio != null &&
+              element.widthIsExact &&
+              element.ratioBaseOnWidth != false) {
             /// The height needs to be calculated later based on the width
             /// minWidth == maxWidth
             minHeight = minWidth / element.widthHeightRatio!;
@@ -2471,6 +2497,8 @@ class _ConstrainedNode {
 
   double? get widthHeightRatio => parentData.widthHeightRatio;
 
+  bool? get ratioBaseOnWidth => parentData.ratioBaseOnWidth;
+
   /// fixed size, matchParent, matchConstraint with two constraints
   bool get widthIsExact =>
       width >= 0 ||
@@ -2707,6 +2735,7 @@ class _InternalBox extends RenderBox {
     constraintBoxData.minHeight = 0;
     constraintBoxData.maxHeight = matchParent;
     constraintBoxData.widthHeightRatio = null;
+    constraintBoxData.ratioBaseOnWidth = null;
   }
 }
 

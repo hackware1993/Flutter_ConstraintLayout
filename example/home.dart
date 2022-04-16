@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'badge.dart';
 import 'barrier.dart';
 import 'complex_list.dart';
+import 'dimension_ratio.dart';
 import 'guideline.dart';
+import 'percentage_layout.dart';
 import 'summary.dart';
 
 class ExampleHome extends StatelessWidget {
@@ -39,6 +41,12 @@ class ExampleHome extends StatelessWidget {
           }),
           button('Badge', () {
             push(context, const BadgeExample());
+          }),
+          button('PercentageLayout', () {
+            push(context, const PercentageLayoutExample());
+          }),
+          button('DimensionRatio', () {
+            push(context, const DimensionRatioExample());
           }),
           const Spacer(),
           const Text(
