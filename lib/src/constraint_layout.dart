@@ -1,5 +1,3 @@
-// ignore_for_file: invalid_override_of_non_virtual_member
-
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -299,6 +297,7 @@ class OffBuildWidget extends StatelessWidget {
   }
 
   @override
+  // ignore: invalid_override_of_non_virtual_member
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is OffBuildWidget &&
@@ -306,6 +305,7 @@ class OffBuildWidget extends StatelessWidget {
           id == (other).id;
 
   @override
+  // ignore: invalid_override_of_non_virtual_member
   int get hashCode => id.hashCode;
 }
 
@@ -332,7 +332,10 @@ bool _debugEnsureNegativePercent(String name, double? percent) {
 }
 
 final ConstraintId parent = ConstraintId('parent');
-final _ConstrainedNode _parentNode = _ConstrainedNode()..nodeId = parent;
+final _ConstrainedNode _parentNode = _ConstrainedNode()
+  ..nodeId = parent
+  ..depth = 0
+  ..notLaidOut = false;
 const double matchConstraint = -3.1415926;
 const double matchParent = -2.7182818;
 const double wrapContent = -0.6180339;
@@ -1097,6 +1100,9 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   late Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap;
   BarrierDirection? _direction;
   List<ConstraintId>? _referencedIds;
+  bool _isGuideline = false;
+  bool _isBarrier = false;
+  Size? _helperSize;
 }
 
 class Constrained extends ParentDataWidget<_ConstraintBoxData> {
@@ -1189,6 +1195,7 @@ class _ConstraintRenderBox extends RenderBox
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
+  final Map<ConstraintId, _ConstrainedNode> _helperNodeMap = HashMap();
 
   /// For layout
   late List<_ConstrainedNode> _layoutOrderList;
@@ -1298,8 +1305,8 @@ class _ConstraintRenderBox extends RenderBox
 
       /// Do not do special treatment for built-in components, treat them as ordinary
       /// child elements, but have a size of 0 and are gone
-      if (child is _InternalBox) {
-        (child).updateParentData();
+      if (child is _HelperBox) {
+        child.updateParentData();
       }
     }
   }
@@ -1310,6 +1317,14 @@ class _ConstraintRenderBox extends RenderBox
     RenderBox? child = firstChild;
     Set<ConstraintId> idSet = HashSet();
     idSet.add(parent);
+    if (_helperNodeMap.isNotEmpty) {
+      for (final element in _helperNodeMap.keys) {
+        if (!idSet.add(element)) {
+          throw ConstraintLayoutException('Duplicate id in ConstraintLayout.');
+        }
+      }
+    }
+
     Set<ConstraintId> constraintsIdSet = HashSet();
     while (child != null) {
       _ConstraintBoxData childParentData =
@@ -1345,11 +1360,25 @@ class _ConstraintRenderBox extends RenderBox
       }
       child = childParentData.nextSibling;
     }
+
+    /// The id used by all constraints must be defined
     Set<ConstraintId> illegalIdSet = constraintsIdSet.difference(idSet);
     if (illegalIdSet.isNotEmpty) {
       throw ConstraintLayoutException(
           'These ids $illegalIdSet are not yet defined.');
     }
+
+    /// All ids referenced by Barrier must be defined
+    // for (final element in _helperNodeMap.values) {
+    //   if (element.isBarrier) {
+    //     Set<ConstraintId> illegalIdSet =
+    //         element.referencedIds!.toSet().difference(idSet);
+    //     if (illegalIdSet.isNotEmpty) {
+    //       throw ConstraintLayoutException(
+    //           'These ids $illegalIdSet are not yet defined.');
+    //     }
+    //   }
+    // }
   }
 
   /// There should be no loop constraints
@@ -1467,6 +1496,10 @@ class _ConstraintRenderBox extends RenderBox
         nodesMap[id] = node;
       }
       return node;
+    }
+
+    if (_helperNodeMap.isNotEmpty) {
+      nodesMap.addAll(_helperNodeMap);
     }
 
     RenderBox? child = firstChild;
@@ -1759,7 +1792,7 @@ class _ConstraintRenderBox extends RenderBox
                 right = element.rightConstraint!.getRight(size);
               }
               double leftMargin;
-              if (element.leftConstraint!.isNotLaidOut()) {
+              if (element.leftConstraint!.notLaidOut) {
                 leftMargin = _getLeftInsets(
                     goneMargin, element.percentageMargin, right - left);
               } else {
@@ -1767,7 +1800,7 @@ class _ConstraintRenderBox extends RenderBox
                     margin, element.percentageMargin, right - left);
               }
               double rightMargin;
-              if (element.rightConstraint!.isNotLaidOut()) {
+              if (element.rightConstraint!.notLaidOut) {
                 rightMargin = _getRightInsets(
                     goneMargin, element.percentageMargin, right - left);
               } else {
@@ -1843,7 +1876,7 @@ class _ConstraintRenderBox extends RenderBox
                 bottom = element.bottomConstraint!.getBottom(size);
               }
               double topMargin;
-              if (element.topConstraint!.isNotLaidOut()) {
+              if (element.topConstraint!.notLaidOut) {
                 topMargin = _getTopInsets(
                     goneMargin, element.percentageMargin, bottom - top);
               } else {
@@ -1851,7 +1884,7 @@ class _ConstraintRenderBox extends RenderBox
                     margin, element.percentageMargin, bottom - top);
               }
               double bottomMargin;
-              if (element.bottomConstraint!.isNotLaidOut()) {
+              if (element.bottomConstraint!.notLaidOut) {
                 bottomMargin = _getBottomInsets(
                     goneMargin, element.percentageMargin, bottom - top);
               } else {
@@ -1892,7 +1925,7 @@ class _ConstraintRenderBox extends RenderBox
 
       /// Measure
       if (maxWidth <= 0 || maxHeight <= 0) {
-        element.laidOut = false;
+        element.notLaidOut = true;
         if (maxWidth < 0) {
           minWidth = 0;
           maxWidth = 0;
@@ -1903,7 +1936,7 @@ class _ConstraintRenderBox extends RenderBox
         }
         assert(() {
           if (_debugCheckConstraints) {
-            if (element.renderBox is! _InternalBox &&
+            if ((!element.isGuideline && !element.isBarrier) &&
                 element.visibility != gone) {
               debugPrint(
                   'Warning: The child element with id ${element.nodeId} has a negative size, will not be laid out and paint.');
@@ -1912,24 +1945,32 @@ class _ConstraintRenderBox extends RenderBox
           return true;
         }());
       } else {
-        element.laidOut = true;
+        element.notLaidOut = false;
       }
 
-      /// Due to the design of the Flutter framework, even if a child element is gone, it still has to be laid out
-      /// I don't understand why the official design is this way
-      element.renderBox!.layout(
-        BoxConstraints(
-          minWidth: minWidth,
-          maxWidth: maxWidth,
-          minHeight: minHeight,
-          maxHeight: maxHeight,
-        ),
-        parentUsesSize: true,
-      );
+      /// Helper widgets may have no RenderObject
+      if (element.renderBox == null) {
+        element.helperSize = Size(minWidth, minHeight);
+      } else {
+        /// Due to the design of the Flutter framework, even if a child element is gone, it still has to be laid out
+        /// I don't understand why the official design is this way
+        element.renderBox!.layout(
+          BoxConstraints(
+            minWidth: minWidth,
+            maxWidth: maxWidth,
+            minHeight: minHeight,
+            maxHeight: maxHeight,
+          ),
+          parentUsesSize: true,
+        );
+        if (element.isGuideline || element.isBarrier) {
+          element.helperSize = Size(minWidth, minHeight);
+        }
+      }
 
       double offsetX = 0;
       double offsetY = 0;
-      if (element.renderBox is _BarrierRenderBox) {
+      if (element.isBarrier) {
         BarrierDirection direction = element.direction!;
         List<double> list = [];
         for (final id in element.referencedIds!) {
@@ -1983,7 +2024,7 @@ class _ConstraintRenderBox extends RenderBox
             right = element.rightConstraint!.getRight(size);
           }
           double leftMargin;
-          if (element.leftConstraint!.isNotLaidOut()) {
+          if (element.leftConstraint!.notLaidOut) {
             leftMargin = _getLeftInsets(
                 goneMargin, element.percentageMargin, right - left);
           } else {
@@ -1991,7 +2032,7 @@ class _ConstraintRenderBox extends RenderBox
                 _getLeftInsets(margin, element.percentageMargin, right - left);
           }
           double rightMargin;
-          if (element.rightConstraint!.isNotLaidOut()) {
+          if (element.rightConstraint!.notLaidOut) {
             rightMargin = _getRightInsets(
                 goneMargin, element.percentageMargin, right - left);
           } else {
@@ -2013,7 +2054,7 @@ class _ConstraintRenderBox extends RenderBox
           } else {
             left = element.leftConstraint!.getRight(size);
           }
-          if (element.leftConstraint!.isNotLaidOut()) {
+          if (element.leftConstraint!.notLaidOut) {
             left += _getLeftInsets(
                 goneMargin, element.percentageMargin, size.width);
           } else {
@@ -2028,7 +2069,7 @@ class _ConstraintRenderBox extends RenderBox
           } else {
             right = element.rightConstraint!.getRight(size);
           }
-          if (element.rightConstraint!.isNotLaidOut()) {
+          if (element.rightConstraint!.notLaidOut) {
             right -= _getRightInsets(
                 goneMargin, element.percentageMargin, size.width);
           } else {
@@ -2055,7 +2096,7 @@ class _ConstraintRenderBox extends RenderBox
             bottom = element.bottomConstraint!.getBottom(size);
           }
           double topMargin;
-          if (element.topConstraint!.isNotLaidOut()) {
+          if (element.topConstraint!.notLaidOut) {
             topMargin = _getTopInsets(
                 goneMargin, element.percentageMargin, bottom - top);
           } else {
@@ -2063,7 +2104,7 @@ class _ConstraintRenderBox extends RenderBox
                 _getTopInsets(margin, element.percentageMargin, bottom - top);
           }
           double bottomMargin;
-          if (element.bottomConstraint!.isNotLaidOut()) {
+          if (element.bottomConstraint!.notLaidOut) {
             bottomMargin = _getBottomInsets(
                 goneMargin, element.percentageMargin, bottom - top);
           } else {
@@ -2085,7 +2126,7 @@ class _ConstraintRenderBox extends RenderBox
           } else {
             top = element.topConstraint!.getBottom(size);
           }
-          if (element.topConstraint!.isNotLaidOut()) {
+          if (element.topConstraint!.notLaidOut) {
             top += _getTopInsets(
                 goneMargin, element.percentageMargin, size.height);
           } else {
@@ -2099,7 +2140,7 @@ class _ConstraintRenderBox extends RenderBox
           } else {
             bottom = element.bottomConstraint!.getBottom(size);
           }
-          if (element.bottomConstraint!.isNotLaidOut()) {
+          if (element.bottomConstraint!.notLaidOut) {
             bottom -= _getBottomInsets(
                 goneMargin, element.percentageMargin, size.height);
           } else {
@@ -2119,7 +2160,7 @@ class _ConstraintRenderBox extends RenderBox
                     .getDistanceToBaseline(element.textBaseline, true) -
                 element.getDistanceToBaseline(element.textBaseline, false);
           }
-          if (element.baselineConstraint!.isNotLaidOut()) {
+          if (element.baselineConstraint!.notLaidOut) {
             offsetY += _getTopInsets(
                 goneMargin, element.percentageMargin, size.height);
             offsetY -= _getBottomInsets(
@@ -2293,9 +2334,9 @@ class _ConstraintRenderBox extends RenderBox
     assert(() {
       if (_debugShowGuideline) {
         for (final element in _paintingOrderList) {
-          if (element.renderBox is _InternalBox) {
+          if (element.isGuideline || element.isBarrier) {
             Paint paint = Paint();
-            if (element.renderBox is _GuidelineRenderBox) {
+            if (element.isGuideline) {
               paint.color = Colors.green;
             } else {
               paint.color = Colors.purple;
@@ -2422,7 +2463,7 @@ class _ConstrainedNode {
   _AlignType? bottomAlignType;
   _AlignType? baselineAlignType;
   int depth = -1;
-  late bool laidOut;
+  late bool notLaidOut;
   late _ConstraintBoxData parentData;
   late int index;
   bool widthBasedHeight = false;
@@ -2499,6 +2540,16 @@ class _ConstrainedNode {
 
   bool? get ratioBaseOnWidth => parentData.ratioBaseOnWidth;
 
+  bool get isGuideline => parentData._isGuideline;
+
+  bool get isBarrier => parentData._isBarrier;
+
+  Size? get helperSize => parentData._helperSize;
+
+  set helperSize(Size? size) {
+    parentData._helperSize = size;
+  }
+
   /// fixed size, matchParent, matchConstraint with two constraints
   bool get widthIsExact =>
       width >= 0 ||
@@ -2521,14 +2572,7 @@ class _ConstrainedNode {
   }
 
   bool shouldNotPaint() {
-    return visibility == gone || visibility == invisible || isNotLaidOut();
-  }
-
-  bool isNotLaidOut() {
-    if (isParent()) {
-      return false;
-    }
-    return !laidOut;
+    return visibility == gone || visibility == invisible || notLaidOut;
   }
 
   double getX() {
@@ -2563,6 +2607,9 @@ class _ConstrainedNode {
     if (isParent()) {
       return size.width;
     }
+    if (isGuideline || isBarrier) {
+      return helperSize!.width;
+    }
     return renderBox!.size.width;
   }
 
@@ -2570,12 +2617,18 @@ class _ConstrainedNode {
     if (isParent()) {
       return size.height;
     }
+    if (isGuideline || isBarrier) {
+      return helperSize!.height;
+    }
     return renderBox!.size.height;
   }
 
   double getDistanceToBaseline(TextBaseline textBaseline, bool absolute) {
     if (isParent()) {
       return 0;
+    }
+    if (isGuideline || isBarrier) {
+      return getY();
     }
     double? baseline =
         renderBox!.getDistanceToBaseline(textBaseline, onlyReal: true);
@@ -2598,7 +2651,7 @@ class _ConstrainedNode {
 
   int getDepth() {
     if (depth < 0) {
-      if (renderBox is _BarrierRenderBox) {
+      if (isBarrier) {
         List<int> list = [];
         for (final id in referencedIds!) {
           list.add(parentData._constrainedNodeMap[id]!.getDepth());
@@ -2606,19 +2659,15 @@ class _ConstrainedNode {
         list.sort((left, right) => left - right);
         depth = list.last + 1;
       } else {
-        if (nodeId == parent) {
-          depth = 0;
-        } else {
-          List<int> list = [
-            getDepthFor(leftConstraint),
-            getDepthFor(topConstraint),
-            getDepthFor(rightConstraint),
-            getDepthFor(bottomConstraint),
-            getDepthFor(baselineConstraint),
-          ];
-          list.sort((left, right) => left - right);
-          depth = list.last + 1;
-        }
+        List<int> list = [
+          getDepthFor(leftConstraint),
+          getDepthFor(topConstraint),
+          getDepthFor(rightConstraint),
+          getDepthFor(bottomConstraint),
+          getDepthFor(baselineConstraint),
+        ];
+        list.sort((left, right) => left - right);
+        depth = list.last + 1;
       }
     }
     return depth;
@@ -2699,7 +2748,7 @@ class _ConstrainedNode {
   }
 }
 
-class _InternalBox extends RenderBox {
+class _HelperBox extends RenderBox {
   @protected
   @mustCallSuper
   void updateParentData() {
@@ -2727,8 +2776,6 @@ class _InternalBox extends RenderBox {
     constraintBoxData.horizontalBias = 0.5;
     constraintBoxData.verticalBias = 0.5;
     constraintBoxData.callback = null;
-    constraintBoxData._direction = null;
-    constraintBoxData._referencedIds = null;
     constraintBoxData.percentageTranslate = false;
     constraintBoxData.minWidth = 0;
     constraintBoxData.maxWidth = matchParent;
@@ -2736,6 +2783,11 @@ class _InternalBox extends RenderBox {
     constraintBoxData.maxHeight = matchParent;
     constraintBoxData.widthHeightRatio = null;
     constraintBoxData.ratioBaseOnWidth = null;
+    constraintBoxData._direction = null;
+    constraintBoxData._referencedIds = null;
+    constraintBoxData._isGuideline = false;
+    constraintBoxData._isBarrier = false;
+    constraintBoxData._helperSize = null;
   }
 }
 
@@ -2798,7 +2850,7 @@ class Guideline extends LeafRenderObjectWidget {
   }
 }
 
-class _GuidelineRenderBox extends _InternalBox {
+class _GuidelineRenderBox extends _HelperBox {
   late ConstraintId _id;
   double? _guidelineBegin;
   double? _guidelineEnd;
@@ -2851,6 +2903,7 @@ class _GuidelineRenderBox extends _InternalBox {
     super.updateParentData();
     _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
     constraintBoxData.id = _id;
+    constraintBoxData._isGuideline = true;
     if (_horizontal) {
       if (_guidelineBegin != null) {
         constraintBoxData.left = parent.left;
@@ -2952,7 +3005,7 @@ class Barrier extends LeafRenderObjectWidget {
   }
 }
 
-class _BarrierRenderBox extends _InternalBox {
+class _BarrierRenderBox extends _HelperBox {
   late ConstraintId _id;
   late BarrierDirection _direction;
   late List<ConstraintId> _referencedIds;
@@ -2962,6 +3015,7 @@ class _BarrierRenderBox extends _InternalBox {
     super.updateParentData();
     _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
     constraintBoxData.id = _id;
+    constraintBoxData._isBarrier = true;
     constraintBoxData._direction = _direction;
     constraintBoxData._referencedIds = _referencedIds;
     if (_direction == BarrierDirection.top ||
