@@ -12,7 +12,7 @@ import 'package:flutter/rendering.dart';
 /// email: hackware1993@gmail.com
 class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// Constraints can be separated from widgets
-  final List<Constraint> childConstraints;
+  final List<ConstraintDefine>? childConstraints;
 
   final bool debugShowGuideline;
   final bool debugShowClickArea;
@@ -25,7 +25,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   ConstraintLayout({
     Key? key,
-    this.childConstraints = const [],
+    this.childConstraints,
     required List<Widget> children,
     this.debugShowGuideline = false,
     this.debugShowClickArea = false,
@@ -44,7 +44,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
     return _ConstraintRenderBox()
-      .._childConstraints = childConstraints
+      ..childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
       .._debugShowClickArea = debugShowClickArea
       .._debugPrintConstraints = debugPrintConstraints
@@ -433,9 +433,23 @@ class _Align {
 
 typedef OnLayoutCallback = void Function(RenderObject renderObject, Rect rect);
 
-class Constraint {
+class ConstraintDefine {
   final ConstraintId? id;
 
+  ConstraintDefine(this.id);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConstraintDefine &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+class Constraint extends ConstraintDefine {
   /// 'wrap_content'、'match_parent'、'match_constraint'、'48, etc'
   /// 'match_parent' will be converted to the base constraints
   final double width;
@@ -538,7 +552,7 @@ class Constraint {
   final bool? ratioBaseOnWidth;
 
   Constraint({
-    this.id,
+    ConstraintId? id,
     this.width = wrapContent,
     this.height = wrapContent,
     @_baseConstraint this.left,
@@ -581,14 +595,14 @@ class Constraint {
     this.maxHeight = matchParent,
     this.widthHeightRatio,
     this.ratioBaseOnWidth,
-  });
+  }) : super(id);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Constraint &&
+      super == other &&
+          other is Constraint &&
           runtimeType == other.runtimeType &&
-          id == other.id &&
           width == other.width &&
           height == other.height &&
           clickPadding == other.clickPadding &&
@@ -633,7 +647,7 @@ class Constraint {
 
   @override
   int get hashCode =>
-      id.hashCode ^
+      super.hashCode ^
       width.hashCode ^
       height.hashCode ^
       clickPadding.hashCode ^
@@ -1161,14 +1175,17 @@ class UnConstrained extends ParentDataWidget<_ConstraintBoxData> {
   @override
   void applyParentData(RenderObject renderObject) {
     assert(renderObject.parent is _ConstraintRenderBox);
-    List<Constraint> childConstraints =
+    List<ConstraintDefine>? childConstraints =
         (renderObject.parent as _ConstraintRenderBox)._childConstraints;
-    Iterable<Constraint> constraintIterable =
-        childConstraints.where((element) => element.id == id);
+    assert(childConstraints != null,
+        'Can not find Constraint for child with id $id.');
+    Iterable<ConstraintDefine> constraintIterable =
+        childConstraints!.where((element) => element.id == id);
     assert(constraintIterable.isNotEmpty,
         'Can not find Constraint for child with id $id.');
     assert(constraintIterable.length == 1, 'Duplicate id in childConstraints.');
-    Constraint constraint = constraintIterable.first;
+    assert(constraintIterable.first is Constraint);
+    Constraint constraint = constraintIterable.first as Constraint;
     assert(constraint.validate());
     constraint.applyTo(renderObject);
   }
@@ -1183,7 +1200,7 @@ class _ConstraintRenderBox extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ConstraintBoxData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ConstraintBoxData> {
-  late List<Constraint> _childConstraints;
+  List<ConstraintDefine>? _childConstraints;
   late bool _debugShowGuideline;
   late bool _debugShowClickArea;
   late bool _debugPrintConstraints;
@@ -1207,15 +1224,23 @@ class _ConstraintRenderBox extends RenderBox
   Queue<int> layoutTimeUsage = Queue();
   Queue<int> paintTimeUsage = Queue();
 
-  set childConstraints(List<Constraint> value) {
+  set childConstraints(List<ConstraintDefine>? value) {
     bool isSameList = true;
-    if (_childConstraints.length != value.length) {
+    if (_childConstraints == null && value == null) {
+      // do nothing
+    } else if (_childConstraints == null) {
+      isSameList = false;
+    } else if (value == null) {
       isSameList = false;
     } else {
-      for (int i = 0; i < _childConstraints.length; i++) {
-        if (_childConstraints[i] != value[i]) {
-          isSameList = false;
-          break;
+      if (_childConstraints!.length != value.length) {
+        isSameList = false;
+      } else {
+        for (int i = 0; i < _childConstraints!.length; i++) {
+          if (_childConstraints![i] != value[i]) {
+            isSameList = false;
+            break;
+          }
         }
       }
     }
@@ -2789,6 +2814,40 @@ class _HelperBox extends RenderBox {
     constraintBoxData._isBarrier = false;
     constraintBoxData._helperSize = null;
   }
+}
+
+class GuidelineDefine extends ConstraintDefine {
+  final double? guidelineBegin;
+  final double? guidelineEnd;
+  final double? guidelinePercent;
+  final bool horizontal;
+
+  GuidelineDefine({
+    required ConstraintId id,
+    this.guidelineBegin,
+    this.guidelineEnd,
+    this.guidelinePercent,
+    this.horizontal = false,
+  }) : super(id);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is GuidelineDefine &&
+          runtimeType == other.runtimeType &&
+          guidelineBegin == other.guidelineBegin &&
+          guidelineEnd == other.guidelineEnd &&
+          guidelinePercent == other.guidelinePercent &&
+          horizontal == other.horizontal;
+
+  @override
+  int get hashCode =>
+      super.hashCode ^
+      guidelineBegin.hashCode ^
+      guidelineEnd.hashCode ^
+      guidelinePercent.hashCode ^
+      horizontal.hashCode;
 }
 
 class Guideline extends LeafRenderObjectWidget {
