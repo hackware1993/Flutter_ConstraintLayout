@@ -14,7 +14,8 @@ complex layout(One thousand child elements, two thousand constraints), layout an
 within 5 milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be
 easily reached 200 fps.**
 
-**If not necessary, try to be relative to the parent layout, so that you can define less id.**
+**If not necessary, try to be relative to the parent layout, so that you can define less id. Or use
+relative id.**
 
 **Warning**:
 For layout performance considerations, constraints are always one-way, and there should be no two
@@ -53,6 +54,7 @@ insult him.
 11. constraints and widgets separation
 12. barrier
 13. dimension ratio
+14. relative id
 
 Coming soon:
 
@@ -78,12 +80,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.13-stable'
+      ref: 'v0.9.14-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.13-stable
+  flutter_constraintlayout: ^0.9.14-stable
 ```
 
 ```dart
