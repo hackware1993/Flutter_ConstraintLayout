@@ -1,6 +1,7 @@
 # Flutter ConstraintLayout
 
-Build flexible layouts with constraints, Similar to Android ConstraintLayout.
+A super powerful Stack, build flexible layouts with constraints, Similar to Android
+ConstraintLayout.
 
 No matter how complex the layout is and how deep the constraints are, it has almost the same
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
