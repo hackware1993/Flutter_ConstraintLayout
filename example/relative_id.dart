@@ -23,29 +23,14 @@ class RelativeIdExample extends StatelessWidget {
             centerTo: parent,
           ),
           Container(
-            color: Colors.green,
-            child: const Text(
-              'Indeterminate badge size',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-              ),
-            ),
-          ).applyConstraint(
-            left: rId(0).right,
-            bottom: rId(0).top,
-            translate: const Offset(-0.5, 0.5),
-            percentageTranslate: true,
-          ),
-          Container(
-            color: Colors.green,
+            color: Colors.redAccent,
           ).applyConstraint(
             width: 100,
             height: 100,
             left: rId(0).right,
             right: rId(0).right,
-            top: rId(0).bottom,
-            bottom: rId(0).bottom,
+            top: rId(0).top,
+            bottom: rId(0).top,
           )
         ],
       ),
