@@ -6,6 +6,7 @@ import 'complex_list.dart';
 import 'dimension_ratio.dart';
 import 'guideline.dart';
 import 'percentage_layout.dart';
+import 'relative_id.dart';
 import 'summary.dart';
 
 class ExampleHome extends StatelessWidget {
@@ -47,6 +48,9 @@ class ExampleHome extends StatelessWidget {
           }),
           button('DimensionRatio', () {
             push(context, const DimensionRatioExample());
+          }),
+          button('Relative Id', () {
+            push(context, const RelativeIdExample());
           }),
           button('Chain (Coming soon)', null),
           const Spacer(),

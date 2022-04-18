@@ -413,6 +413,32 @@ class ConstraintId {
   }
 }
 
+class RelativeConstraintId extends ConstraintId {
+  final int childIndex;
+
+  RelativeConstraintId(this.childIndex) : super('child[$childIndex]');
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is RelativeConstraintId &&
+          runtimeType == other.runtimeType &&
+          childIndex == other.childIndex;
+
+  @override
+  int get hashCode => super.hashCode ^ childIndex.hashCode;
+
+  @override
+  String toString() {
+    return 'RelativeConstraintId{childIndex: $childIndex}';
+  }
+}
+
+ConstraintId rId(int childIndex) {
+  return RelativeConstraintId(childIndex);
+}
+
 class _Align {
   ConstraintId? id;
   _AlignType type;
@@ -1388,9 +1414,11 @@ class _ConstraintRenderBox extends RenderBox
 
     /// The id used by all constraints must be defined
     Set<ConstraintId> illegalIdSet = constraintsIdSet.difference(idSet);
-    if (illegalIdSet.isNotEmpty) {
+    Set<RelativeConstraintId> relativeIds =
+        illegalIdSet.whereType<RelativeConstraintId>().toSet();
+    if (relativeIds.length != illegalIdSet.length) {
       throw ConstraintLayoutException(
-          'These ids $illegalIdSet are not yet defined.');
+          'These ids ${illegalIdSet.difference(relativeIds)} are not yet defined.');
     }
 
     /// All ids referenced by Barrier must be defined
@@ -1536,8 +1564,7 @@ class _ConstraintRenderBox extends RenderBox
       childParentData._constrainedNodeMap = nodesMap;
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
-          childParentData.id ??
-              ConstraintId('child[$childIndex]@${child.runtimeType}'));
+          childParentData.id ?? RelativeConstraintId(childIndex));
       currentNode.parentData = childParentData;
       currentNode.index = childIndex;
       currentNode.renderBox = child;
