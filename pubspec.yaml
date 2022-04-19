@@ -30,3 +30,4 @@ flutter:
     - example/percentage_layout.dart
     - example/dimension_ratio.dart
     - example/relative_id.dart
+    - example/wrapper_constraints.dart

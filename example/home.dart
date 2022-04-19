@@ -8,6 +8,7 @@ import 'guideline.dart';
 import 'percentage_layout.dart';
 import 'relative_id.dart';
 import 'summary.dart';
+import 'wrapper_constraints.dart';
 
 class ExampleHome extends StatelessWidget {
   const ExampleHome({Key? key}) : super(key: key);
@@ -51,6 +52,9 @@ class ExampleHome extends StatelessWidget {
           }),
           button('Relative Id', () {
             push(context, const RelativeIdExample());
+          }),
+          button('Wrapper Constraints', () {
+            push(context, const WrapperConstraintsExample());
           }),
           button('Chain (Coming soon)', null),
           const Spacer(),

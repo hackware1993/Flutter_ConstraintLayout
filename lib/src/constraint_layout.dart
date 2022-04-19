@@ -175,6 +175,22 @@ extension ConstrainedWidgetsExt on Widget {
     @_wrapperConstraint ConstraintId? bottomRightTo,
     @_wrapperConstraint ConstraintId? centerHorizontalTo,
     @_wrapperConstraint ConstraintId? centerVerticalTo,
+    @_wrapperConstraint ConstraintId? outTopLeftTo,
+    @_wrapperConstraint ConstraintId? outTopCenterTo,
+    @_wrapperConstraint ConstraintId? outTopRightTo,
+    @_wrapperConstraint ConstraintId? outCenterLeftTo,
+    @_wrapperConstraint ConstraintId? outCenterRightTo,
+    @_wrapperConstraint ConstraintId? outBottomLeftTo,
+    @_wrapperConstraint ConstraintId? outBottomCenterTo,
+    @_wrapperConstraint ConstraintId? outBottomRightTo,
+    @_wrapperConstraint ConstraintId? centerTopLeftTo,
+    @_wrapperConstraint ConstraintId? centerTopCenterTo,
+    @_wrapperConstraint ConstraintId? centerTopRightTo,
+    @_wrapperConstraint ConstraintId? centerCenterLeftTo,
+    @_wrapperConstraint ConstraintId? centerCenterRightTo,
+    @_wrapperConstraint ConstraintId? centerBottomLeftTo,
+    @_wrapperConstraint ConstraintId? centerBottomCenterTo,
+    @_wrapperConstraint ConstraintId? centerBottomRightTo,
     OnLayoutCallback? callback,
     double chainWeight = 1,
     bool percentageTranslate = false,
@@ -231,6 +247,22 @@ extension ConstrainedWidgetsExt on Widget {
         maxHeight: maxHeight,
         widthHeightRatio: widthHeightRatio,
         ratioBaseOnWidth: ratioBaseOnWidth,
+        outTopLeftTo: outTopLeftTo,
+        outTopCenterTo: outTopCenterTo,
+        outTopRightTo: outTopRightTo,
+        outCenterLeftTo: outCenterLeftTo,
+        outCenterRightTo: outCenterRightTo,
+        outBottomLeftTo: outBottomLeftTo,
+        outBottomCenterTo: outBottomCenterTo,
+        outBottomRightTo: outBottomRightTo,
+        centerTopLeftTo: centerTopLeftTo,
+        centerTopCenterTo: centerTopCenterTo,
+        centerTopRightTo: centerTopRightTo,
+        centerCenterLeftTo: centerCenterLeftTo,
+        centerCenterRightTo: centerCenterRightTo,
+        centerBottomLeftTo: centerBottomLeftTo,
+        centerBottomCenterTo: centerBottomCenterTo,
+        centerBottomRightTo: centerBottomRightTo,
       ),
       child: this,
     );
@@ -554,6 +586,38 @@ class Constraint extends ConstraintDefine {
   final ConstraintId? centerHorizontalTo;
   @_wrapperConstraint
   final ConstraintId? centerVerticalTo;
+  @_wrapperConstraint
+  final ConstraintId? outTopLeftTo;
+  @_wrapperConstraint
+  final ConstraintId? outTopCenterTo;
+  @_wrapperConstraint
+  final ConstraintId? outTopRightTo;
+  @_wrapperConstraint
+  final ConstraintId? outCenterLeftTo;
+  @_wrapperConstraint
+  final ConstraintId? outCenterRightTo;
+  @_wrapperConstraint
+  final ConstraintId? outBottomLeftTo;
+  @_wrapperConstraint
+  final ConstraintId? outBottomCenterTo;
+  @_wrapperConstraint
+  final ConstraintId? outBottomRightTo;
+  @_wrapperConstraint
+  final ConstraintId? centerTopLeftTo;
+  @_wrapperConstraint
+  final ConstraintId? centerTopCenterTo;
+  @_wrapperConstraint
+  final ConstraintId? centerTopRightTo;
+  @_wrapperConstraint
+  final ConstraintId? centerCenterLeftTo;
+  @_wrapperConstraint
+  final ConstraintId? centerCenterRightTo;
+  @_wrapperConstraint
+  final ConstraintId? centerBottomLeftTo;
+  @_wrapperConstraint
+  final ConstraintId? centerBottomCenterTo;
+  @_wrapperConstraint
+  final ConstraintId? centerBottomRightTo;
 
   final OnLayoutCallback? callback;
   final double chainWeight;
@@ -612,6 +676,22 @@ class Constraint extends ConstraintDefine {
     @_wrapperConstraint this.bottomRightTo,
     @_wrapperConstraint this.centerHorizontalTo,
     @_wrapperConstraint this.centerVerticalTo,
+    @_wrapperConstraint this.outTopLeftTo,
+    @_wrapperConstraint this.outTopCenterTo,
+    @_wrapperConstraint this.outTopRightTo,
+    @_wrapperConstraint this.outCenterLeftTo,
+    @_wrapperConstraint this.outCenterRightTo,
+    @_wrapperConstraint this.outBottomLeftTo,
+    @_wrapperConstraint this.outBottomCenterTo,
+    @_wrapperConstraint this.outBottomRightTo,
+    @_wrapperConstraint this.centerTopLeftTo,
+    @_wrapperConstraint this.centerTopCenterTo,
+    @_wrapperConstraint this.centerTopRightTo,
+    @_wrapperConstraint this.centerCenterLeftTo,
+    @_wrapperConstraint this.centerCenterRightTo,
+    @_wrapperConstraint this.centerBottomLeftTo,
+    @_wrapperConstraint this.centerBottomCenterTo,
+    @_wrapperConstraint this.centerBottomRightTo,
     this.callback,
     this.chainWeight = 1,
     this.percentageTranslate = false,
@@ -662,6 +742,22 @@ class Constraint extends ConstraintDefine {
           bottomRightTo == other.bottomRightTo &&
           centerHorizontalTo == other.centerHorizontalTo &&
           centerVerticalTo == other.centerVerticalTo &&
+          outTopLeftTo == other.outTopLeftTo &&
+          outTopCenterTo == other.outTopCenterTo &&
+          outTopRightTo == other.outTopRightTo &&
+          outCenterLeftTo == other.outCenterLeftTo &&
+          outCenterRightTo == other.outCenterRightTo &&
+          outBottomLeftTo == other.outBottomLeftTo &&
+          outBottomCenterTo == other.outBottomCenterTo &&
+          outBottomRightTo == other.outBottomRightTo &&
+          centerTopLeftTo == other.centerTopLeftTo &&
+          centerTopCenterTo == other.centerTopCenterTo &&
+          centerTopRightTo == other.centerTopRightTo &&
+          centerCenterLeftTo == other.centerCenterLeftTo &&
+          centerCenterRightTo == other.centerCenterRightTo &&
+          centerBottomLeftTo == other.centerBottomLeftTo &&
+          centerBottomCenterTo == other.centerBottomCenterTo &&
+          centerBottomRightTo == other.centerBottomRightTo &&
           callback == other.callback &&
           percentageTranslate == other.percentageTranslate &&
           minWidth == other.minWidth &&
@@ -707,6 +803,22 @@ class Constraint extends ConstraintDefine {
       bottomRightTo.hashCode ^
       centerHorizontalTo.hashCode ^
       centerVerticalTo.hashCode ^
+      outTopLeftTo.hashCode ^
+      outTopCenterTo.hashCode ^
+      outTopRightTo.hashCode ^
+      outCenterLeftTo.hashCode ^
+      outCenterRightTo.hashCode ^
+      outBottomLeftTo.hashCode ^
+      outBottomCenterTo.hashCode ^
+      outBottomRightTo.hashCode ^
+      centerTopLeftTo.hashCode ^
+      centerTopCenterTo.hashCode ^
+      centerTopRightTo.hashCode ^
+      centerCenterLeftTo.hashCode ^
+      centerCenterRightTo.hashCode ^
+      centerBottomLeftTo.hashCode ^
+      centerBottomCenterTo.hashCode ^
+      centerBottomRightTo.hashCode ^
       callback.hashCode ^
       percentageTranslate.hashCode ^
       minWidth.hashCode ^
@@ -843,6 +955,106 @@ class Constraint extends ConstraintDefine {
     if (centerVerticalTo != null) {
       top = centerVerticalTo!.top;
       bottom = centerVerticalTo!.bottom;
+    }
+
+    if (outTopLeftTo != null) {
+      right = outTopLeftTo!.left;
+      bottom = outTopLeftTo!.top;
+    }
+
+    if (outTopCenterTo != null) {
+      left = outTopCenterTo!.left;
+      right = outTopCenterTo!.right;
+      bottom = outTopCenterTo!.top;
+    }
+
+    if (outTopRightTo != null) {
+      left = outTopRightTo!.right;
+      bottom = outTopRightTo!.top;
+    }
+
+    if (outCenterLeftTo != null) {
+      top = outCenterLeftTo!.top;
+      bottom = outCenterLeftTo!.bottom;
+      right = outCenterLeftTo!.left;
+    }
+
+    if (outCenterRightTo != null) {
+      top = outCenterRightTo!.top;
+      bottom = outCenterRightTo!.bottom;
+      left = outCenterRightTo!.right;
+    }
+
+    if (outBottomLeftTo != null) {
+      right = outBottomLeftTo!.left;
+      top = outBottomLeftTo!.bottom;
+    }
+
+    if (outBottomCenterTo != null) {
+      left = outBottomCenterTo!.left;
+      right = outBottomCenterTo!.right;
+      top = outBottomCenterTo!.bottom;
+    }
+
+    if (outBottomRightTo != null) {
+      left = outBottomRightTo!.right;
+      top = outBottomRightTo!.bottom;
+    }
+
+    if (centerTopLeftTo != null) {
+      left = centerTopLeftTo!.left;
+      right = centerTopLeftTo!.left;
+      top = centerTopLeftTo!.top;
+      bottom = centerTopLeftTo!.top;
+    }
+
+    if (centerTopCenterTo != null) {
+      left = centerTopCenterTo!.left;
+      right = centerTopCenterTo!.right;
+      top = centerTopCenterTo!.top;
+      bottom = centerTopCenterTo!.top;
+    }
+
+    if (centerTopRightTo != null) {
+      left = centerTopRightTo!.right;
+      right = centerTopRightTo!.right;
+      top = centerTopRightTo!.top;
+      bottom = centerTopRightTo!.top;
+    }
+
+    if (centerCenterLeftTo != null) {
+      left = centerCenterLeftTo!.left;
+      right = centerCenterLeftTo!.left;
+      top = centerCenterLeftTo!.top;
+      bottom = centerCenterLeftTo!.bottom;
+    }
+
+    if (centerCenterRightTo != null) {
+      left = centerCenterRightTo!.right;
+      right = centerCenterRightTo!.right;
+      top = centerCenterRightTo!.top;
+      bottom = centerCenterRightTo!.bottom;
+    }
+
+    if (centerBottomLeftTo != null) {
+      left = centerBottomLeftTo!.left;
+      right = centerBottomLeftTo!.left;
+      top = centerBottomLeftTo!.bottom;
+      bottom = centerBottomLeftTo!.bottom;
+    }
+
+    if (centerBottomCenterTo != null) {
+      left = centerBottomCenterTo!.left;
+      right = centerBottomCenterTo!.right;
+      top = centerBottomCenterTo!.bottom;
+      bottom = centerBottomCenterTo!.bottom;
+    }
+
+    if (centerBottomRightTo != null) {
+      left = centerBottomRightTo!.right;
+      right = centerBottomRightTo!.right;
+      top = centerBottomRightTo!.bottom;
+      bottom = centerBottomRightTo!.bottom;
     }
 
     /// Convert wrapper constraints finish
