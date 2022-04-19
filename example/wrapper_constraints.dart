@@ -47,30 +47,6 @@ class WrapperConstraintsExample extends StatelessWidget {
               right: 200,
             ),
           ),
-          item('outTopLeftTo').applyConstraint(
-            outTopLeftTo: rId(1),
-          ),
-          item('outTopCenterTo').applyConstraint(
-            outTopCenterTo: rId(1),
-          ),
-          item('outTopRightTo').applyConstraint(
-            outTopRightTo: rId(1),
-          ),
-          item('outCenterLeftTo').applyConstraint(
-            outCenterLeftTo: rId(1),
-          ),
-          item('outCenterRightTo').applyConstraint(
-            outCenterRightTo: rId(1),
-          ),
-          item('outBottomLeftTo').applyConstraint(
-            outBottomLeftTo: rId(1),
-          ),
-          item('outBottomCenterTo').applyConstraint(
-            outBottomCenterTo: rId(1),
-          ),
-          item('outBottomRightTo').applyConstraint(
-            outBottomRightTo: rId(1),
-          ),
           item('centerTopLeftTo').applyConstraint(
             centerTopLeftTo: rId(0),
           ),
@@ -94,6 +70,40 @@ class WrapperConstraintsExample extends StatelessWidget {
           ),
           item('centerBottomRightTo').applyConstraint(
             centerBottomRightTo: rId(0),
+          ),
+          item('centerHorizontalTo', Colors.green).applyConstraint(
+            centerHorizontalTo: rId(0),
+            top: rId(0).top,
+            translate: const Offset(0, 50),
+          ),
+          item('centerVerticalTo', Colors.green).applyConstraint(
+            centerVerticalTo: rId(0),
+            left: rId(0).left,
+            translate: const Offset(50, 0),
+          ),
+          item('outTopLeftTo').applyConstraint(
+            outTopLeftTo: rId(1),
+          ),
+          item('outTopCenterTo').applyConstraint(
+            outTopCenterTo: rId(1),
+          ),
+          item('outTopRightTo').applyConstraint(
+            outTopRightTo: rId(1),
+          ),
+          item('outCenterLeftTo').applyConstraint(
+            outCenterLeftTo: rId(1),
+          ),
+          item('outCenterRightTo').applyConstraint(
+            outCenterRightTo: rId(1),
+          ),
+          item('outBottomLeftTo').applyConstraint(
+            outBottomLeftTo: rId(1),
+          ),
+          item('outBottomCenterTo').applyConstraint(
+            outBottomCenterTo: rId(1),
+          ),
+          item('outBottomRightTo').applyConstraint(
+            outBottomRightTo: rId(1),
           ),
           item('topLeftTo', Colors.green).applyConstraint(
             topLeftTo: rId(1),
