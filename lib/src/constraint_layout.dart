@@ -1669,10 +1669,18 @@ class _ConstraintRenderBox extends RenderBox
         }
       } else if (element.width == matchConstraint) {
         if (element.widthHeightRatio == null) {
-          if (element.leftConstraint == null ||
-              element.rightConstraint == null) {
-            throw ConstraintLayoutException(
-                'Need to set left and right constraints for ${element.nodeId}.');
+          if (element.widthPercentageAnchor == PercentageAnchor.constraint) {
+            if (element.leftConstraint == null ||
+                element.rightConstraint == null) {
+              throw ConstraintLayoutException(
+                  'Need to set left and right constraints for ${element.nodeId}.');
+            }
+          } else {
+            if (element.leftConstraint == null &&
+                element.rightConstraint == null) {
+              throw ConstraintLayoutException(
+                  'Need to set a left or right constraint for ${element.nodeId}.');
+            }
           }
         } else {
           if (element.leftConstraint == null &&
@@ -1701,16 +1709,24 @@ class _ConstraintRenderBox extends RenderBox
               'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
         }
         if (element.widthHeightRatio == null) {
-          if (element.topConstraint == null ||
-              element.bottomConstraint == null) {
-            throw ConstraintLayoutException(
-                'Need to set both top and bottom constraints for ${element.nodeId}.');
+          if (element.heightPercentageAnchor == PercentageAnchor.constraint) {
+            if (element.topConstraint == null ||
+                element.bottomConstraint == null) {
+              throw ConstraintLayoutException(
+                  'Need to set both top and bottom constraints for ${element.nodeId}.');
+            }
+          } else {
+            if (element.topConstraint == null &&
+                element.bottomConstraint == null) {
+              throw ConstraintLayoutException(
+                  'Need to set a top or bottom constraints for ${element.nodeId}.');
+            }
           }
         } else {
           if (element.topConstraint == null &&
               element.bottomConstraint == null) {
             throw ConstraintLayoutException(
-                'Need to set top or bottom constraints for ${element.nodeId}.');
+                'Need to set a top or bottom constraints for ${element.nodeId}.');
           }
         }
       } else {
@@ -2817,14 +2833,20 @@ class _ConstrainedNode {
   /// fixed size, matchParent, matchConstraint with two constraints
   bool get widthIsExact =>
       width >= 0 ||
-      (width != wrapContent &&
+      (width == matchParent) ||
+      (width == matchConstraint &&
+          widthPercentageAnchor == PercentageAnchor.parent) ||
+      (width == matchConstraint &&
           leftConstraint != null &&
           rightConstraint != null);
 
   /// fixed size, matchParent, matchConstraint with two constraints
   bool get heightIsExact =>
       height >= 0 ||
-      (height != wrapContent &&
+      (height == matchParent) ||
+      (height == matchConstraint &&
+          heightPercentageAnchor == PercentageAnchor.parent) ||
+      (height == matchConstraint &&
           (topConstraint != null && bottomConstraint != null));
 
   set offset(Offset value) {
