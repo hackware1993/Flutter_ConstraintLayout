@@ -402,12 +402,27 @@ enum PercentageAnchor {
 class ConstraintId {
   String id;
 
+  _ConstrainedNode? contextCacheNode;
+  int? contextHash;
+
   ConstraintId(this.id) {
     left.id = this;
     top.id = this;
     right.id = this;
     bottom.id = this;
     baseline.id = this;
+  }
+
+  _ConstrainedNode? getCacheNode(int hash) {
+    if (contextHash == hash) {
+      return contextCacheNode!;
+    }
+    return null;
+  }
+
+  void setCacheNode(int hash, _ConstrainedNode node) {
+    contextHash = hash;
+    contextCacheNode = node;
   }
 
   _Align left = _Align(null, _AlignType.left);
@@ -1771,11 +1786,16 @@ class _ConstraintRenderBox extends RenderBox
       if (id == parent) {
         return _parentNode;
       }
-      _ConstrainedNode? node = nodesMap[id];
+      _ConstrainedNode? node = id.getCacheNode(hashCode);
+      if (node != null) {
+        return node;
+      }
+      node = nodesMap[id];
       if (node == null) {
         node = _ConstrainedNode()..nodeId = id;
         nodesMap[id] = node;
       }
+      id.setCacheNode(hashCode, node);
       return node;
     }
 
