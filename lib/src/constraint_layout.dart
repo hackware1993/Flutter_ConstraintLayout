@@ -1465,6 +1465,7 @@ class _ConstraintRenderBox extends RenderBox
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
+  int _buildNodeTreesCount = 0;
   final Map<ConstraintId, _ConstrainedNode> _helperNodeMap = HashMap();
 
   /// For layout
@@ -1499,6 +1500,41 @@ class _ConstraintRenderBox extends RenderBox
     }
     if (!isSameList) {
       _childConstraints = value;
+      _helperNodeMap.clear();
+      for (final element in _childConstraints ?? []) {
+        if (element is GuidelineDefine) {
+          _ConstraintBoxData constraintBoxData = _ConstraintBoxData();
+          _HelperBox.initParentData(constraintBoxData);
+          _GuidelineRenderBox.initParentData(
+            constraintBoxData,
+            id: element.id!,
+            horizontal: element.horizontal,
+            guidelineBegin: element.guidelineBegin,
+            guidelineEnd: element.guidelineEnd,
+            guidelinePercent: element.guidelinePercent,
+          );
+          _ConstrainedNode constrainedNode = _ConstrainedNode()
+            ..nodeId = element.id!
+            ..parentData = constraintBoxData
+            ..index = -1
+            ..depth = 1;
+          _helperNodeMap[element.id!] = constrainedNode;
+        } else if (element is BarrierDefine) {
+          _ConstraintBoxData constraintBoxData = _ConstraintBoxData();
+          _HelperBox.initParentData(constraintBoxData);
+          _BarrierRenderBox.initParentData(
+            constraintBoxData,
+            id: element.id!,
+            direction: element.direction,
+            referencedIds: element.referencedIds,
+          );
+          _ConstrainedNode constrainedNode = _ConstrainedNode()
+            ..nodeId = element.id!
+            ..parentData = constraintBoxData
+            ..index = -1;
+          _helperNodeMap[element.id!] = constrainedNode;
+        }
+      }
       markNeedsRecalculateConstraints();
       markNeedsLayout();
     }
@@ -1639,6 +1675,13 @@ class _ConstraintRenderBox extends RenderBox
       child = childParentData.nextSibling;
     }
 
+    /// All ids referenced by Barrier must be defined
+    for (final element in _helperNodeMap.values) {
+      if (element.isBarrier) {
+        constraintsIdSet.addAll(element.referencedIds!);
+      }
+    }
+
     /// The id used by all constraints must be defined
     Set<ConstraintId> illegalIdSet = constraintsIdSet.difference(idSet);
     Set<RelativeConstraintId> relativeIds =
@@ -1647,18 +1690,6 @@ class _ConstraintRenderBox extends RenderBox
       throw ConstraintLayoutException(
           'These ids ${illegalIdSet.difference(relativeIds)} are not yet defined.');
     }
-
-    /// All ids referenced by Barrier must be defined
-    // for (final element in _helperNodeMap.values) {
-    //   if (element.isBarrier) {
-    //     Set<ConstraintId> illegalIdSet =
-    //         element.referencedIds!.toSet().difference(idSet);
-    //     if (illegalIdSet.isNotEmpty) {
-    //       throw ConstraintLayoutException(
-    //           'These ids $illegalIdSet are not yet defined.');
-    //     }
-    //   }
-    // }
   }
 
   /// There should be no loop constraints
@@ -1781,26 +1812,59 @@ class _ConstraintRenderBox extends RenderBox
 
   Map<ConstraintId, _ConstrainedNode> _buildConstrainedNodeTrees() {
     Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
+    _buildNodeTreesCount++;
 
     _ConstrainedNode _getConstrainedNodeForChild(ConstraintId id) {
       if (id == parent) {
         return _parentNode;
       }
-      _ConstrainedNode? node = id.getCacheNode(hashCode);
+
+      /// Fewer reads to nodesMap for faster constraint building
+      _ConstrainedNode? node = id.getCacheNode(_buildNodeTreesCount ^ hashCode);
       if (node != null) {
         return node;
       }
+
       node = nodesMap[id];
       if (node == null) {
         node = _ConstrainedNode()..nodeId = id;
         nodesMap[id] = node;
       }
-      id.setCacheNode(hashCode, node);
+      id.setCacheNode(_buildNodeTreesCount ^ hashCode, node);
       return node;
     }
 
     if (_helperNodeMap.isNotEmpty) {
       nodesMap.addAll(_helperNodeMap);
+      for (final element in _helperNodeMap.values) {
+        if (element.parentData.left != null) {
+          element.leftConstraint =
+              _getConstrainedNodeForChild(element.parentData.left!.id!);
+          element.leftAlignType = element.parentData.left!.type;
+        }
+
+        if (element.parentData.top != null) {
+          element.topConstraint =
+              _getConstrainedNodeForChild(element.parentData.top!.id!);
+          element.topAlignType = element.parentData.top!.type;
+        }
+
+        if (element.parentData.right != null) {
+          element.rightConstraint =
+              _getConstrainedNodeForChild(element.parentData.right!.id!);
+          element.rightAlignType = element.parentData.right!.type;
+        }
+
+        if (element.parentData.bottom != null) {
+          element.bottomConstraint =
+              _getConstrainedNodeForChild(element.parentData.bottom!.id!);
+          element.bottomAlignType = element.parentData.bottom!.type;
+        }
+
+        if (element.isBarrier) {
+          element.parentData._constrainedNodeMap = nodesMap;
+        }
+      }
     }
 
     RenderBox? child = firstChild;
@@ -3055,10 +3119,7 @@ class _ConstrainedNode {
 }
 
 class _HelperBox extends RenderBox {
-  @protected
-  @mustCallSuper
-  void updateParentData() {
-    _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
+  static void initParentData(_ConstraintBoxData constraintBoxData) {
     constraintBoxData.width = 0;
     constraintBoxData.height = 0;
     constraintBoxData.clickPadding = EdgeInsets.zero;
@@ -3094,6 +3155,13 @@ class _HelperBox extends RenderBox {
     constraintBoxData._isGuideline = false;
     constraintBoxData._isBarrier = false;
     constraintBoxData._helperSize = null;
+  }
+
+  @protected
+  @mustCallSuper
+  void updateParentData() {
+    _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
+    initParentData(constraintBoxData);
   }
 }
 
@@ -3192,10 +3260,10 @@ class Guideline extends LeafRenderObjectWidget {
 
 class _GuidelineRenderBox extends _HelperBox {
   late ConstraintId _id;
+  late bool _horizontal;
   double? _guidelineBegin;
   double? _guidelineEnd;
   double? _guidelinePercent;
-  late bool _horizontal;
 
   set id(ConstraintId value) {
     if (_id != value) {
@@ -3242,55 +3310,14 @@ class _GuidelineRenderBox extends _HelperBox {
   void updateParentData() {
     super.updateParentData();
     _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
-    constraintBoxData.id = _id;
-    constraintBoxData._isGuideline = true;
-    if (_horizontal) {
-      if (_guidelineBegin != null) {
-        constraintBoxData.left = parent.left;
-        constraintBoxData.top = parent.top;
-        constraintBoxData.right = parent.right;
-        constraintBoxData.width = matchParent;
-        constraintBoxData.margin = EdgeInsets.only(top: _guidelineBegin!);
-      } else if (_guidelineEnd != null) {
-        constraintBoxData.left = parent.left;
-        constraintBoxData.right = parent.right;
-        constraintBoxData.bottom = parent.bottom;
-        constraintBoxData.width = matchParent;
-        constraintBoxData.margin = EdgeInsets.only(bottom: _guidelineEnd!);
-      } else {
-        constraintBoxData.left = parent.left;
-        constraintBoxData.top = parent.top;
-        constraintBoxData.right = parent.right;
-        constraintBoxData.width = matchParent;
-        constraintBoxData.margin = EdgeInsets.only(
-          top: _guidelinePercent!,
-        );
-        constraintBoxData.percentageMargin = true;
-      }
-    } else {
-      if (_guidelineBegin != null) {
-        constraintBoxData.left = parent.left;
-        constraintBoxData.top = parent.top;
-        constraintBoxData.bottom = parent.bottom;
-        constraintBoxData.height = matchParent;
-        constraintBoxData.margin = EdgeInsets.only(left: _guidelineBegin!);
-      } else if (_guidelineEnd != null) {
-        constraintBoxData.top = parent.top;
-        constraintBoxData.right = parent.right;
-        constraintBoxData.bottom = parent.bottom;
-        constraintBoxData.height = matchParent;
-        constraintBoxData.margin = EdgeInsets.only(right: _guidelineEnd!);
-      } else {
-        constraintBoxData.left = parent.left;
-        constraintBoxData.top = parent.top;
-        constraintBoxData.bottom = parent.bottom;
-        constraintBoxData.height = matchParent;
-        constraintBoxData.margin = EdgeInsets.only(
-          left: _guidelinePercent!,
-        );
-        constraintBoxData.percentageMargin = true;
-      }
-    }
+    initParentData(
+      constraintBoxData,
+      id: _id,
+      horizontal: _horizontal,
+      guidelineBegin: _guidelineBegin,
+      guidelineEnd: _guidelineEnd,
+      guidelinePercent: _guidelinePercent,
+    );
   }
 
   @override
@@ -3301,6 +3328,89 @@ class _GuidelineRenderBox extends _HelperBox {
       size = Size(0, constraints.minHeight);
     }
   }
+
+  static void initParentData(
+    _ConstraintBoxData constraintBoxData, {
+    required ConstraintId id,
+    required bool horizontal,
+    double? guidelineBegin,
+    double? guidelineEnd,
+    double? guidelinePercent,
+  }) {
+    constraintBoxData.id = id;
+    constraintBoxData._isGuideline = true;
+    if (horizontal) {
+      if (guidelineBegin != null) {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.width = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(top: guidelineBegin);
+      } else if (guidelineEnd != null) {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.bottom = parent.bottom;
+        constraintBoxData.width = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(bottom: guidelineEnd);
+      } else {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.width = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(
+          top: guidelinePercent!,
+        );
+        constraintBoxData.percentageMargin = true;
+      }
+    } else {
+      if (guidelineBegin != null) {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.bottom = parent.bottom;
+        constraintBoxData.height = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(left: guidelineBegin);
+      } else if (guidelineEnd != null) {
+        constraintBoxData.top = parent.top;
+        constraintBoxData.right = parent.right;
+        constraintBoxData.bottom = parent.bottom;
+        constraintBoxData.height = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(right: guidelineEnd);
+      } else {
+        constraintBoxData.left = parent.left;
+        constraintBoxData.top = parent.top;
+        constraintBoxData.bottom = parent.bottom;
+        constraintBoxData.height = matchParent;
+        constraintBoxData.margin = EdgeInsets.only(
+          left: guidelinePercent!,
+        );
+        constraintBoxData.percentageMargin = true;
+      }
+    }
+  }
+}
+
+class BarrierDefine extends ConstraintDefine {
+  final BarrierDirection direction;
+  final List<ConstraintId> referencedIds;
+
+  BarrierDefine({
+    required ConstraintId id,
+    required this.direction,
+    required this.referencedIds,
+  }) : super(id);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is BarrierDefine &&
+          runtimeType == other.runtimeType &&
+          direction == other.direction &&
+          referencedIds == other.referencedIds;
+
+  @override
+  int get hashCode =>
+      super.hashCode ^ direction.hashCode ^ referencedIds.hashCode;
 }
 
 class Barrier extends LeafRenderObjectWidget {
@@ -3354,24 +3464,12 @@ class _BarrierRenderBox extends _HelperBox {
   void updateParentData() {
     super.updateParentData();
     _ConstraintBoxData constraintBoxData = parentData as _ConstraintBoxData;
-    constraintBoxData.id = _id;
-    constraintBoxData._isBarrier = true;
-    constraintBoxData._direction = _direction;
-    constraintBoxData._referencedIds = _referencedIds;
-    if (_direction == BarrierDirection.top ||
-        _direction == BarrierDirection.bottom) {
-      constraintBoxData.width = matchParent;
-      constraintBoxData.height = 0;
-      constraintBoxData.top = parent.top;
-      constraintBoxData.left = parent.left;
-      constraintBoxData.right = parent.right;
-    } else {
-      constraintBoxData.width = 0;
-      constraintBoxData.height = matchParent;
-      constraintBoxData.left = parent.left;
-      constraintBoxData.top = parent.top;
-      constraintBoxData.bottom = parent.bottom;
-    }
+    initParentData(
+      constraintBoxData,
+      id: _id,
+      direction: _direction,
+      referencedIds: _referencedIds,
+    );
   }
 
   set id(ConstraintId value) {
@@ -3418,6 +3516,32 @@ class _BarrierRenderBox extends _HelperBox {
       size = Size(constraints.minWidth, 0);
     } else {
       size = Size(0, constraints.minHeight);
+    }
+  }
+
+  static void initParentData(
+    _ConstraintBoxData constraintBoxData, {
+    required ConstraintId id,
+    required BarrierDirection direction,
+    required List<ConstraintId> referencedIds,
+  }) {
+    constraintBoxData.id = id;
+    constraintBoxData._isBarrier = true;
+    constraintBoxData._direction = direction;
+    constraintBoxData._referencedIds = referencedIds;
+    if (direction == BarrierDirection.top ||
+        direction == BarrierDirection.bottom) {
+      constraintBoxData.width = matchParent;
+      constraintBoxData.height = 0;
+      constraintBoxData.top = parent.top;
+      constraintBoxData.left = parent.left;
+      constraintBoxData.right = parent.right;
+    } else {
+      constraintBoxData.width = 0;
+      constraintBoxData.height = matchParent;
+      constraintBoxData.left = parent.left;
+      constraintBoxData.top = parent.top;
+      constraintBoxData.bottom = parent.bottom;
     }
   }
 }
