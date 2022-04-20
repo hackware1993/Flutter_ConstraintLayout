@@ -57,7 +57,7 @@ insult him.
 13. dimension ratio
 14. relative id
 15. wrapper constraints
-16. grid
+16. grid、list(list is a special grid with 1 column)
 
 Coming soon:
 
@@ -83,12 +83,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.18-stable'
+      ref: 'v0.9.19-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.18-stable
+  flutter_constraintlayout: ^0.9.19-stable
 ```
 
 ```dart
