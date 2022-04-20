@@ -74,6 +74,47 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   }
 }
 
+List<Widget> constraintGrid({
+  required ConstraintId id,
+  required _Align left,
+  required _Align top,
+  required int itemCount,
+  required int columnCount,
+  required double itemWidth,
+  required double itemHeight,
+  required Widget Function(int index) itemBuilder,
+  EdgeInsets Function(int index)? itemMarginBuilder,
+}) {
+  assert(itemCount > 0);
+  assert(columnCount > 0);
+  assert(itemWidth > 0);
+  assert(itemHeight > 0);
+  List<Widget> widgets = [];
+  _Align leftAnchor = left;
+  _Align topAnchor = top;
+  for (int i = 0; i < itemCount; i++) {
+    ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
+    Widget widget = itemBuilder(i);
+    widgets.add(Constrained(
+      child: widget,
+      constraint: Constraint(
+        id: itemId,
+        width: itemWidth,
+        height: itemHeight,
+        left: leftAnchor,
+        top: topAnchor,
+        margin: itemMarginBuilder?.call(i) ?? EdgeInsets.zero,
+      ),
+    ));
+    leftAnchor = itemId.right;
+    if (i % columnCount == columnCount - 1) {
+      leftAnchor = left;
+      topAnchor = itemId.bottom;
+    }
+  }
+  return widgets;
+}
+
 /// Not completed
 List<Widget> horizontalChain({
   required _Align left,

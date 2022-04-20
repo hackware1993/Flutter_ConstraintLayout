@@ -57,6 +57,7 @@ insult him.
 13. dimension ratio
 14. relative id
 15. wrapper constraints
+16. grid
 
 Coming soon:
 
@@ -494,6 +495,54 @@ class BadgeExample extends StatelessWidget {
 ```
 
 ![badge.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/badge.webp?raw=true)
+
+4. grid
+
+```dart
+class GridExample extends StatelessWidget {
+  const GridExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<Color> colors = [
+      Colors.redAccent,
+      Colors.greenAccent,
+      Colors.blueAccent,
+      Colors.orangeAccent,
+      Colors.yellow,
+      Colors.pink,
+      Colors.lightBlueAccent
+    ];
+    return Scaffold(
+      body: ConstraintLayout(
+        children: [
+          ...constraintGrid(
+              id: ConstraintId('grid'),
+              left: parent.left,
+              top: parent.top,
+              itemCount: 50,
+              columnCount: 8,
+              itemWidth: 50,
+              itemHeight: 50,
+              itemBuilder: (index) {
+                return Container(
+                  color: colors[index % colors.length],
+                );
+              },
+              itemMarginBuilder: (index) {
+                return const EdgeInsets.only(
+                  left: 10,
+                  top: 10,
+                );
+              })
+        ],
+      ),
+    );
+  }
+}
+```
+
+![grid.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/grid.webp?raw=true)
 
 # Performance optimization
 

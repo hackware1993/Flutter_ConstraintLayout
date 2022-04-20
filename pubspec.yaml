@@ -31,3 +31,4 @@ flutter:
     - example/dimension_ratio.dart
     - example/relative_id.dart
     - example/wrapper_constraints.dart
+    - example/grid.dart

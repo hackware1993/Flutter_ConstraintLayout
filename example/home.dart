@@ -4,6 +4,7 @@ import 'badge.dart';
 import 'barrier.dart';
 import 'complex_list.dart';
 import 'dimension_ratio.dart';
+import 'grid.dart';
 import 'guideline.dart';
 import 'percentage_layout.dart';
 import 'relative_id.dart';
@@ -55,6 +56,9 @@ class ExampleHome extends StatelessWidget {
           }),
           button('Wrapper Constraints', () {
             push(context, const WrapperConstraintsExample());
+          }),
+          button('Grid', () {
+            push(context, const GridExample());
           }),
           button('Chain (Coming soon)', null),
           const Spacer(),
