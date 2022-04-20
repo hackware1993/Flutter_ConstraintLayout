@@ -82,12 +82,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.17-stable'
+      ref: 'v0.9.18-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.17-stable
+  flutter_constraintlayout: ^0.9.18-stable
 ```
 
 ```dart
@@ -566,6 +566,65 @@ class OffBuildExample extends StatelessWidget {
    changes (usually the size of the window changes), all child elements whose width or height is
    wrapContent will be re-layout. And since the constraints passed to other child elements won't
    change, no real re-layout will be triggered.
+
+4. If you use Guideline or Barrier in the children list, Element and RenderObject will inevitably be
+   generated for them, which will be laid out but not drawn. At this point you can use
+   GuidelineDefine or BarrierDefine to optimize it, no Element and RenderObject will be generated
+   anymore:
+
+```dart
+class BarrierExample extends StatelessWidget {
+  const BarrierExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    ConstraintId leftChild = ConstraintId('leftChild');
+    ConstraintId rightChild = ConstraintId('rightChild');
+    ConstraintId barrier = ConstraintId('barrier');
+    return Scaffold(
+      body: ConstraintLayout(
+        childConstraints: [
+          BarrierDefine(
+            id: barrier,
+            direction: BarrierDirection.bottom,
+            referencedIds: [leftChild, rightChild],
+          ),
+        ],
+        children: [
+          Container(
+            color: const Color(0xFF005BBB),
+          ).applyConstraint(
+            id: leftChild,
+            width: 200,
+            height: 200,
+            topLeftTo: parent,
+          ),
+          Container(
+            color: const Color(0xFFFFD500),
+          ).applyConstraint(
+            id: rightChild,
+            width: 200,
+            height: matchConstraint,
+            centerRightTo: parent,
+            heightPercent: 0.5,
+            verticalBias: 0,
+          ),
+          const Text(
+            'Align to barrier',
+            style: TextStyle(
+              fontSize: 40,
+              color: Colors.blue,
+            ),
+          ).applyConstraint(
+            centerHorizontalTo: parent,
+            top: barrier.bottom,
+          )
+        ],
+      ),
+    );
+  }
+}   
+```
 
 # Support me
 
