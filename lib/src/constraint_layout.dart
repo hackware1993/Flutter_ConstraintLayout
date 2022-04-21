@@ -22,6 +22,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final bool releasePrintLayoutTime;
   final String? debugName;
   final bool debugShowZIndex;
+  final bool debugShowChildDepth;
 
   ConstraintLayout({
     Key? key,
@@ -35,6 +36,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.releasePrintLayoutTime = false,
     this.debugName,
     this.debugShowZIndex = false,
+    this.debugShowChildDepth = false,
   }) : super(
           key: key,
           children: children,
@@ -52,7 +54,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugCheckConstraints = debugCheckConstraints
       .._releasePrintLayoutTime = releasePrintLayoutTime
       .._debugName = debugName
-      .._debugShowZIndex = debugShowZIndex;
+      .._debugShowZIndex = debugShowZIndex
+      .._debugShowChildDepth = debugShowChildDepth;
   }
 
   @override
@@ -70,7 +73,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugCheckConstraints = debugCheckConstraints
       ..releasePrintLayoutTime = releasePrintLayoutTime
       ..debugName = debugName
-      ..debugShowZIndex = debugShowZIndex;
+      ..debugShowZIndex = debugShowZIndex
+      ..debugShowChildDepth = debugShowChildDepth;
   }
 }
 
@@ -1533,6 +1537,7 @@ class _ConstraintRenderBox extends RenderBox
   late bool _releasePrintLayoutTime;
   String? _debugName;
   late bool _debugShowZIndex;
+  late bool _debugShowChildDepth;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
@@ -1672,6 +1677,13 @@ class _ConstraintRenderBox extends RenderBox
   set debugShowZIndex(bool value) {
     if (_debugShowZIndex != value) {
       _debugShowZIndex = value;
+      markNeedsPaint();
+    }
+  }
+
+  set debugShowChildDepth(bool value) {
+    if (_debugShowChildDepth != value) {
+      _debugShowChildDepth = value;
       markNeedsPaint();
     }
   }
@@ -2761,6 +2773,32 @@ class _ConstraintRenderBox extends RenderBox
           ));
           context.canvas
               .drawParagraph(paragraph, element.offset + offset + paintShift);
+        }
+        return true;
+      }());
+
+      assert(() {
+        if (_debugShowChildDepth) {
+          ui.ParagraphBuilder paragraphBuilder =
+              ui.ParagraphBuilder(ui.ParagraphStyle(
+            textAlign: TextAlign.center,
+            fontSize: 10,
+          ));
+          paragraphBuilder.pushStyle(ui.TextStyle(
+            color: Colors.black,
+          ));
+          paragraphBuilder.addText("depth ${element.getDepth()}");
+          ui.Paragraph paragraph = paragraphBuilder.build();
+          paragraph.layout(ui.ParagraphConstraints(
+            width: element.getMeasuredWidth(size),
+          ));
+          context.canvas.drawParagraph(
+              paragraph,
+              element.offset +
+                  offset +
+                  paintShift +
+                  Offset(
+                      0, element.getMeasuredHeight(size) - paragraph.height));
         }
         return true;
       }());
