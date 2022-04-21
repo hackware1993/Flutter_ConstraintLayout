@@ -90,6 +90,10 @@ List<Widget> constraintGrid({
   required Widget Function(int index) itemBuilder,
   EdgeInsets Function(int index)? itemMarginBuilder,
   EdgeInsets margin = EdgeInsets.zero,
+  CLVisibility visibility = visible,
+  Offset translate = Offset.zero,
+  bool translateConstraint = false,
+  int? zIndex,
 }) {
   assert(itemCount > 0);
   assert(columnCount > 0);
@@ -124,8 +128,10 @@ List<Widget> constraintGrid({
     return margin;
   }
 
+  List<ConstraintId> childIds = [];
   for (int i = 0; i < itemCount; i++) {
     ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
+    childIds.add(itemId);
     Widget widget = itemBuilder(i);
     Size? itemSize = itemSizeBuilder?.call(i);
     widgets.add(Constrained(
@@ -136,6 +142,9 @@ List<Widget> constraintGrid({
         height: itemHeight ?? itemSize!.height,
         left: leftAnchor,
         top: topAnchor,
+        zIndex: zIndex,
+        translate: translate,
+        visibility: visibility,
         margin: calculateItemMargin(
             i, columnCount, itemMarginBuilder?.call(i) ?? EdgeInsets.zero),
       ),
@@ -146,6 +155,50 @@ List<Widget> constraintGrid({
       topAnchor = itemId.bottom;
     }
   }
+
+  Barrier leftBarrier = Barrier(
+    id: ConstraintId(id.id + '_left_barrier'),
+    direction: BarrierDirection.left,
+    referencedIds: childIds,
+  );
+
+  Barrier topBarrier = Barrier(
+    id: ConstraintId(id.id + '_top_barrier'),
+    direction: BarrierDirection.top,
+    referencedIds: childIds,
+  );
+
+  Barrier rightBarrier = Barrier(
+    id: ConstraintId(id.id + '_right_barrier'),
+    direction: BarrierDirection.right,
+    referencedIds: childIds,
+  );
+
+  Barrier bottomBarrier = Barrier(
+    id: ConstraintId(id.id + '_bottom_barrier'),
+    direction: BarrierDirection.bottom,
+    referencedIds: childIds,
+  );
+
+  widgets.add(leftBarrier);
+  widgets.add(topBarrier);
+  widgets.add(rightBarrier);
+  widgets.add(bottomBarrier);
+
+  widgets.add(const SizedBox().applyConstraint(
+    id: id,
+    width: matchConstraint,
+    height: matchConstraint,
+    left: leftBarrier.id.left,
+    top: topBarrier.id.top,
+    right: rightBarrier.id.right,
+    bottom: bottomBarrier.id.bottom,
+    zIndex: -1,
+    translate: translate,
+    translateConstraint: translateConstraint,
+    visibility: visibility,
+  ));
+
   return widgets;
 }
 
