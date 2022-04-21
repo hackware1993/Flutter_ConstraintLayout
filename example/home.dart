@@ -6,9 +6,11 @@ import 'complex_list.dart';
 import 'dimension_ratio.dart';
 import 'grid.dart';
 import 'guideline.dart';
+import 'horizontal_list.dart';
 import 'percentage_layout.dart';
 import 'relative_id.dart';
 import 'summary.dart';
+import 'vertical_list.dart';
 import 'wrapper_constraints.dart';
 
 class ExampleHome extends StatelessWidget {
@@ -59,6 +61,12 @@ class ExampleHome extends StatelessWidget {
           }),
           button('Grid', () {
             push(context, const GridExample());
+          }),
+          button('Horizontal List', () {
+            push(context, const HorizontalListExample());
+          }),
+          button('Vertical List', () {
+            push(context, const VerticalListExample());
           }),
           button('Chain (Coming soon)', null),
           const Spacer(),

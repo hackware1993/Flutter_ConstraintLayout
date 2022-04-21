@@ -80,30 +80,60 @@ List<Widget> constraintGrid({
   required _Align top,
   required int itemCount,
   required int columnCount,
-  required double itemWidth,
-  required double itemHeight,
+  double? itemWidth,
+  double? itemHeight,
+  Size Function(int index)? itemSizeBuilder,
   required Widget Function(int index) itemBuilder,
   EdgeInsets Function(int index)? itemMarginBuilder,
+  EdgeInsets margin = EdgeInsets.zero,
 }) {
   assert(itemCount > 0);
   assert(columnCount > 0);
-  assert(itemWidth > 0);
-  assert(itemHeight > 0);
+  assert(itemWidth == null || (itemWidth > 0 || itemWidth == wrapContent));
+  assert(itemHeight == null || (itemHeight > 0 || itemHeight == wrapContent));
+  assert((itemSizeBuilder == null && itemWidth != null && itemHeight != null) ||
+      (itemSizeBuilder != null && itemWidth == null && itemHeight == null));
   List<Widget> widgets = [];
   _Align leftAnchor = left;
   _Align topAnchor = top;
+
+  EdgeInsets leftMargin = EdgeInsets.only(
+    left: margin.left,
+  );
+  EdgeInsets topMargin = EdgeInsets.only(
+    top: margin.top,
+  );
+  EdgeInsets calculateItemMargin(
+    int index,
+    int columnCount,
+    EdgeInsets margin,
+  ) {
+    /// First row
+    if (index < columnCount) {
+      margin = margin.add(topMargin) as EdgeInsets;
+    }
+
+    /// First column
+    if (index % columnCount == 0) {
+      margin = margin.add(leftMargin) as EdgeInsets;
+    }
+    return margin;
+  }
+
   for (int i = 0; i < itemCount; i++) {
     ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
     Widget widget = itemBuilder(i);
+    Size? itemSize = itemSizeBuilder?.call(i);
     widgets.add(Constrained(
       child: widget,
       constraint: Constraint(
         id: itemId,
-        width: itemWidth,
-        height: itemHeight,
+        width: itemWidth ?? itemSize!.width,
+        height: itemHeight ?? itemSize!.height,
         left: leftAnchor,
         top: topAnchor,
-        margin: itemMarginBuilder?.call(i) ?? EdgeInsets.zero,
+        margin: calculateItemMargin(
+            i, columnCount, itemMarginBuilder?.call(i) ?? EdgeInsets.zero),
       ),
     ));
     leftAnchor = itemId.right;

@@ -32,3 +32,5 @@ flutter:
     - example/relative_id.dart
     - example/wrapper_constraints.dart
     - example/grid.dart
+    - example/horizontal_list.dart
+    - example/vertical_list.dart

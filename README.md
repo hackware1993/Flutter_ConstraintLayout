@@ -57,7 +57,7 @@ insult him.
 13. dimension ratio
 14. relative id
 15. wrapper constraints
-16. grid、list(list is a special grid with 1 column)
+16. grid、list(list is a special grid)
 
 Coming soon:
 
