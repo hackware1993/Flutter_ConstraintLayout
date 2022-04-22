@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
@@ -128,10 +129,26 @@ List<Widget> constraintGrid({
     return margin;
   }
 
-  List<ConstraintId> childIds = [];
+  List<ConstraintId> leftChildIds = [];
+  List<ConstraintId> topChildIds = [];
+  List<ConstraintId> rightChildIds = [];
+  List<ConstraintId> bottomChildIds = [];
+  int lastRowIndex = (itemCount / columnCount).ceil() - 1;
+  int lastColumnIndex = min(columnCount - 1, itemCount - 1);
   for (int i = 0; i < itemCount; i++) {
     ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
-    childIds.add(itemId);
+    if (i % columnCount == 0) {
+      leftChildIds.add(itemId);
+    }
+    if (i < columnCount) {
+      topChildIds.add(itemId);
+    }
+    if (i % columnCount == lastColumnIndex) {
+      rightChildIds.add(itemId);
+    }
+    if (i ~/ columnCount == lastRowIndex) {
+      bottomChildIds.add(itemId);
+    }
     Widget widget = itemBuilder(i);
     Size? itemSize = itemSizeBuilder?.call(i);
     widgets.add(Constrained(
@@ -159,25 +176,25 @@ List<Widget> constraintGrid({
   Barrier leftBarrier = Barrier(
     id: ConstraintId(id.id + '_left_barrier'),
     direction: BarrierDirection.left,
-    referencedIds: childIds,
+    referencedIds: leftChildIds,
   );
 
   Barrier topBarrier = Barrier(
     id: ConstraintId(id.id + '_top_barrier'),
     direction: BarrierDirection.top,
-    referencedIds: childIds,
+    referencedIds: topChildIds,
   );
 
   Barrier rightBarrier = Barrier(
     id: ConstraintId(id.id + '_right_barrier'),
     direction: BarrierDirection.right,
-    referencedIds: childIds,
+    referencedIds: rightChildIds,
   );
 
   Barrier bottomBarrier = Barrier(
     id: ConstraintId(id.id + '_bottom_barrier'),
     direction: BarrierDirection.bottom,
-    referencedIds: childIds,
+    referencedIds: bottomChildIds,
   );
 
   widgets.add(leftBarrier);
@@ -196,7 +213,7 @@ List<Widget> constraintGrid({
     zIndex: -1,
     translate: translate,
     translateConstraint: translateConstraint,
-    visibility: visibility,
+    visibility: invisible,
   ));
 
   return widgets;
