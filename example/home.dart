@@ -66,7 +66,10 @@ class ExampleHome extends StatelessWidget {
                 onPressed: example == null
                     ? null
                     : () {
-                        push(context, example);
+                        Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (_) {
+                          return example;
+                        }));
                       },
                 child: Text(
                   keyList[index],
@@ -94,11 +97,5 @@ class ExampleHome extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void push(BuildContext context, Widget widget) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-      return widget;
-    }));
   }
 }
