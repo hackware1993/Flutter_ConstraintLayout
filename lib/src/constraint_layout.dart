@@ -25,6 +25,10 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final bool debugShowZIndex;
   final bool debugShowChildDepth;
 
+  // fixed size、matchParent(wrapContent is not supported yet)
+  final double width;
+  final double height;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints,
@@ -38,6 +42,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.debugName,
     this.debugShowZIndex = false,
     this.debugShowChildDepth = false,
+    this.width = matchParent,
+    this.height = matchParent,
   }) : super(
           key: key,
           children: children,
@@ -46,6 +52,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
+    assert(width >= 0 || width == matchParent);
+    assert(height >= 0 || height == matchParent);
     return _ConstraintRenderBox()
       ..childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
@@ -56,7 +64,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._releasePrintLayoutTime = releasePrintLayoutTime
       .._debugName = debugName
       .._debugShowZIndex = debugShowZIndex
-      .._debugShowChildDepth = debugShowChildDepth;
+      .._debugShowChildDepth = debugShowChildDepth
+      .._width = width
+      .._height = height;
   }
 
   @override
@@ -65,6 +75,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     covariant RenderObject renderObject,
   ) {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
+    assert(width >= 0 || width == matchParent);
+    assert(height >= 0 || height == matchParent);
     (renderObject as _ConstraintRenderBox)
       ..childConstraints = childConstraints
       ..debugShowGuideline = debugShowGuideline
@@ -75,7 +87,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..releasePrintLayoutTime = releasePrintLayoutTime
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex
-      ..debugShowChildDepth = debugShowChildDepth;
+      ..debugShowChildDepth = debugShowChildDepth
+      ..width = width
+      ..height = height;
   }
 }
 
@@ -98,8 +112,9 @@ List<Widget> constraintGrid({
 }) {
   assert(itemCount > 0);
   assert(columnCount > 0);
-  assert(itemWidth == null || (itemWidth > 0 || itemWidth == wrapContent));
-  assert(itemHeight == null || (itemHeight > 0 || itemHeight == wrapContent));
+  assert(itemWidth == null || (itemWidth >= 0 || itemWidth != matchConstraint));
+  assert(
+      itemHeight == null || (itemHeight >= 0 || itemHeight != matchConstraint));
   assert((itemSizeBuilder == null && itemWidth != null && itemHeight != null) ||
       (itemSizeBuilder != null && itemWidth == null && itemHeight == null));
   List<Widget> widgets = [];
@@ -151,14 +166,16 @@ List<Widget> constraintGrid({
     }
     Widget widget = itemBuilder(i);
     Size? itemSize = itemSizeBuilder?.call(i);
+    double width = itemWidth ?? itemSize!.width;
+    double height = itemHeight ?? itemSize!.height;
     widgets.add(Constrained(
       child: widget,
       constraint: Constraint(
         id: itemId,
-        width: itemWidth ?? itemSize!.width,
-        height: itemHeight ?? itemSize!.height,
-        left: leftAnchor,
-        top: topAnchor,
+        width: width,
+        height: height,
+        left: width == matchParent ? null : leftAnchor,
+        top: height == matchParent ? null : topAnchor,
         zIndex: zIndex,
         translate: translate,
         visibility: visibility,
@@ -1609,6 +1626,9 @@ class _ConstraintRenderBox extends RenderBox
   late bool _debugShowZIndex;
   late bool _debugShowChildDepth;
 
+  late double _width;
+  late double _height;
+
   bool _needsRecalculateConstraints = true;
   bool _needsReorderChildren = true;
   int _buildNodeTreesCount = 0;
@@ -1762,6 +1782,20 @@ class _ConstraintRenderBox extends RenderBox
     if (_needsReorderChildren != value) {
       _needsReorderChildren = value;
       markNeedsPaint();
+    }
+  }
+
+  set width(double value) {
+    if (_width != value) {
+      _width = value;
+      markNeedsLayout();
+    }
+  }
+
+  set height(double value) {
+    if (_height != value) {
+      _height = value;
+      markNeedsLayout();
     }
   }
 
@@ -2102,17 +2136,31 @@ class _ConstraintRenderBox extends RenderBox
       return true;
     }());
 
-    /// Always fill the parent layout
-    /// TODO will support wrap_content in the future
+    /// TODO will support wrapContent in the future
+    double width;
     double consMaxWidth = constraints.maxWidth;
     if (consMaxWidth == double.infinity) {
       consMaxWidth = window.physicalSize.width / window.devicePixelRatio;
     }
+    if (_width >= 0) {
+      width = _width.clamp(constraints.minWidth, consMaxWidth);
+    } else {
+      width = consMaxWidth;
+    }
+
+    double height;
     double consMaxHeight = constraints.maxHeight;
     if (consMaxHeight == double.infinity) {
       consMaxHeight = window.physicalSize.height / window.devicePixelRatio;
     }
-    size = constraints.constrain(Size(consMaxWidth, consMaxHeight));
+    if (_height >= 0) {
+      height = _height.clamp(constraints.minHeight, consMaxHeight);
+    } else {
+      height = consMaxHeight;
+    }
+
+    size = constraints.constrain(Size(width, height));
+    assert(constraints.isSatisfiedBy(size));
 
     if (_needsRecalculateConstraints) {
       assert(() {
