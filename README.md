@@ -63,7 +63,8 @@ Coming soon:
 
 1. chain
 2. constraints visualization
-3. more...
+3. self wrapContent
+4. more...
 
 Support platform:
 
