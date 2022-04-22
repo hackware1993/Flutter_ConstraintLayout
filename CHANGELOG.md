@@ -1,3 +1,7 @@
+# v0.9.22-stable
+
+add self size set.
+
 # v0.9.21-stable
 
 1. enhance grid again.
