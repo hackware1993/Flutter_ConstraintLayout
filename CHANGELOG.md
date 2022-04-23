@@ -1,3 +1,7 @@
+# v0.9.23-stable
+
+add staggered grid support.
+
 # v0.9.22-stable
 
 add self size set.
