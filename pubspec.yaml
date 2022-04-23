@@ -34,3 +34,4 @@ flutter:
     - example/grid.dart
     - example/horizontal_list.dart
     - example/vertical_list.dart
+    - example/staggered_grid.dart

@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
@@ -104,6 +103,7 @@ List<Widget> constraintGrid({
   Size Function(int index)? itemSizeBuilder,
   required Widget Function(int index) itemBuilder,
   EdgeInsets Function(int index)? itemMarginBuilder,
+  int Function(int index)? itemSpanBuilder,
   EdgeInsets margin = EdgeInsets.zero,
   CLVisibility visibility = visible,
   Offset translate = Offset.zero,
@@ -127,47 +127,91 @@ List<Widget> constraintGrid({
   EdgeInsets topMargin = EdgeInsets.only(
     top: margin.top,
   );
-  EdgeInsets calculateItemMargin(
-    int index,
-    int columnCount,
-    EdgeInsets margin,
-  ) {
-    /// First row
-    if (index < columnCount) {
-      margin = margin.add(topMargin) as EdgeInsets;
-    }
 
-    /// First column
-    if (index % columnCount == 0) {
-      margin = margin.add(leftMargin) as EdgeInsets;
-    }
-    return margin;
-  }
-
+  List<ConstraintId> allChildIds = [];
   List<ConstraintId> leftChildIds = [];
   List<ConstraintId> topChildIds = [];
   List<ConstraintId> rightChildIds = [];
   List<ConstraintId> bottomChildIds = [];
-  int lastRowIndex = (itemCount / columnCount).ceil() - 1;
-  int lastColumnIndex = min(columnCount - 1, itemCount - 1);
+  int totalAvailableSpanCount = (itemCount / columnCount).ceil() * columnCount;
+  int currentRowIndex = -1;
+  int currentRowUsedSpanCount = columnCount + 1;
+  int totalUsedSpanCount = 0;
+  late int currentRowBarrierCount;
+  Map<int, ConstraintId> currentSpanSlot = HashMap();
   for (int i = 0; i < itemCount; i++) {
     ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
-    if (i % columnCount == 0) {
+    allChildIds.add(itemId);
+
+    EdgeInsets childMargin = itemMarginBuilder?.call(i) ?? EdgeInsets.zero;
+    int itemSpan = itemSpanBuilder?.call(i) ?? 1;
+    assert(itemSpan >= 1 && itemSpan <= columnCount);
+    currentRowUsedSpanCount += itemSpan;
+    totalUsedSpanCount += itemSpan;
+
+    /// New row start
+    if (currentRowUsedSpanCount > columnCount) {
+      currentRowIndex++;
+      currentRowUsedSpanCount = itemSpan;
+      currentRowBarrierCount = 0;
+      if (i > 0) {
+        if (!rightChildIds.contains(allChildIds[i - 1])) {
+          /// Last column
+          rightChildIds.add(allChildIds[i - 1]);
+        }
+      } else {
+        if (itemSpan == columnCount) {
+          /// Last column
+          rightChildIds.add(itemId);
+        }
+      }
+
+      /// First column
+      leftAnchor = left;
       leftChildIds.add(itemId);
+      childMargin = childMargin.add(leftMargin) as EdgeInsets;
     }
-    if (i < columnCount) {
+
+    // First row
+    if (currentRowIndex == 0) {
+      childMargin = childMargin.add(topMargin) as EdgeInsets;
       topChildIds.add(itemId);
     }
-    if (i % columnCount == lastColumnIndex) {
-      rightChildIds.add(itemId);
-    }
-    if (i ~/ columnCount == lastRowIndex) {
+
+    // Last row
+    if (totalAvailableSpanCount - totalUsedSpanCount < columnCount) {
       bottomChildIds.add(itemId);
     }
+
+    if (currentRowIndex > 0) {
+      if (itemSpan == 1) {
+        topAnchor = currentSpanSlot[currentRowUsedSpanCount]!.bottom;
+      } else {
+        List<ConstraintId> referencedIds = [];
+        for (int i = 0; i < itemSpan; i++) {
+          ConstraintId id = currentSpanSlot[currentRowUsedSpanCount - i]!;
+          if (!referencedIds.contains(id)) {
+            referencedIds.add(id);
+          }
+        }
+        ConstraintId rowBarrierId = ConstraintId(id.id +
+            '_row_${currentRowIndex}_bottom_barrier_$currentRowBarrierCount');
+        Barrier rowBottomBarrier = Barrier(
+          id: rowBarrierId,
+          direction: BarrierDirection.bottom,
+          referencedIds: referencedIds,
+        );
+        widgets.add(rowBottomBarrier);
+        topAnchor = rowBarrierId.bottom;
+        currentRowBarrierCount++;
+      }
+    }
+
     Widget widget = itemBuilder(i);
     Size? itemSize = itemSizeBuilder?.call(i);
     double width = itemWidth ?? itemSize!.width;
     double height = itemHeight ?? itemSize!.height;
+
     widgets.add(Constrained(
       child: widget,
       constraint: Constraint(
@@ -179,15 +223,19 @@ List<Widget> constraintGrid({
         zIndex: zIndex,
         translate: translate,
         visibility: visibility,
-        margin: calculateItemMargin(
-            i, columnCount, itemMarginBuilder?.call(i) ?? EdgeInsets.zero),
+        margin: childMargin,
+        goneMargin: childMargin,
       ),
     ));
+
     leftAnchor = itemId.right;
-    if (i % columnCount == columnCount - 1) {
-      leftAnchor = left;
-      topAnchor = itemId.bottom;
+    for (int i = 0; i < itemSpan; i++) {
+      currentSpanSlot[currentRowUsedSpanCount - i] = itemId;
     }
+  }
+
+  if (!rightChildIds.contains(allChildIds.last)) {
+    rightChildIds.add(allChildIds.last);
   }
 
   Barrier leftBarrier = Barrier(

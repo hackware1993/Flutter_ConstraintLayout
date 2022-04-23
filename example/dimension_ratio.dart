@@ -10,7 +10,7 @@ class DimensionRatioExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(
-        title: 'DimensionRatio',
+        title: 'Dimension Ratio',
         codePath: 'example/dimension_ratio.dart',
       ),
       body: ConstraintLayout(

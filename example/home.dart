@@ -10,6 +10,7 @@ import 'guideline.dart';
 import 'horizontal_list.dart';
 import 'percentage_layout.dart';
 import 'relative_id.dart';
+import 'staggered_grid.dart';
 import 'summary.dart';
 import 'vertical_list.dart';
 import 'wrapper_constraints.dart';
@@ -21,15 +22,16 @@ class ExampleHome extends StatelessWidget {
     'Summary': const SummaryExample(),
     'Guideline': const GuidelineExample(),
     'Barrier': const BarrierExample(),
-    'ComplexList': const ComplexListExample(),
+    'Complex List': const ComplexListExample(),
     'Badge': const BadgeExample(),
-    'PercentageLayout': const PercentageLayoutExample(),
-    'DimensionRatio': const DimensionRatioExample(),
+    'Percentage Layout': const PercentageLayoutExample(),
+    'Dimension Ratio': const DimensionRatioExample(),
     'Relative Id': const RelativeIdExample(),
     'Wrapper Constraints': const WrapperConstraintsExample(),
     'Grid': const GridExample(),
     'Horizontal List': const HorizontalListExample(),
     'Vertical List': const VerticalListExample(),
+    'Staggered Grid': const StaggeredGridExample(),
     'Chain (Coming soon)': null,
   };
 
@@ -50,7 +52,7 @@ class ExampleHome extends StatelessWidget {
             topCenterTo: parent,
           ),
           ...constraintGrid(
-            id: ConstraintId('example_list'),
+            id: ConstraintId('exampleList'),
             margin: const EdgeInsets.only(
               top: 20,
             ),
