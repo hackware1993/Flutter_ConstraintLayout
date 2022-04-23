@@ -48,9 +48,6 @@ class StaggeredGridExample extends StatelessWidget {
               id: ConstraintId('horizontalList'),
               left: parent.left,
               top: parent.top,
-              margin: const EdgeInsets.only(
-                left: 100,
-              ),
               itemCount: 50,
               columnCount: columnCount,
               itemBuilder: (index) {

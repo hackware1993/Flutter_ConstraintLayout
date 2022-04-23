@@ -138,7 +138,7 @@ List<Widget> constraintGrid({
   int currentRowUsedSpanCount = columnCount + 1;
   int totalUsedSpanCount = 0;
   late int currentRowBarrierCount;
-  Map<int, ConstraintId> currentSpanSlot = HashMap();
+  List<ConstraintId?> currentSpanSlot = List.filled(columnCount + 1, null);
   for (int i = 0; i < itemCount; i++) {
     ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
     allChildIds.add(itemId);
