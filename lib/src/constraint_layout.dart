@@ -2173,13 +2173,13 @@ class _ConstraintRenderBox extends RenderBox
 
   @override
   void performLayout() {
-    int startTime = 0;
+    Stopwatch? stopwatch;
     if (_releasePrintLayoutTime && kReleaseMode) {
-      startTime = DateTime.now().millisecondsSinceEpoch;
+      stopwatch = Stopwatch()..start();
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        startTime = DateTime.now().millisecondsSinceEpoch;
+        stopwatch = Stopwatch()..start();
       }
       return true;
     }());
@@ -2263,19 +2263,12 @@ class _ConstraintRenderBox extends RenderBox
 
     _layoutByConstrainedNodeTrees();
 
-    if (_releasePrintLayoutTime && kReleaseMode) {
-      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+    if (stopwatch != null) {
+      layoutTimeUsage.add(stopwatch!.elapsedMicroseconds);
       if (layoutTimeUsage.length > maxTimeUsage) {
         layoutTimeUsage.removeFirst();
       }
     }
-    assert(() {
-      layoutTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
-      if (layoutTimeUsage.length > maxTimeUsage) {
-        layoutTimeUsage.removeFirst();
-      }
-      return true;
-    }());
   }
 
   static double _getLeftInsets(
@@ -2857,13 +2850,13 @@ class _ConstraintRenderBox extends RenderBox
     PaintingContext context,
     Offset offset,
   ) {
-    int startTime = 0;
+    Stopwatch? stopwatch;
     if (_releasePrintLayoutTime && kReleaseMode) {
-      startTime = DateTime.now().millisecondsSinceEpoch;
+      stopwatch = Stopwatch()..start();
     }
     assert(() {
       if (_debugPrintLayoutTime) {
-        startTime = DateTime.now().millisecondsSinceEpoch;
+        stopwatch = Stopwatch()..start();
       }
       return true;
     }());
@@ -2992,23 +2985,13 @@ class _ConstraintRenderBox extends RenderBox
       return true;
     }());
 
-    if (_releasePrintLayoutTime && kReleaseMode) {
-      paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
+    if (stopwatch != null) {
+      paintTimeUsage.add(stopwatch!.elapsedMicroseconds);
       if (paintTimeUsage.length > maxTimeUsage) {
         paintTimeUsage.removeFirst();
       }
       _debugShowPerformance(context, offset);
     }
-    assert(() {
-      if (_debugPrintLayoutTime) {
-        paintTimeUsage.add(DateTime.now().millisecondsSinceEpoch - startTime);
-        if (paintTimeUsage.length > maxTimeUsage) {
-          paintTimeUsage.removeFirst();
-        }
-        _debugShowPerformance(context, offset);
-      }
-      return true;
-    }());
   }
 
   void _debugShowPerformance(
@@ -3033,7 +3016,7 @@ class _ConstraintRenderBox extends RenderBox
           color: Colors.green,
         ));
       }
-      paragraphBuilder.addText("layout $layoutTime ms");
+      paragraphBuilder.addText("layout $layoutTime us");
       ui.Paragraph paragraph = paragraphBuilder.build();
       paragraph.layout(const ui.ParagraphConstraints(
         width: 80,
@@ -3061,7 +3044,7 @@ class _ConstraintRenderBox extends RenderBox
           color: Colors.green,
         ));
       }
-      paragraphBuilder.addText("paint $paintTime ms");
+      paragraphBuilder.addText("paint $paintTime us");
       ui.Paragraph paragraph = paragraphBuilder.build();
       paragraph.layout(const ui.ParagraphConstraints(
         width: 80,
