@@ -1,3 +1,7 @@
+# v0.9.24-stable
+
+optimize performance overlay.
+
 # v0.9.23-stable
 
 add staggered grid support.
