@@ -1,3 +1,7 @@
+# v0.9.25-stable
+
+add circle position support.
+
 # v0.9.24-stable
 
 optimize performance overlay.

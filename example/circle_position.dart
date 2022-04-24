@@ -22,7 +22,7 @@ class CirclePositionExample extends StatelessWidget {
             height: 100,
             centerTo: parent,
           ),
-          for (int angle = 0; angle <= 360; angle += 15)
+          for (int angle = 0; angle <= 360; angle += 30)
             Container(
               color: Colors.yellow,
             ).applyConstraint(
@@ -30,7 +30,7 @@ class CirclePositionExample extends StatelessWidget {
               height: 50,
               centerTo: rId(0),
               translate: circleTranslate(
-                radius: 300,
+                radius: 200,
                 angle: angle,
               ),
             ),

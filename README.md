@@ -59,6 +59,7 @@ insult him.
 15. wrapper constraints
 16. staggered grid、grid、list(list is a special staggered grid, grid is also a special staggered
     grid)
+17. circle position
 
 Coming soon:
 
@@ -85,12 +86,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.24-stable'
+      ref: 'v0.9.25-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.24-stable
+  flutter_constraintlayout: ^0.9.25-stable
 ```
 
 ```dart
@@ -652,6 +653,45 @@ class StaggeredGridExample extends StatelessWidget {
 ```
 
 ![staggered_grid.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/staggered_grid.gif?raw=true)
+
+6. circle position
+
+```dart
+class CirclePositionExample extends StatelessWidget {
+  const CirclePositionExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ConstraintLayout(
+        children: [
+          Container(
+            color: Colors.redAccent,
+          ).applyConstraint(
+            width: 100,
+            height: 100,
+            centerTo: parent,
+          ),
+          for (int angle = 0; angle <= 360; angle += 30)
+            Container(
+              color: Colors.yellow,
+            ).applyConstraint(
+              width: 50,
+              height: 50,
+              centerTo: rId(0),
+              translate: circleTranslate(
+                radius: 200,
+                angle: angle,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+![circle_position.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/circle_position.webp?raw=true)
 
 # Performance optimization
 
