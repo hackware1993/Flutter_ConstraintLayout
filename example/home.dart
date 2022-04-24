@@ -53,36 +53,37 @@ class ExampleHome extends StatelessWidget {
           ).applyConstraint(
             topCenterTo: parent,
           ),
-          ...constraintGrid(
-            id: ConstraintId('exampleList'),
-            margin: const EdgeInsets.only(
-              top: 20,
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                for (int i = 0; i < keyList.length; i++)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: TextButton(
+                      onPressed: exampleMap[keyList[i]] == null
+                          ? null
+                          : () {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (_) {
+                                return exampleMap[keyList[i]]!;
+                              }));
+                            },
+                      child: Text(
+                        keyList[i],
+                        style: const TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  )
+              ],
             ),
-            left: parent.left,
-            top: rId(0).bottom,
-            itemCount: keyList.length,
-            columnCount: 1,
-            itemWidth: matchParent,
-            itemHeight: 40,
-            itemBuilder: (index) {
-              Widget? example = exampleMap[keyList[index]];
-              return TextButton(
-                onPressed: example == null
-                    ? null
-                    : () {
-                        Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (_) {
-                          return example;
-                        }));
-                      },
-                child: Text(
-                  keyList[index],
-                  style: const TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              );
-            },
+          ).applyConstraint(
+            width: matchParent,
+            height: matchConstraint,
+            top: sId(-1).bottom,
+            bottom: sId(1).top,
           ),
           const Text(
             'Powered by Flutter Web & ConstraintLayout',
@@ -91,7 +92,6 @@ class ExampleHome extends StatelessWidget {
               fontWeight: FontWeight.bold,
               height: 1.5,
             ),
-            textAlign: TextAlign.center,
           ).applyConstraint(
             bottomCenterTo: parent,
             margin: const EdgeInsets.only(

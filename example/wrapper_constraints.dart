@@ -3,8 +3,16 @@ import 'package:flutter_constraintlayout/src/constraint_layout.dart';
 
 import 'custom_app_bar.dart';
 
-class WrapperConstraintsExample extends StatelessWidget {
+class WrapperConstraintsExample extends StatefulWidget {
   const WrapperConstraintsExample({Key? key}) : super(key: key);
+
+  @override
+  State createState() => WrapperConstraintsExampleState();
+}
+
+class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
+  double leftX = 0;
+  double rightX = 0;
 
   Widget item(String text, [Color color = Colors.redAccent]) {
     return Container(
@@ -55,6 +63,9 @@ class WrapperConstraintsExample extends StatelessWidget {
           ),
           item('centerTopRightTo').applyConstraint(
             centerTopRightTo: rId(0),
+            callback: (_, rect) {
+              leftX = rect.right;
+            },
           ),
           item('centerCenterLeftTo').applyConstraint(
             centerCenterLeftTo: rId(0),
@@ -83,6 +94,12 @@ class WrapperConstraintsExample extends StatelessWidget {
           ),
           item('outTopLeftTo').applyConstraint(
             outTopLeftTo: rId(1),
+            callback: (_, rect) {
+              rightX = rect.left;
+              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                setState(() {});
+              });
+            },
           ),
           item('outTopCenterTo').applyConstraint(
             outTopCenterTo: rId(1),
@@ -131,6 +148,20 @@ class WrapperConstraintsExample extends StatelessWidget {
           ),
           item('bottomRightTo', Colors.green).applyConstraint(
             bottomRightTo: rId(1),
+          ),
+          const Text(
+            'The display area is overlapping\nPlease view it in full screen on the computer',
+            style: TextStyle(
+              color: Colors.redAccent,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ).applyConstraint(
+            topCenterTo: parent,
+            margin: const EdgeInsets.only(
+              top: 5,
+            ),
+            visibility: rightX - 1 < leftX ? visible : gone,
           ),
         ],
       ),
