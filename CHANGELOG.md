@@ -1,3 +1,7 @@
+# v0.9.26-stable
+
+enhance relative id.
+
 # v0.9.25-stable
 
 add circle position support.
