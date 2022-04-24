@@ -149,18 +149,18 @@ class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
           item('bottomRightTo', Colors.green).applyConstraint(
             bottomRightTo: rId(1),
           ),
-          const Text(
-            'The display area is overlapping\nPlease view it in full screen on the computer',
-            style: TextStyle(
-              color: Colors.redAccent,
-              fontSize: 16,
+          Container(
+            color: Colors.black,
+            child: const Text(
+              'The display area is overlapping\nPlease view it in full screen on the computer',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ).applyConstraint(
             topCenterTo: parent,
-            margin: const EdgeInsets.only(
-              top: 5,
-            ),
             visibility: rightX - 1 < leftX ? visible : gone,
           ),
         ],
