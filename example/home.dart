@@ -3,6 +3,7 @@ import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 import 'badge.dart';
 import 'barrier.dart';
+import 'circle_position.dart';
 import 'complex_list.dart';
 import 'dimension_ratio.dart';
 import 'grid.dart';
@@ -32,6 +33,7 @@ class ExampleHome extends StatelessWidget {
     'Horizontal List': const HorizontalListExample(),
     'Vertical List': const VerticalListExample(),
     'Staggered Grid': const StaggeredGridExample(),
+    'Circle Position': const CirclePositionExample(),
     'Chain (Coming soon)': null,
   };
 
@@ -58,7 +60,7 @@ class ExampleHome extends StatelessWidget {
             ),
             left: parent.left,
             top: rId(0).bottom,
-            itemCount: 13,
+            itemCount: keyList.length,
             columnCount: 1,
             itemWidth: matchParent,
             itemHeight: 40,

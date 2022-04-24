@@ -35,3 +35,4 @@ flutter:
     - example/horizontal_list.dart
     - example/vertical_list.dart
     - example/staggered_grid.dart
+    - example/circle_position.dart
