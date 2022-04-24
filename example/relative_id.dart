@@ -31,6 +31,20 @@ class RelativeIdExample extends StatelessWidget {
             right: rId(0).right,
             top: rId(0).top,
             bottom: rId(0).top,
+          ),
+          Container(
+            color: Colors.green,
+          ).applyConstraint(
+            width: 50,
+            height: 50,
+            centerBottomRightTo: sId(-1),
+          ),
+          Container(
+            color: Colors.blue,
+          ).applyConstraint(
+            width: 50,
+            height: 50,
+            centerBottomRightTo: sId(-3),
           )
         ],
       ),
