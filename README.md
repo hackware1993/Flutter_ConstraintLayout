@@ -46,6 +46,9 @@ insult him.
    This means that the click area can be shared between child elements without increasing nesting.
    Sometimes it may be necessary to combine with z-index)
 4. visibility control
+    1. visible
+    2. invisible
+    3. gone
 5. constraint integrity hint
 6. bias
 7. z-index
@@ -57,6 +60,33 @@ insult him.
 13. dimension ratio
 14. relative id
 15. wrapper constraints
+    1. topLeftTo
+    2. topCenterTo
+    3. topRightTo
+    4. centerLeftTo
+    5. centerTo
+    6. centerRightTo
+    7. bottomLeftTo
+    8. bottomCenterTo
+    9. bottomRightTo
+    10. centerHorizontalTo
+    11. centerVerticalTo
+    12. outTopLeftTo
+    13. outTopCenterTo
+    14. outTopRightTo
+    15. outCenterLeftTo
+    16. outCenterRightTo
+    17. outBottomLeftTo
+    18. outBottomCenterTo
+    19. outBottomRightTo
+    20. centerTopLeftTo
+    21. centerTopCenterTo
+    22. centerTopRightTo
+    23. centerCenterLeftTo
+    24. centerCenterRightTo
+    25. centerBottomLeftTo
+    26. centerBottomCenterTo
+    27. centerBottomRightTo
 16. staggered grid、grid、list(list is a special staggered grid, grid is also a special staggered
     grid)
 17. circle position
@@ -99,6 +129,8 @@ import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 ```
 
 # Example
+
+View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
 ```dart
 import 'package:flutter/material.dart';
