@@ -44,14 +44,14 @@ insult him.
 2. margin and goneMargin
 3. clickPadding (quickly expand the click area of child elements without changing their actual size.
    This means that the click area can be shared between child elements without increasing nesting.
-   Sometimes it may be necessary to combine with z-index)
+   Sometimes it may be necessary to combine with e-index)
 4. visibility control
     1. visible
     2. invisible
     3. gone
 5. constraint integrity hint
 6. bias
-7. z-index
+7. z-index(drawing order, default is child index)
 8. translate
 9. percentage layout
 10. guideline
@@ -90,6 +90,7 @@ insult him.
 16. staggered grid、grid、list(list is a special staggered grid, grid is also a special staggered
     grid)
 17. circle position
+18. e-index(event dispatch order, default is z-index)
 
 Coming soon:
 
@@ -116,12 +117,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.26-stable'
+      ref: 'v0.9.27-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.26-stable
+  flutter_constraintlayout: ^0.9.27-stable
 ```
 
 ```dart

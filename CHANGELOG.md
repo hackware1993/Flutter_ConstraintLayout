@@ -1,3 +1,7 @@
+# v0.9.27-stable
+
+add e-index support.
+
 # v0.9.26-stable
 
 enhance relative id.
