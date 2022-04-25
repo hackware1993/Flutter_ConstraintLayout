@@ -4,6 +4,7 @@ import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 import 'badge.dart';
 import 'barrier.dart';
 import 'circle_position.dart';
+import 'coming_soon.dart';
 import 'complex_list.dart';
 import 'dimension_ratio.dart';
 import 'grid.dart';
@@ -34,7 +35,7 @@ class ExampleHome extends StatelessWidget {
     'Vertical List': const VerticalListExample(),
     'Staggered Grid': const StaggeredGridExample(),
     'Circle Position': const CirclePositionExample(),
-    'Chain (Coming soon)': null,
+    'Chain (Coming soon)': const ComingSoonWidget(),
   };
 
   @override
@@ -53,32 +54,24 @@ class ExampleHome extends StatelessWidget {
           ).applyConstraint(
             topCenterTo: parent,
           ),
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                for (int i = 0; i < keyList.length; i++)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 40,
-                    child: TextButton(
-                      onPressed: exampleMap[keyList[i]] == null
-                          ? null
-                          : () {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute(builder: (_) {
-                                return exampleMap[keyList[i]]!;
-                              }));
-                            },
-                      child: Text(
-                        keyList[i],
-                        style: const TextStyle(
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                  )
-              ],
-            ),
+          ListView.builder(
+            itemBuilder: (_, index) {
+              return TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) {
+                    return exampleMap[keyList[index]]!;
+                  }));
+                },
+                child: Text(
+                  keyList[index],
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                ),
+              );
+            },
+            itemCount: keyList.length,
+            itemExtent: 40,
           ).applyConstraint(
             width: matchParent,
             height: matchConstraint,
