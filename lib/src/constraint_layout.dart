@@ -422,6 +422,7 @@ extension ConstrainedWidgetsExt on Widget {
     double maxHeight = matchParent,
     double? widthHeightRatio,
     bool? ratioBaseOnWidth,
+    int? eIndex,
   }) {
     return Constrained(
       key: key,
@@ -485,6 +486,7 @@ extension ConstrainedWidgetsExt on Widget {
         centerBottomLeftTo: centerBottomLeftTo,
         centerBottomCenterTo: centerBottomCenterTo,
         centerBottomRightTo: centerBottomRightTo,
+        eIndex: eIndex,
       ),
       child: this,
     );
@@ -909,6 +911,8 @@ class Constraint extends ConstraintDefine {
   /// to specify the ratioBaseOnWidth parameter. The default value of null means automatically decide
   final bool? ratioBaseOnWidth;
 
+  final int? eIndex;
+
   Constraint({
     ConstraintId? id,
     this.width = wrapContent,
@@ -969,6 +973,7 @@ class Constraint extends ConstraintDefine {
     this.maxHeight = matchParent,
     this.widthHeightRatio,
     this.ratioBaseOnWidth,
+    this.eIndex,
   }) : super(id);
 
   @override
@@ -1033,7 +1038,8 @@ class Constraint extends ConstraintDefine {
           minHeight == other.minHeight &&
           maxHeight == other.maxHeight &&
           widthHeightRatio == other.widthHeightRatio &&
-          ratioBaseOnWidth == other.ratioBaseOnWidth;
+          ratioBaseOnWidth == other.ratioBaseOnWidth &&
+          eIndex == other.eIndex;
 
   @override
   int get hashCode =>
@@ -1094,7 +1100,8 @@ class Constraint extends ConstraintDefine {
       minHeight.hashCode ^
       maxHeight.hashCode ^
       widthHeightRatio.hashCode ^
-      ratioBaseOnWidth.hashCode;
+      ratioBaseOnWidth.hashCode ^
+      eIndex.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -1357,7 +1364,8 @@ class Constraint extends ConstraintDefine {
         renderObject.parentData! as _ConstraintBoxData;
     bool needsLayout = false;
     bool needsPaint = false;
-    bool needsReorderChildren = false;
+    bool needsReorderPaintingOrder = false;
+    bool needsReorderEventOrder = false;
     bool needsRecalculateConstraints = false;
 
     if (parentData.id != id) {
@@ -1463,7 +1471,8 @@ class Constraint extends ConstraintDefine {
 
     if (parentData.zIndex != zIndex) {
       parentData.zIndex = zIndex;
-      needsReorderChildren = true;
+      needsReorderPaintingOrder = true;
+      needsReorderEventOrder = true;
       needsPaint = true;
     }
 
@@ -1548,6 +1557,11 @@ class Constraint extends ConstraintDefine {
       needsLayout = true;
     }
 
+    if (parentData.eIndex != eIndex) {
+      parentData.eIndex = eIndex;
+      needsReorderEventOrder = true;
+    }
+
     if (needsLayout) {
       AbstractNode? targetParent = renderObject.parent;
       if (needsRecalculateConstraints) {
@@ -1559,10 +1573,16 @@ class Constraint extends ConstraintDefine {
         targetParent.markNeedsLayout();
       }
     } else {
-      if (needsReorderChildren) {
+      if (needsReorderPaintingOrder) {
         AbstractNode? targetParent = renderObject.parent;
         if (targetParent is _ConstraintRenderBox) {
-          targetParent.needsReorderChildren = true;
+          targetParent.needsReorderPaintingOrder = true;
+        }
+      }
+      if (needsReorderEventOrder) {
+        AbstractNode? targetParent = renderObject.parent;
+        if (targetParent is _ConstraintRenderBox) {
+          targetParent.needsReorderEventOrder = true;
         }
       }
       if (needsPaint) {
@@ -1615,6 +1635,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? maxHeight;
   double? widthHeightRatio;
   bool? ratioBaseOnWidth;
+  int? eIndex;
 
   // for internal use
   late Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap;
@@ -1721,7 +1742,8 @@ class _ConstraintRenderBox extends RenderBox
   late double _height;
 
   bool _needsRecalculateConstraints = true;
-  bool _needsReorderChildren = true;
+  bool _needsReorderPaintingOrder = true;
+  bool _needsReorderEventOrder = true;
   int _buildNodeTreesCount = 0;
   final Map<ConstraintId, _ConstrainedNode> _helperNodeMap = HashMap();
 
@@ -1730,6 +1752,9 @@ class _ConstraintRenderBox extends RenderBox
 
   /// For paint
   late List<_ConstrainedNode> _paintingOrderList;
+
+  /// For event dispatch
+  late List<_ConstrainedNode> _eventOrderList;
 
   static const int maxTimeUsage = 20;
   Queue<int> layoutTimeUsage = Queue();
@@ -1869,10 +1894,16 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  set needsReorderChildren(bool value) {
-    if (_needsReorderChildren != value) {
-      _needsReorderChildren = value;
+  set needsReorderPaintingOrder(bool value) {
+    if (_needsReorderPaintingOrder != value) {
+      _needsReorderPaintingOrder = value;
       markNeedsPaint();
+    }
+  }
+
+  set needsReorderEventOrder(bool value) {
+    if (_needsReorderEventOrder != value) {
+      _needsReorderEventOrder = value;
     }
   }
 
@@ -2219,7 +2250,8 @@ class _ConstraintRenderBox extends RenderBox
 
   void markNeedsRecalculateConstraints() {
     _needsRecalculateConstraints = true;
-    _needsReorderChildren = true;
+    _needsReorderPaintingOrder = true;
+    _needsReorderEventOrder = true;
   }
 
   @override
@@ -2285,6 +2317,7 @@ class _ConstraintRenderBox extends RenderBox
       /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
       _layoutOrderList = nodesMap.values.toList();
       _paintingOrderList = nodesMap.values.toList();
+      _eventOrderList = nodesMap.values.toList();
 
       _layoutOrderList.sort((left, right) {
         return left.getDepth() - right.getDepth();
@@ -2294,6 +2327,14 @@ class _ConstraintRenderBox extends RenderBox
         int result = left.zIndex - right.zIndex;
         if (result == 0) {
           result = left.index - right.index;
+        }
+        return result;
+      });
+
+      _eventOrderList.sort((left, right) {
+        int result = right.eIndex - left.eIndex;
+        if (result == 0) {
+          result = right.index - left.index;
         }
         return result;
       });
@@ -2309,7 +2350,8 @@ class _ConstraintRenderBox extends RenderBox
       }());
 
       _needsRecalculateConstraints = false;
-      _needsReorderChildren = false;
+      _needsReorderPaintingOrder = false;
+      _needsReorderEventOrder = false;
     }
 
     _layoutByConstrainedNodeTrees();
@@ -2848,7 +2890,18 @@ class _ConstraintRenderBox extends RenderBox
     BoxHitTestResult result, {
     required Offset position,
   }) {
-    for (final element in _paintingOrderList.reversed) {
+    if (_needsReorderEventOrder) {
+      _eventOrderList.sort((left, right) {
+        int result = right.eIndex - left.eIndex;
+        if (result == 0) {
+          result = right.index - left.index;
+        }
+        return result;
+      });
+      _needsReorderEventOrder = false;
+    }
+
+    for (final element in _eventOrderList) {
       if (element.shouldNotPaint()) {
         continue;
       }
@@ -2912,7 +2965,7 @@ class _ConstraintRenderBox extends RenderBox
       return true;
     }());
 
-    if (_needsReorderChildren) {
+    if (_needsReorderPaintingOrder) {
       _paintingOrderList.sort((left, right) {
         int result = left.zIndex - right.zIndex;
         if (result == 0) {
@@ -2920,7 +2973,7 @@ class _ConstraintRenderBox extends RenderBox
         }
         return result;
       });
-      _needsReorderChildren = false;
+      _needsReorderPaintingOrder = false;
     }
 
     for (final element in _paintingOrderList) {
@@ -3146,6 +3199,8 @@ class _ConstrainedNode {
   double get height => parentData.height!;
 
   int get zIndex => parentData.zIndex ?? index;
+
+  int get eIndex => parentData.eIndex ?? zIndex;
 
   Offset get offset {
     if (translateConstraint) {
@@ -3459,6 +3514,7 @@ class _HelperBox extends RenderBox {
     constraintBoxData.maxHeight = matchParent;
     constraintBoxData.widthHeightRatio = null;
     constraintBoxData.ratioBaseOnWidth = null;
+    constraintBoxData.eIndex = null;
     constraintBoxData._direction = null;
     constraintBoxData._referencedIds = null;
     constraintBoxData._isGuideline = false;
