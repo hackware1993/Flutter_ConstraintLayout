@@ -129,21 +129,11 @@ dependencies:
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 ```
 
-# Example
+# Example [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
-View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+![effect.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
-
-class Example extends StatefulWidget {
-  const Example({Key? key}) : super(key: key);
-
-  @override
-  State createState() => ExampleState();
-}
-
 class ExampleState extends State<Example> {
   double x = 0;
   double y = 0;
@@ -350,16 +340,13 @@ class ExampleState extends State<Example> {
 }
 ```
 
-![example.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
-
 # Advanced usage
 
 1. guideline [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
+![guideline.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/guideline.webp?raw=true)
 
+```dart
 class GuidelineExample extends StatelessWidget {
   const GuidelineExample({Key? key}) : super(key: key);
 
@@ -411,14 +398,11 @@ class GuidelineExample extends StatelessWidget {
 }
 ```
 
-![guideline.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/guideline.webp?raw=true)
-
 2. barrier [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
+![barrier.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/barrier.gif?raw=true)
 
+```dart
 class BarrierExample extends StatelessWidget {
   const BarrierExample({Key? key}) : super(key: key);
 
@@ -479,60 +463,63 @@ class BarrierExample extends StatelessWidget {
 }
 ```
 
-![barrier.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/barrier.gif?raw=true)
-
 3. badge [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
+![badge.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/badge.webp?raw=true)
 
+```dart
 class BadgeExample extends StatelessWidget {
   const BadgeExample({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     ConstraintId anchor = ConstraintId('anchor');
-    return MaterialApp(
-      home: Scaffold(
-        body: ConstraintLayout(
-          children: [
-            Container(
-              color: Colors.yellow,
-            ).applyConstraint(
-              width: 200,
-              height: 200,
-              centerTo: parent,
-              id: anchor,
-            ),
-            Container(
-              color: Colors.green,
-              child: const Text(
-                'Indeterminate badge size',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 20,
-                ),
+    return Scaffold(
+      body: ConstraintLayout(
+        children: [
+          Container(
+            color: Colors.yellow,
+          ).applyConstraint(
+            width: 200,
+            height: 200,
+            centerTo: parent,
+            id: anchor,
+          ),
+          Container(
+            color: Colors.green,
+            child: const Text(
+              'Indeterminate badge size',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
               ),
-            ).applyConstraint(
-              width: wrapContent,
-              height: wrapContent,
-              left: anchor.right,
-              bottom: anchor.top,
-              translate: const Offset(-0.5, 0.5),
-              percentageTranslate: true,
-            )
-          ],
-        ),
+            ),
+          ).applyConstraint(
+            left: anchor.right,
+            bottom: anchor.top,
+            translate: const Offset(-0.5, 0.5),
+            percentageTranslate: true,
+          ),
+          Container(
+            color: Colors.green,
+          ).applyConstraint(
+            width: 100,
+            height: 100,
+            left: anchor.right,
+            right: anchor.right,
+            top: anchor.bottom,
+            bottom: anchor.bottom,
+          )
+        ],
       ),
     );
   }
 }
 ```
 
-![badge.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/badge.webp?raw=true)
-
 4. grid [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+
+![grid.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/grid.webp?raw=true)
 
 ```dart
 class GridExample extends StatelessWidget {
@@ -578,9 +565,9 @@ class GridExample extends StatelessWidget {
 }
 ```
 
-![grid.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/grid.webp?raw=true)
-
 5. staggered grid [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+
+![staggered_grid.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/staggered_grid.gif?raw=true)
 
 ```dart
 class StaggeredGridExample extends StatelessWidget {
@@ -685,9 +672,9 @@ class StaggeredGridExample extends StatelessWidget {
 }
 ```
 
-![staggered_grid.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/staggered_grid.gif?raw=true)
-
 6. circle position [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+
+![circle_position.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/circle_position.gif?raw=true)
 
 ```dart
 class CirclePositionExampleState extends State<CirclePositionExample> {
@@ -842,17 +829,12 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
 }
 ```
 
-![circle_position.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/circle_position.gif?raw=true)
-
 # Performance optimization
 
 1. When the layout is complex, if the child elements need to be repainted frequently, it is
    recommended to use RepaintBoundary to improve performance.
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout.dart';
-
 class OffPaintExample extends StatelessWidget {
   const OffPaintExample({Key? key}) : super(key: key);
 
@@ -881,9 +863,6 @@ class OffPaintExample extends StatelessWidget {
    can use OffBuildWidget to avoid the rebuilding of the child element.
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout.dart';
-
 class OffBuildExample extends StatelessWidget {
   const OffBuildExample({Key? key}) : super(key: key);
 
