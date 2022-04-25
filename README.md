@@ -9,7 +9,7 @@ flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nest
 
 View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
-**Flutter ConstraintLayout has extremely high layout performance because it does not require linear
+**Flutter ConstraintLayout has extremely high layout performance. It does not require linear
 equations to solve. It is recommended to use ConstraintLayout at the top level. For extremely
 complex layout(One thousand child elements, two thousand constraints), layout and drawing total time
 within 5 milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be
@@ -690,7 +690,7 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
   void initState() {
     super.initState();
     calculateClockAngle();
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (_) {
       calculateClockAngle();
     });
   }
@@ -739,39 +739,34 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
             translateConstraint: true,
           ),
           for (int i = 0; i < 12; i++)
-            Container(
-              alignment: Alignment.center,
-              child: Text(
-                '${i + 1}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 25,
-                ),
+            Text(
+              '${i + 1}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
               ),
             ).applyConstraint(
-              width: 50,
-              height: 50,
               centerTo: rId(0),
               translate: circleTranslate(
-                radius: 200,
+                radius: 205,
                 angle: (i + 1) * 30,
               ),
             ),
           for (int i = 0; i < 60; i++)
-            Transform.rotate(
-              angle: pi + pi * (i * 6 / 180),
-              child: Container(
-                color: Colors.grey,
-                margin: const EdgeInsets.only(
-                  top: 405,
+            if (i % 5 != 0)
+              Transform.rotate(
+                angle: pi + pi * (i * 6 / 180),
+                child: Container(
+                  color: Colors.grey,
+                  margin: const EdgeInsets.only(
+                    top: 405,
+                  ),
                 ),
+              ).applyConstraint(
+                width: 1,
+                height: 415,
+                centerTo: rId(0),
               ),
-            ).applyConstraint(
-              width: 1,
-              height: 415,
-              centerTo: rId(0),
-              visibility: i % 5 == 0 ? gone : visible,
-            ),
           Transform.rotate(
             angle: pi + pi * (hour * 30 / 180),
             alignment: Alignment.topCenter,
