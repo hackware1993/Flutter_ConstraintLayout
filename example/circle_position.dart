@@ -147,7 +147,7 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
             percentageTranslate: true,
           ),
           Text(
-            '$hour:$minute:$second',
+            '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:${second.toString().padLeft(2, '0')}',
             style: const TextStyle(
               fontSize: 40,
             ),
