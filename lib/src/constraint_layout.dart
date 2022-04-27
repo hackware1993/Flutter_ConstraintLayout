@@ -2018,11 +2018,11 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   /// There should be no loop constraints
-  static void _debugCheckLoopConstraints(
-      List<_ConstrainedNode> nodeList, bool selfSizeConfirmed) {
+  static void _debugCheckLoopConstraints(List<_ConstrainedNode> nodeList,
+      bool selfSizeConfirmed, int parentDepth) {
     for (final element in nodeList) {
       try {
-        element.getDepth(selfSizeConfirmed);
+        element.getDepth(selfSizeConfirmed, parentDepth);
       } on StackOverflowError catch (_) {
         throw ConstraintLayoutException(
             'There are some loop constraints, please check the code. For layout performance considerations, constraints are always one-way, and there should be no two child elements directly or indirectly restrain each other. Each constraint should describe exactly where the child elements are located. Use Guideline to break loop constraints.');
@@ -2454,7 +2454,7 @@ class _ConstraintRenderBox extends RenderBox
           if (_debugCheckConstraints) {
             List<_ConstrainedNode> nodeList = nodesMap.values.toList();
             _debugCheckConstraintsIntegrity(nodeList);
-            _debugCheckLoopConstraints(nodeList, true);
+            _debugCheckLoopConstraints(nodeList, true, 0);
           }
           return true;
         }());
@@ -2463,14 +2463,15 @@ class _ConstraintRenderBox extends RenderBox
         assert(() {
           if (_debugCheckConstraints) {
             List<_ConstrainedNode> nodeList = nodesMap.values.toList();
+            late _ConstrainedNode parentNode;
             for (int i = 0; i < nodeList.length; i++) {
               if (nodeList[i].isParent()) {
-                nodeList.removeAt(i);
+                parentNode = nodeList.removeAt(i);
                 break;
               }
             }
             _debugCheckConstraintsIntegrity(nodeList);
-            _debugCheckLoopConstraints(nodeList, false);
+            _debugCheckLoopConstraints(nodeList, false, parentNode.depth);
           }
           return true;
         }());
@@ -2478,13 +2479,18 @@ class _ConstraintRenderBox extends RenderBox
 
       /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
       _layoutOrderList = nodesMap.values.toList();
-      _layoutOrderList.sort((left, right) {
-        return left.getDepth(selfSizeConfirmed) -
-            right.getDepth(selfSizeConfirmed);
-      });
 
-      if (!selfSizeConfirmed) {
-        nodesMap.remove(parent);
+      if (selfSizeConfirmed) {
+        _layoutOrderList.sort((left, right) {
+          return left.getDepth(selfSizeConfirmed, 0) -
+              right.getDepth(selfSizeConfirmed, 0);
+        });
+      } else {
+        _ConstrainedNode parentNode = nodesMap.remove(parent)!;
+        _layoutOrderList.sort((left, right) {
+          return left.getDepth(selfSizeConfirmed, parentNode.depth) -
+              right.getDepth(selfSizeConfirmed, parentNode.depth);
+        });
       }
 
       _paintingOrderList = nodesMap.values.toList();
@@ -3348,7 +3354,7 @@ class _ConstraintRenderBox extends RenderBox
           paragraphBuilder.pushStyle(ui.TextStyle(
             color: Colors.black,
           ));
-          paragraphBuilder.addText("depth ${element.getDepth(null)}");
+          paragraphBuilder.addText("depth ${element.getDepth(null, -1)}");
           ui.Paragraph paragraph = paragraphBuilder.build();
           paragraph.layout(ui.ParagraphConstraints(
             width: element.getMeasuredWidth(),
@@ -3666,8 +3672,8 @@ class _ConstrainedNode {
     return baseline;
   }
 
-  int getDepthFor(
-      _ConstrainedNode? constrainedNode, bool? parentSizeConfirmed) {
+  int getDepthFor(_ConstrainedNode? constrainedNode, bool? parentSizeConfirmed,
+      int parentDepth) {
     if (constrainedNode == null) {
       return -1;
     }
@@ -3680,29 +3686,34 @@ class _ConstrainedNode {
         }
       }
     }
-    return constrainedNode.getDepth(parentSizeConfirmed);
+    return constrainedNode.getDepth(parentSizeConfirmed, parentDepth);
   }
 
-  int getDepth(bool? parentSizeConfirmed) {
+  int getDepth(bool? parentSizeConfirmed, int parentDepth) {
     if (depth < 0) {
       if (isBarrier) {
         List<int> list = [];
         for (final id in referencedIds!) {
           list.add(parentData._constrainedNodeMap[id]!
-              .getDepth(parentSizeConfirmed));
+              .getDepth(parentSizeConfirmed, parentDepth));
         }
         list.sort((left, right) => left - right);
         depth = list.last + 1;
       } else {
         List<int> list = [
-          getDepthFor(leftConstraint, parentSizeConfirmed),
-          getDepthFor(topConstraint, parentSizeConfirmed),
-          getDepthFor(rightConstraint, parentSizeConfirmed),
-          getDepthFor(bottomConstraint, parentSizeConfirmed),
-          getDepthFor(baselineConstraint, parentSizeConfirmed),
+          getDepthFor(leftConstraint, parentSizeConfirmed, parentDepth),
+          getDepthFor(topConstraint, parentSizeConfirmed, parentDepth),
+          getDepthFor(rightConstraint, parentSizeConfirmed, parentDepth),
+          getDepthFor(bottomConstraint, parentSizeConfirmed, parentDepth),
+          getDepthFor(baselineConstraint, parentSizeConfirmed, parentDepth),
         ];
         list.sort((left, right) => left - right);
         depth = list.last + 1;
+        if (parentSizeConfirmed == false) {
+          if (width == matchConstraint || height == matchConstraint) {
+            depth = max(depth, parentDepth + 1);
+          }
+        }
       }
     }
     return depth;
@@ -3778,7 +3789,7 @@ class _ConstrainedNode {
         }
       }
     }
-    map['depth'] = getDepth(null);
+    map['depth'] = getDepth(null, -1);
     return map;
   }
 }
