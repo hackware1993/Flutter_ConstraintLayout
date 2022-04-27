@@ -2357,7 +2357,7 @@ class _ConstraintRenderBox extends RenderBox
       child = childParentData.nextSibling;
     }
 
-    parentNode.depth = childCount;
+    parentNode.depth = childCount + 1;
 
     return nodesMap;
   }
@@ -2741,13 +2741,13 @@ class _ConstraintRenderBox extends RenderBox
               if (element.leftAlignType == _AlignType.left) {
                 left = element.leftConstraint!.getX();
               } else {
-                left = element.leftConstraint!.getRight(size);
+                left = element.leftConstraint!.getRight(this);
               }
               double right;
               if (element.rightAlignType == _AlignType.left) {
                 right = element.rightConstraint!.getX();
               } else {
-                right = element.rightConstraint!.getRight(size);
+                right = element.rightConstraint!.getRight(this);
               }
               double leftMargin;
               if (element.leftConstraint!.notLaidOut) {
@@ -2829,13 +2829,13 @@ class _ConstraintRenderBox extends RenderBox
               if (element.topAlignType == _AlignType.top) {
                 top = element.topConstraint!.getY();
               } else {
-                top = element.topConstraint!.getBottom(size);
+                top = element.topConstraint!.getBottom(this);
               }
               double bottom;
               if (element.bottomAlignType == _AlignType.top) {
                 bottom = element.bottomConstraint!.getY();
               } else {
-                bottom = element.bottomConstraint!.getBottom(size);
+                bottom = element.bottomConstraint!.getBottom(this);
               }
               double topMargin;
               if (element.topConstraint!.notLaidOut) {
@@ -2956,9 +2956,9 @@ class _ConstraintRenderBox extends RenderBox
         } else if (direction == BarrierDirection.top) {
           list.add(node.parentData._constrainedNodeMap[id]!.getY());
         } else if (direction == BarrierDirection.right) {
-          list.add(node.parentData._constrainedNodeMap[id]!.getRight(size));
+          list.add(node.parentData._constrainedNodeMap[id]!.getRight());
         } else {
-          list.add(node.parentData._constrainedNodeMap[id]!.getBottom(size));
+          list.add(node.parentData._constrainedNodeMap[id]!.getBottom());
         }
       }
       list.sort((left, right) {
@@ -2990,13 +2990,13 @@ class _ConstraintRenderBox extends RenderBox
         if (node.leftAlignType == _AlignType.left) {
           left = node.leftConstraint!.getX();
         } else {
-          left = node.leftConstraint!.getRight(size);
+          left = node.leftConstraint!.getRight(this);
         }
         double right;
         if (node.rightAlignType == _AlignType.left) {
           right = node.rightConstraint!.getX();
         } else {
-          right = node.rightConstraint!.getRight(size);
+          right = node.rightConstraint!.getRight(this);
         }
         double leftMargin;
         if (node.leftConstraint!.notLaidOut) {
@@ -3027,7 +3027,7 @@ class _ConstraintRenderBox extends RenderBox
         if (node.leftAlignType == _AlignType.left) {
           left = node.leftConstraint!.getX();
         } else {
-          left = node.leftConstraint!.getRight(size);
+          left = node.leftConstraint!.getRight(this);
         }
         if (node.leftConstraint!.notLaidOut) {
           left += _getLeftInsets(goneMargin, node.percentageMargin, size.width);
@@ -3040,7 +3040,7 @@ class _ConstraintRenderBox extends RenderBox
         if (node.rightAlignType == _AlignType.left) {
           right = node.rightConstraint!.getX();
         } else {
-          right = node.rightConstraint!.getRight(size);
+          right = node.rightConstraint!.getRight(this);
         }
         if (node.rightConstraint!.notLaidOut) {
           right -=
@@ -3059,13 +3059,13 @@ class _ConstraintRenderBox extends RenderBox
         if (node.topAlignType == _AlignType.top) {
           top = node.topConstraint!.getY();
         } else {
-          top = node.topConstraint!.getBottom(size);
+          top = node.topConstraint!.getBottom(this);
         }
         double bottom;
         if (node.bottomAlignType == _AlignType.top) {
           bottom = node.bottomConstraint!.getY();
         } else {
-          bottom = node.bottomConstraint!.getBottom(size);
+          bottom = node.bottomConstraint!.getBottom(this);
         }
         double topMargin;
         if (node.topConstraint!.notLaidOut) {
@@ -3096,7 +3096,7 @@ class _ConstraintRenderBox extends RenderBox
         if (node.topAlignType == _AlignType.top) {
           top = node.topConstraint!.getY();
         } else {
-          top = node.topConstraint!.getBottom(size);
+          top = node.topConstraint!.getBottom(this);
         }
         if (node.topConstraint!.notLaidOut) {
           top += _getTopInsets(goneMargin, node.percentageMargin, size.height);
@@ -3109,7 +3109,7 @@ class _ConstraintRenderBox extends RenderBox
         if (node.bottomAlignType == _AlignType.top) {
           bottom = node.bottomConstraint!.getY();
         } else {
-          bottom = node.bottomConstraint!.getBottom(size);
+          bottom = node.bottomConstraint!.getBottom(this);
         }
         if (node.bottomConstraint!.notLaidOut) {
           bottom -=
@@ -3124,7 +3124,7 @@ class _ConstraintRenderBox extends RenderBox
           offsetY = node.baselineConstraint!.getY() -
               node.getDistanceToBaseline(node.textBaseline, false);
         } else if (node.baselineAlignType == _AlignType.bottom) {
-          offsetY = node.baselineConstraint!.getBottom(size) -
+          offsetY = node.baselineConstraint!.getBottom(this) -
               node.getDistanceToBaseline(node.textBaseline, false);
         } else {
           offsetY = node.baselineConstraint!
@@ -3585,16 +3585,16 @@ class _ConstrainedNode {
     return offset.dy;
   }
 
-  double getRight([Size? size]) {
+  double getRight([RenderBox? parent]) {
     if (isParent()) {
-      return size!.width;
+      return parent!.size.width;
     }
     return getX() + getMeasuredWidth();
   }
 
-  double getBottom([Size? size]) {
+  double getBottom([RenderBox? parent]) {
     if (isParent()) {
-      return size!.height;
+      return parent!.size.height;
     }
     return getY() + getMeasuredHeight();
   }
@@ -4163,14 +4163,10 @@ class _BarrierRenderBox extends _HelperBox {
     constraintBoxData._referencedIds = referencedIds;
     if (direction == BarrierDirection.top ||
         direction == BarrierDirection.bottom) {
-      constraintBoxData.width = matchParent;
-      constraintBoxData.height = 0;
       constraintBoxData.top = parent.top;
       constraintBoxData.left = parent.left;
       constraintBoxData.right = parent.right;
     } else {
-      constraintBoxData.width = 0;
-      constraintBoxData.height = matchParent;
       constraintBoxData.left = parent.left;
       constraintBoxData.top = parent.top;
       constraintBoxData.bottom = parent.bottom;
