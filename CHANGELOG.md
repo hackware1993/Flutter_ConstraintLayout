@@ -1,3 +1,7 @@
+# v0.9.28-alpha2
+
+fix self wrapContent bugs.
+
 # v0.9.28-alpha
 
 add self wrapContent support.
