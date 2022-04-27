@@ -91,13 +91,13 @@ insult him.
     grid)
 17. circle position
 18. e-index(event dispatch order, default is z-index)
+19. self wrapContent
 
 Coming soon:
 
 1. chain
 2. constraints visualization
-3. self wrapContent
-4. more...
+3. more...
 
 Support platform:
 
