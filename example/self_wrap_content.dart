@@ -27,7 +27,7 @@ class SelfWrapContentExample extends StatelessWidget {
             Container(
               color: Colors.yellow,
             ).applyConstraint(
-              width: 300,
+              width: 250,
               height: 150,
               topLeftTo: parent,
               margin: const EdgeInsets.only(
