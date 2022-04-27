@@ -1,3 +1,7 @@
+# v0.9.28-alpha
+
+add self wrapContent support.
+
 # v0.9.27-stable
 
 add e-index support.

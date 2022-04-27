@@ -91,13 +91,13 @@ insult him.
     grid)
 17. circle position
 18. e-index(event dispatch order, default is z-index)
+19. self wrapContent
 
 Coming soon:
 
 1. chain
 2. constraints visualization
-3. self wrapContent
-4. more...
+3. more...
 
 Support platform:
 
@@ -117,12 +117,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.27-stable'
+      ref: 'v0.9.28-alpha'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.27-stable
+  flutter_constraintlayout: ^0.9.28-alpha
 ```
 
 ```dart

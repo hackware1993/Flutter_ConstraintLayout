@@ -1,6 +1,6 @@
 name: flutter_constraintlayout
 description: A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for Android and AutoLayout for iOS.
-version: 0.9.27-stable
+version: 0.9.28-alpha
 anthor: hackware
 homepage: https://github.com/hackware1993/Flutter-ConstraintLayout
 
@@ -36,3 +36,4 @@ flutter:
     - example/vertical_list.dart
     - example/staggered_grid.dart
     - example/circle_position.dart
+    - example/self_wrap_content.dart
