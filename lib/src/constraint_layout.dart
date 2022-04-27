@@ -534,6 +534,15 @@ extension ConstrainedWidgetsExt on Widget {
       child: this,
     );
   }
+
+  Widget debugWrap([Color? color]) {
+    return Center(
+      child: Container(
+        color: color ?? Colors.black,
+        child: this,
+      ),
+    );
+  }
 }
 
 class OffBuildWidget extends StatelessWidget {
@@ -2606,6 +2615,14 @@ class _ConstraintRenderBox extends RenderBox
         double contentBottom = -double.infinity;
         for (int j = 0; j < i; j++) {
           _ConstrainedNode sizeConfirmedChild = _layoutOrderList[j];
+          if (sizeConfirmedChild.isBarrier) {
+            if (sizeConfirmedChild.direction == BarrierDirection.top ||
+                sizeConfirmedChild.direction == BarrierDirection.bottom) {
+              sizeConfirmedChild.helperSize = Size(size.width, 0);
+            } else {
+              sizeConfirmedChild.helperSize = Size(0, size.height);
+            }
+          }
           sizeConfirmedChild.offset = calculateChildOffset(sizeConfirmedChild);
           EdgeInsets margin = sizeConfirmedChild.margin;
           EdgeInsets goneMargin = sizeConfirmedChild.goneMargin;
@@ -2672,6 +2689,14 @@ class _ConstraintRenderBox extends RenderBox
                 : resolvedHeight);
         for (int j = 0; j < i; j++) {
           _ConstrainedNode sizeConfirmedChild = _layoutOrderList[j];
+          if (sizeConfirmedChild.isBarrier) {
+            if (sizeConfirmedChild.direction == BarrierDirection.top ||
+                sizeConfirmedChild.direction == BarrierDirection.bottom) {
+              sizeConfirmedChild.helperSize = Size(size.width, 0);
+            } else {
+              sizeConfirmedChild.helperSize = Size(0, size.height);
+            }
+          }
           sizeConfirmedChild.offset = calculateChildOffset(sizeConfirmedChild);
           if (sizeConfirmedChild.callback != null) {
             sizeConfirmedChild.callback!.call(
@@ -2911,9 +2936,7 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       /// Helper widgets may have no RenderObject
-      if (element.renderBox == null) {
-        element.helperSize = Size(minWidth, minHeight);
-      } else {
+      if (element.renderBox != null) {
         /// Due to the design of the Flutter framework, even if a child element is gone, it still has to be laid out
         /// I don't understand why the official design is this way
         element.renderBox!.layout(
@@ -2925,7 +2948,18 @@ class _ConstraintRenderBox extends RenderBox
           ),
           parentUsesSize: true,
         );
-        if (element.isGuideline || element.isBarrier) {
+      }
+      if (element.isGuideline) {
+        element.helperSize = Size(minWidth, minHeight);
+      } else if (element.isBarrier) {
+        if (selfSizeConfirmed) {
+          if (element.direction == BarrierDirection.top ||
+              element.direction == BarrierDirection.bottom) {
+            element.helperSize = Size(size.width, 0);
+          } else {
+            element.helperSize = Size(0, size.height);
+          }
+        } else {
           element.helperSize = Size(minWidth, minHeight);
         }
       }
