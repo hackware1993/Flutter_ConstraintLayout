@@ -125,12 +125,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.28-beta'
+      ref: 'v0.9.28-beta2'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.28-beta
+  flutter_constraintlayout: ^0.9.28-beta2
 ```
 
 ```dart
