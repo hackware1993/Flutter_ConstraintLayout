@@ -91,7 +91,15 @@ insult him.
     grid)
 17. circle position
 18. e-index(event dispatch order, default is z-index)
-19. self wrapContent
+19. child size can be set to:
+    1. fixed size(>=0)
+    2. matchParent
+    3. wrapContent(minimum and maximum supported)
+    4. matchConstraint
+20. self size can be set to:
+    1. fixed size(>=0)
+    2. matchParent
+    3. wrapContent(minimum and maximum are temporarily not supported)
 
 Coming soon:
 
@@ -117,12 +125,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v0.9.28-alpha2'
+      ref: 'v0.9.28-beta'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^0.9.28-alpha2
+  flutter_constraintlayout: ^0.9.28-beta
 ```
 
 ```dart
