@@ -2419,7 +2419,7 @@ class _ConstraintRenderBox extends RenderBox
 
     double resolvedHeight;
     if (_height >= 0) {
-      resolvedHeight = constraints.constrainWidth(_height);
+      resolvedHeight = constraints.constrainHeight(_height);
     } else {
       if (_height == matchParent) {
         if (constraints.maxHeight == double.infinity) {
