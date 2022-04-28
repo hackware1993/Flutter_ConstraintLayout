@@ -1,3 +1,7 @@
+# v0.9.28-beta3
+
+optimize self wrapContent calculate.
+
 # v0.9.28-beta2
 
 fix a self wrapContent bug.
