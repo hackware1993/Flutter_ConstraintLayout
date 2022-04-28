@@ -2476,10 +2476,8 @@ class _ConstraintRenderBox extends RenderBox
               resolvedHeight == wrapContent
                   ? constraints.minHeight
                   : resolvedHeight);
-          double contentLeft = double.infinity;
-          double contentTop = double.infinity;
-          double contentRight = -double.infinity;
-          double contentBottom = -double.infinity;
+          double contentWidth = -double.infinity;
+          double contentHeight = -double.infinity;
           for (int j = 0; j < i; j++) {
             _ConstrainedNode sizeConfirmedChild = _layoutOrderList[j];
 
@@ -2509,69 +2507,43 @@ class _ConstraintRenderBox extends RenderBox
 
             sizeConfirmedChild.offset =
                 calculateChildOffset(sizeConfirmedChild);
-            EdgeInsets margin = sizeConfirmedChild.margin;
-            EdgeInsets goneMargin = sizeConfirmedChild.goneMargin;
-            double childLeft = max(sizeConfirmedChild.getX(), 0);
-            double childTop = max(sizeConfirmedChild.getY(), 0);
-            double childRight =
-                childLeft + sizeConfirmedChild.getMeasuredWidth();
-            double childBottom =
-                childTop + sizeConfirmedChild.getMeasuredHeight();
+            double childSpanWidth = sizeConfirmedChild.getMeasuredWidth();
+            double childSpanHeight = sizeConfirmedChild.getMeasuredHeight();
 
-            if (element.leftConstraint != null) {
-              if (element.leftConstraint!.notLaidOut) {
-                childLeft -= _getLeftInsets(goneMargin);
-              } else {
-                childLeft -= _getLeftInsets(margin);
-              }
+            if (sizeConfirmedChild.leftConstraint != null &&
+                sizeConfirmedChild.rightConstraint != null) {
+            } else if (sizeConfirmedChild.leftConstraint != null) {
+              childSpanWidth += sizeConfirmedChild.getX();
+            } else if (sizeConfirmedChild.rightConstraint != null) {
+              childSpanWidth += size.width - sizeConfirmedChild.getRight();
+            } else {
+              /// It is not possible to execute this branch
             }
 
-            if (element.topConstraint != null) {
-              if (element.topConstraint!.notLaidOut) {
-                childTop -= _getTopInsets(goneMargin);
-              } else {
-                childTop -= _getTopInsets(margin);
-              }
+            if (sizeConfirmedChild.topConstraint != null &&
+                sizeConfirmedChild.bottomConstraint != null) {
+            } else if (sizeConfirmedChild.topConstraint != null) {
+              childSpanHeight += sizeConfirmedChild.getY();
+            } else if (sizeConfirmedChild.bottomConstraint != null) {
+              childSpanHeight += size.height - sizeConfirmedChild.getBottom();
+            } else {
+              /// It is not possible to execute this branch
             }
 
-            if (element.rightConstraint != null) {
-              if (element.rightConstraint!.notLaidOut) {
-                childRight += _getRightInsets(goneMargin);
-              } else {
-                childRight += _getRightInsets(margin);
-              }
+            if (childSpanWidth > contentWidth) {
+              contentWidth = childSpanWidth;
             }
 
-            if (element.bottomConstraint != null) {
-              if (element.bottomConstraint!.notLaidOut) {
-                childBottom += _getBottomInsets(goneMargin);
-              } else {
-                childBottom += _getBottomInsets(margin);
-              }
-            }
-
-            if (childLeft < contentLeft) {
-              contentLeft = childLeft;
-            }
-
-            if (childTop < contentTop) {
-              contentTop = childTop;
-            }
-
-            if (childRight > contentRight) {
-              contentRight = childRight;
-            }
-
-            if (childBottom > contentBottom) {
-              contentBottom = childBottom;
+            if (childSpanHeight > contentHeight) {
+              contentHeight = childSpanHeight;
             }
           }
           size = Size(
               resolvedWidth == wrapContent
-                  ? constraints.constrainWidth(contentRight - contentLeft)
+                  ? constraints.constrainWidth(contentWidth)
                   : resolvedWidth,
               resolvedHeight == wrapContent
-                  ? constraints.constrainHeight(contentBottom - contentTop)
+                  ? constraints.constrainHeight(contentHeight)
                   : resolvedHeight);
           for (int j = 0; j < i; j++) {
             _ConstrainedNode sizeConfirmedChild = _layoutOrderList[j];
