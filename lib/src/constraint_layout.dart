@@ -596,10 +596,6 @@ bool _debugEnsureNegativePercent(String name, double? percent) {
 }
 
 final ConstraintId parent = ConstraintId('parent');
-final _ConstrainedNode _parentNode = _ConstrainedNode()
-  ..nodeId = parent
-  ..depth = 0
-  ..notLaidOut = false;
 const double matchConstraint = -3.1415926;
 const double matchParent = -2.7182818;
 const double wrapContent = -0.6180339;
@@ -2018,11 +2014,11 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   /// There should be no loop constraints
-  static void _debugCheckLoopConstraints(List<_ConstrainedNode> nodeList,
-      bool selfSizeConfirmed, int parentDepth) {
+  static void _debugCheckLoopConstraints(
+      List<_ConstrainedNode> nodeList, bool selfSizeConfirmed) {
     for (final element in nodeList) {
       try {
-        element.getDepth(selfSizeConfirmed, parentDepth);
+        element.getDepth(selfSizeConfirmed);
       } on StackOverflowError catch (_) {
         throw ConstraintLayoutException(
             'There are some loop constraints, please check the code. For layout performance considerations, constraints are always one-way, and there should be no two child elements directly or indirectly restrain each other. Each constraint should describe exactly where the child elements are located. Use Guideline to break loop constraints.');
@@ -2136,129 +2132,17 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  Map<ConstraintId, _ConstrainedNode> _buildConstrainedNodeTrees() {
+  Map<ConstraintId, _ConstrainedNode> _buildConstrainedNodeTrees(
+      bool selfSizeConfirmed) {
     Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
     _buildNodeTreesCount++;
-
-    _ConstrainedNode _getConstrainedNodeForChild(ConstraintId id,
-        [int? childIndex]) {
-      if (id == parent) {
-        return _parentNode;
-      }
-
-      if (id is RelativeConstraintId) {
-        int targetIndex = childIndex! + id.siblingIndexOffset;
-        id = IndexConstraintId(targetIndex);
-      }
-
-      /// Fewer reads to nodesMap for faster constraint building
-      _ConstrainedNode? node = id.getCacheNode(_buildNodeTreesCount ^ hashCode);
-      if (node != null) {
-        return node;
-      }
-
-      node = nodesMap[id];
-      if (node == null) {
-        node = _ConstrainedNode()..nodeId = id;
-        nodesMap[id] = node;
-      }
-      id.setCacheNode(_buildNodeTreesCount ^ hashCode, node);
-      return node;
-    }
-
-    if (_helperNodeMap.isNotEmpty) {
-      nodesMap.addAll(_helperNodeMap);
-      for (final element in _helperNodeMap.values) {
-        if (element.parentData.left != null) {
-          element.leftConstraint =
-              _getConstrainedNodeForChild(element.parentData.left!.id!);
-          element.leftAlignType = element.parentData.left!.type;
-        }
-
-        if (element.parentData.top != null) {
-          element.topConstraint =
-              _getConstrainedNodeForChild(element.parentData.top!.id!);
-          element.topAlignType = element.parentData.top!.type;
-        }
-
-        if (element.parentData.right != null) {
-          element.rightConstraint =
-              _getConstrainedNodeForChild(element.parentData.right!.id!);
-          element.rightAlignType = element.parentData.right!.type;
-        }
-
-        if (element.parentData.bottom != null) {
-          element.bottomConstraint =
-              _getConstrainedNodeForChild(element.parentData.bottom!.id!);
-          element.bottomAlignType = element.parentData.bottom!.type;
-        }
-
-        if (element.isBarrier) {
-          element.parentData._constrainedNodeMap = nodesMap;
-        }
-      }
-    }
-
-    RenderBox? child = firstChild;
-    int childIndex = -1;
-    while (child != null) {
-      childIndex++;
-      _ConstraintBoxData childParentData =
-          child.parentData as _ConstraintBoxData;
-      childParentData._constrainedNodeMap = nodesMap;
-
-      _ConstrainedNode currentNode = _getConstrainedNodeForChild(
-          childParentData.id ?? IndexConstraintId(childIndex));
-      currentNode.parentData = childParentData;
-      currentNode.index = childIndex;
-      currentNode.renderBox = child;
-
-      if (childParentData.left != null) {
-        currentNode.leftConstraint =
-            _getConstrainedNodeForChild(childParentData.left!.id!, childIndex);
-        currentNode.leftAlignType = childParentData.left!.type;
-      }
-
-      if (childParentData.top != null) {
-        currentNode.topConstraint =
-            _getConstrainedNodeForChild(childParentData.top!.id!, childIndex);
-        currentNode.topAlignType = childParentData.top!.type;
-      }
-
-      if (childParentData.right != null) {
-        currentNode.rightConstraint =
-            _getConstrainedNodeForChild(childParentData.right!.id!, childIndex);
-        currentNode.rightAlignType = childParentData.right!.type;
-      }
-
-      if (childParentData.bottom != null) {
-        currentNode.bottomConstraint = _getConstrainedNodeForChild(
-            childParentData.bottom!.id!, childIndex);
-        currentNode.bottomAlignType = childParentData.bottom!.type;
-      }
-
-      if (childParentData.baseline != null) {
-        currentNode.baselineConstraint = _getConstrainedNodeForChild(
-            childParentData.baseline!.id!, childIndex);
-        currentNode.baselineAlignType = childParentData.baseline!.type;
-      }
-
-      child = childParentData.nextSibling;
-    }
-
-    nodesMap.remove(parent);
-
-    return nodesMap;
-  }
-
-  Map<ConstraintId, _ConstrainedNode>
-      _buildConstrainedNodeTreesForWrapContent() {
-    Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
-    _buildNodeTreesCount++;
-    final _ConstrainedNode parentNode = _ConstrainedNode()
+    _ConstrainedNode parentNode = _ConstrainedNode()
       ..nodeId = parent
+      ..depth = selfSizeConfirmed ? 0 : childCount + 1
       ..notLaidOut = false;
-    nodesMap[parent] = parentNode;
+    if (!selfSizeConfirmed) {
+      nodesMap[parent] = parentNode;
+    }
 
     _ConstrainedNode _getConstrainedNodeForChild(ConstraintId id,
         [int? childIndex]) {
@@ -2366,8 +2250,6 @@ class _ConstraintRenderBox extends RenderBox
       child = childParentData.nextSibling;
     }
 
-    parentNode.depth = childCount + 1;
-
     return nodesMap;
   }
 
@@ -2447,55 +2329,30 @@ class _ConstraintRenderBox extends RenderBox
       }());
 
       /// Traverse once, building the constrained node tree for each child element
-      Map<ConstraintId, _ConstrainedNode> nodesMap;
-      if (selfSizeConfirmed) {
-        nodesMap = _buildConstrainedNodeTrees();
-        assert(() {
-          if (_debugCheckConstraints) {
-            List<_ConstrainedNode> nodeList = nodesMap.values.toList();
-            _debugCheckConstraintsIntegrity(nodeList);
-            _debugCheckLoopConstraints(nodeList, true, 0);
-          }
-          return true;
-        }());
-      } else {
-        nodesMap = _buildConstrainedNodeTreesForWrapContent();
-        assert(() {
-          if (_debugCheckConstraints) {
-            List<_ConstrainedNode> nodeList = nodesMap.values.toList();
-            late _ConstrainedNode parentNode;
-            for (int i = 0; i < nodeList.length; i++) {
-              if (nodeList[i].isParent()) {
-                parentNode = nodeList.removeAt(i);
-                break;
-              }
-            }
-            _debugCheckConstraintsIntegrity(nodeList);
-            _debugCheckLoopConstraints(nodeList, false, parentNode.depth);
-          }
-          return true;
-        }());
-      }
+      Map<ConstraintId, _ConstrainedNode> nodesMap =
+          _buildConstrainedNodeTrees(selfSizeConfirmed);
+      _ConstrainedNode? parentNode = nodesMap.remove(parent);
+
+      assert(() {
+        if (_debugCheckConstraints) {
+          List<_ConstrainedNode> nodeList = nodesMap.values.toList();
+          _debugCheckConstraintsIntegrity(nodeList);
+          _debugCheckLoopConstraints(nodeList, selfSizeConfirmed);
+        }
+        return true;
+      }());
 
       /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
       _layoutOrderList = nodesMap.values.toList();
-
-      if (selfSizeConfirmed) {
-        _layoutOrderList.sort((left, right) {
-          return left.getDepth(selfSizeConfirmed, 0) -
-              right.getDepth(selfSizeConfirmed, 0);
-        });
-      } else {
-        _ConstrainedNode parentNode = nodesMap.remove(parent)!;
-        _layoutOrderList.sort((left, right) {
-          return left.getDepth(selfSizeConfirmed, parentNode.depth) -
-              right.getDepth(selfSizeConfirmed, parentNode.depth);
-        });
+      if (!selfSizeConfirmed) {
+        _layoutOrderList.add(parentNode!);
       }
+      _layoutOrderList.sort((left, right) {
+        return left.getDepth(selfSizeConfirmed) -
+            right.getDepth(selfSizeConfirmed);
+      });
 
       _paintingOrderList = nodesMap.values.toList();
-      _eventOrderList = nodesMap.values.toList();
-
       _paintingOrderList.sort((left, right) {
         int result = left.zIndex - right.zIndex;
         if (result == 0) {
@@ -2504,6 +2361,7 @@ class _ConstraintRenderBox extends RenderBox
         return result;
       });
 
+      _eventOrderList = nodesMap.values.toList();
       _eventOrderList.sort((left, right) {
         int result = right.eIndex - left.eIndex;
         if (result == 0) {
@@ -3426,7 +3284,7 @@ class _ConstraintRenderBox extends RenderBox
           paragraphBuilder.pushStyle(ui.TextStyle(
             color: Colors.black,
           ));
-          paragraphBuilder.addText("depth ${element.getDepth(null, -1)}");
+          paragraphBuilder.addText("depth ${element.getDepth(null)}");
           ui.Paragraph paragraph = paragraphBuilder.build();
           paragraph.layout(ui.ParagraphConstraints(
             width: element.getMeasuredWidth(),
@@ -3746,8 +3604,8 @@ class _ConstrainedNode {
     return baseline;
   }
 
-  int getDepthFor(_ConstrainedNode? constrainedNode, bool? parentSizeConfirmed,
-      int parentDepth) {
+  int getDepthFor(
+      _ConstrainedNode? constrainedNode, bool? parentSizeConfirmed) {
     if (constrainedNode == null) {
       return -1;
     }
@@ -3760,26 +3618,26 @@ class _ConstrainedNode {
         }
       }
     }
-    return constrainedNode.getDepth(parentSizeConfirmed, parentDepth);
+    return constrainedNode.getDepth(parentSizeConfirmed);
   }
 
-  int getDepth(bool? parentSizeConfirmed, int parentDepth) {
+  int getDepth(bool? parentSizeConfirmed) {
     if (depth < 0) {
       if (isBarrier) {
         List<int> list = [];
         for (final id in referencedIds!) {
           list.add(parentData._constrainedNodeMap[id]!
-              .getDepth(parentSizeConfirmed, parentDepth));
+              .getDepth(parentSizeConfirmed));
         }
         list.sort((left, right) => left - right);
         depth = list.last + 1;
       } else {
         List<int> list = [
-          getDepthFor(leftConstraint, parentSizeConfirmed, parentDepth),
-          getDepthFor(topConstraint, parentSizeConfirmed, parentDepth),
-          getDepthFor(rightConstraint, parentSizeConfirmed, parentDepth),
-          getDepthFor(bottomConstraint, parentSizeConfirmed, parentDepth),
-          getDepthFor(baselineConstraint, parentSizeConfirmed, parentDepth),
+          getDepthFor(leftConstraint, parentSizeConfirmed),
+          getDepthFor(topConstraint, parentSizeConfirmed),
+          getDepthFor(rightConstraint, parentSizeConfirmed),
+          getDepthFor(bottomConstraint, parentSizeConfirmed),
+          getDepthFor(baselineConstraint, parentSizeConfirmed),
         ];
         list.sort((left, right) => left - right);
         depth = list.last + 1;
@@ -3858,7 +3716,7 @@ class _ConstrainedNode {
         }
       }
     }
-    map['depth'] = getDepth(null, -1);
+    map['depth'] = getDepth(null);
     return map;
   }
 }
