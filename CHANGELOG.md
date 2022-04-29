@@ -1,3 +1,7 @@
+# v0.9.29-stable
+
+enhance grid again.
+
 # v0.9.28-beta3
 
 optimize self wrapContent calculate.
