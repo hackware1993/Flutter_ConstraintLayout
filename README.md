@@ -91,14 +91,14 @@ insult him.
     grid)
 17. circle position
 18. e-index(event dispatch order, default is z-index)
-19. child size can be set to:
+19. the size of child widgets can be set to:
     1. fixed size(>=0)
     2. matchParent
-    3. wrapContent(minimum and maximum supported)
+    3. wrapContent(default, minimum and maximum supported)
     4. matchConstraint
-20. self size can be set to:
+20. the size of itself can be set to:
     1. fixed size(>=0)
-    2. matchParent
+    2. matchParent(default)
     3. wrapContent(minimum and maximum are temporarily not supported)
 
 Coming soon:
