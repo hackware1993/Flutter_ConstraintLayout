@@ -111,9 +111,11 @@ List<Widget> constraintGrid({
   required int columnCount,
   double? itemWidth,
   double? itemHeight,
-  Size Function(int index)? itemSizeBuilder,
-  required Widget Function(int index) itemBuilder,
-  EdgeInsets Function(int index)? itemMarginBuilder,
+  Size Function(int index, int rowIndex, int columnIndex)? itemSizeBuilder,
+  required Widget Function(int index, int rowIndex, int columnIndex)
+      itemBuilder,
+  EdgeInsets Function(int index, int rowIndex, int columnIndex)?
+      itemMarginBuilder,
   int Function(int index)? itemSpanBuilder,
   EdgeInsets margin = EdgeInsets.zero,
   CLVisibility visibility = visible,
@@ -154,11 +156,12 @@ List<Widget> constraintGrid({
     ConstraintId itemId = ConstraintId(id.id + '_grid_item_$i');
     allChildIds.add(itemId);
 
-    EdgeInsets childMargin = itemMarginBuilder?.call(i) ?? EdgeInsets.zero;
     int itemSpan = itemSpanBuilder?.call(i) ?? 1;
     assert(itemSpan >= 1 && itemSpan <= columnCount);
     currentRowUsedSpanCount += itemSpan;
     totalUsedSpanCount += itemSpan;
+
+    late EdgeInsets childMargin;
 
     /// New row start
     if (currentRowUsedSpanCount > columnCount) {
@@ -180,7 +183,14 @@ List<Widget> constraintGrid({
       /// First column
       leftAnchor = left;
       leftChildIds.add(itemId);
-      childMargin = childMargin.add(leftMargin) as EdgeInsets;
+      childMargin = (itemMarginBuilder?.call(
+                  i, currentRowIndex, currentRowUsedSpanCount - 1) ??
+              EdgeInsets.zero)
+          .add(leftMargin) as EdgeInsets;
+    } else {
+      childMargin = itemMarginBuilder?.call(
+              i, currentRowIndex, currentRowUsedSpanCount - 1) ??
+          EdgeInsets.zero;
     }
 
     // First row
@@ -218,8 +228,10 @@ List<Widget> constraintGrid({
       }
     }
 
-    Widget widget = itemBuilder(i);
-    Size? itemSize = itemSizeBuilder?.call(i);
+    Widget widget =
+        itemBuilder(i, currentRowIndex, currentRowUsedSpanCount - 1);
+    Size? itemSize =
+        itemSizeBuilder?.call(i, currentRowIndex, currentRowUsedSpanCount - 1);
     double width = itemWidth ?? itemSize!.width;
     double height = itemHeight ?? itemSize!.height;
 

@@ -50,14 +50,14 @@ class StaggeredGridExample extends StatelessWidget {
               top: parent.top,
               itemCount: 50,
               columnCount: columnCount,
-              itemBuilder: (index) {
+              itemBuilder: (index, _, __) {
                 return Container(
                   color: colors[index % colors.length],
                   alignment: Alignment.center,
                   child: Text('$index'),
                 );
               },
-              itemSizeBuilder: (index) {
+              itemSizeBuilder: (index, _, __) {
                 if (index == 0) {
                   return const Size(
                       smallestSize * columnCount + 35, smallestSize);
@@ -95,7 +95,7 @@ class StaggeredGridExample extends StatelessWidget {
                 }
                 return 1;
               },
-              itemMarginBuilder: (index) {
+              itemMarginBuilder: (index, _, __) {
                 return const EdgeInsets.only(
                   left: 5,
                   top: 5,

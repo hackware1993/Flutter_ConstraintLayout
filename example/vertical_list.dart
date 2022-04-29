@@ -34,7 +34,7 @@ class VerticalListExample extends StatelessWidget {
               ),
               itemCount: 20,
               columnCount: 1,
-              itemBuilder: (index) {
+              itemBuilder: (index, _, __) {
                 return Container(
                   color: colors[index % colors.length],
                   padding: const EdgeInsets.symmetric(
@@ -43,10 +43,10 @@ class VerticalListExample extends StatelessWidget {
                   child: Text('child $index'),
                 );
               },
-              itemSizeBuilder: (index) {
+              itemSizeBuilder: (index, _, __) {
                 return const Size(100, wrapContent);
               },
-              itemMarginBuilder: (index) {
+              itemMarginBuilder: (index, _, __) {
                 return const EdgeInsets.only(
                   left: 10,
                   top: 10,

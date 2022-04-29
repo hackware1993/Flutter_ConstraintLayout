@@ -32,12 +32,12 @@ class GridExample extends StatelessWidget {
               columnCount: 8,
               itemWidth: 100,
               itemHeight: 100,
-              itemBuilder: (index) {
+              itemBuilder: (index, _, __) {
                 return Container(
                   color: colors[index % colors.length],
                 );
               },
-              itemMarginBuilder: (index) {
+              itemMarginBuilder: (index, _, __) {
                 return const EdgeInsets.only(
                   left: 10,
                   top: 10,

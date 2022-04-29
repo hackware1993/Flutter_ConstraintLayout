@@ -36,7 +36,7 @@ class HorizontalListExample extends StatelessWidget {
               columnCount: 10,
               itemWidth: wrapContent,
               itemHeight: 100,
-              itemBuilder: (index) {
+              itemBuilder: (index, _, __) {
                 return Container(
                   color: colors[index % colors.length],
                   padding: const EdgeInsets.symmetric(
@@ -45,7 +45,7 @@ class HorizontalListExample extends StatelessWidget {
                   child: Text('child $index'),
                 );
               },
-              itemMarginBuilder: (index) {
+              itemMarginBuilder: (index, _, __) {
                 return const EdgeInsets.only(
                   left: 10,
                   top: 10,
