@@ -24,8 +24,50 @@ child elements directly or indirectly restrain each other. Each constraint shoul
 where the child elements are located. Although constraints can only be one-way, you can still better
 handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
 
-Anyone who sends you a harassing message, you can send him Flutter code and use nested hell to
-insult him.
+Anyone who sends you a harassing message, you can send him Flutter code and use 'nested hell' to
+insult him:
+```dart
+class NestedHell extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return S(
+      child: U(
+        child: N(
+          child: O(
+            child: F(
+              child: B(
+                child: E(
+                  child: A(
+                    child: C(
+                      child: H(
+                        child: F(
+                          child: U(
+                            child: C(
+                              child: K(
+                                child: Y(
+                                  child: O(
+                                    child: U(
+                                      child: Text('ooooooooo'),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
 
 # Feature
 
