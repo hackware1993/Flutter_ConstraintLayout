@@ -668,16 +668,106 @@ enum PercentageAnchor {
 
 class ConstraintId {
   String id;
+  double? _leftMargin;
+  double? _topMargin;
+  double? _rightMargin;
+  double? _bottomMargin;
+  double? _leftGoneMargin;
+  double? _topGoneMargin;
+  double? _rightGoneMargin;
+  double? _bottomGoneMargin;
 
   _ConstrainedNode? contextCacheNode;
   int? contextHash;
 
-  ConstraintId(this.id) {
-    left.id = this;
-    top.id = this;
-    right.id = this;
-    bottom.id = this;
-    baseline.id = this;
+  ConstraintId(this.id);
+
+  @protected
+  ConstraintId copy() {
+    return ConstraintId(id);
+  }
+
+  bool _isMarginSet() {
+    return _leftMargin != null ||
+        _topMargin != null ||
+        _rightMargin != null ||
+        _bottomMargin != null ||
+        _leftGoneMargin != null ||
+        _topGoneMargin != null ||
+        _rightGoneMargin != null ||
+        _bottomGoneMargin != null;
+  }
+
+  ConstraintId leftMargin(double margin) {
+    if (_isMarginSet()) {
+      _leftMargin = margin;
+      return this;
+    } else {
+      return copy().._leftMargin = margin;
+    }
+  }
+
+  ConstraintId topMargin(double margin) {
+    if (_isMarginSet()) {
+      _topMargin = margin;
+      return this;
+    } else {
+      return copy().._topMargin = margin;
+    }
+  }
+
+  ConstraintId rightMargin(double margin) {
+    if (_isMarginSet()) {
+      _rightMargin = margin;
+      return this;
+    } else {
+      return copy().._rightMargin = margin;
+    }
+  }
+
+  ConstraintId bottomMargin(double margin) {
+    if (_isMarginSet()) {
+      _bottomMargin = margin;
+      return this;
+    } else {
+      return copy().._bottomMargin = margin;
+    }
+  }
+
+  ConstraintId leftGoneMargin(double margin) {
+    if (_isMarginSet()) {
+      _leftGoneMargin = margin;
+      return this;
+    } else {
+      return copy().._leftGoneMargin = margin;
+    }
+  }
+
+  ConstraintId topGoneMargin(double margin) {
+    if (_isMarginSet()) {
+      _topGoneMargin = margin;
+      return this;
+    } else {
+      return copy().._topGoneMargin = margin;
+    }
+  }
+
+  ConstraintId rightGoneMargin(double margin) {
+    if (_isMarginSet()) {
+      _rightGoneMargin = margin;
+      return this;
+    } else {
+      return copy().._rightGoneMargin = margin;
+    }
+  }
+
+  ConstraintId bottomGoneMargin(double margin) {
+    if (_isMarginSet()) {
+      _bottomGoneMargin = margin;
+      return this;
+    } else {
+      return copy().._bottomGoneMargin = margin;
+    }
   }
 
   _ConstrainedNode? getCacheNode(int hash) {
@@ -692,15 +782,25 @@ class ConstraintId {
     contextCacheNode = node;
   }
 
-  _Align left = _Align(null, _AlignType.left);
+  late _Align left = _Align(this, _AlignType.left)
+    .._margin = _leftMargin
+    .._goneMargin = _leftGoneMargin;
 
-  _Align top = _Align(null, _AlignType.top);
+  late _Align top = _Align(this, _AlignType.top)
+    .._margin = _topMargin
+    .._goneMargin = _topGoneMargin;
 
-  _Align right = _Align(null, _AlignType.right);
+  late _Align right = _Align(this, _AlignType.right)
+    .._margin = _rightMargin
+    .._goneMargin = _rightGoneMargin;
 
-  _Align bottom = _Align(null, _AlignType.bottom);
+  late _Align bottom = _Align(this, _AlignType.bottom)
+    .._margin = _bottomMargin
+    .._goneMargin = _bottomGoneMargin;
 
-  _Align baseline = _Align(null, _AlignType.baseline);
+  late _Align baseline = _Align(this, _AlignType.baseline)
+    .._margin = _bottomMargin
+    .._goneMargin = _bottomGoneMargin;
 
   @override
   bool operator ==(Object other) {
@@ -727,63 +827,41 @@ class ConstraintId {
   }
 }
 
-class IndexConstraintId extends ConstraintId {
+class _IndexConstraintId extends ConstraintId {
   final int siblingIndex;
 
-  IndexConstraintId(this.siblingIndex)
+  _IndexConstraintId(this.siblingIndex)
       : super('parent.children[$siblingIndex]');
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is IndexConstraintId &&
-          runtimeType == other.runtimeType &&
-          siblingIndex == other.siblingIndex;
-
-  @override
-  int get hashCode => super.hashCode ^ siblingIndex.hashCode;
-
-  @override
-  String toString() {
-    return 'IndexConstraintId{siblingIndex: $siblingIndex}';
+  ConstraintId copy() {
+    return _IndexConstraintId(siblingIndex);
   }
 }
 
 ConstraintId rId(int childIndex) {
-  return IndexConstraintId(childIndex);
+  assert(childIndex >= 0);
+  return _IndexConstraintId(childIndex);
 }
 
-class RelativeConstraintId extends ConstraintId {
+class _RelativeConstraintId extends ConstraintId {
   final int siblingIndexOffset;
 
-  RelativeConstraintId(this.siblingIndexOffset)
-      : super('sibling@$siblingIndexOffset');
+  _RelativeConstraintId(this.siblingIndexOffset) : super('$siblingIndexOffset');
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is RelativeConstraintId &&
-          runtimeType == other.runtimeType &&
-          siblingIndexOffset == other.siblingIndexOffset;
-
-  @override
-  int get hashCode => super.hashCode ^ siblingIndexOffset.hashCode;
-
-  @override
-  String toString() {
-    return 'RelativeConstraintId{siblingIndexOffset: $siblingIndexOffset}';
+  ConstraintId copy() {
+    return _RelativeConstraintId(siblingIndexOffset);
   }
 }
 
 ConstraintId sId(int siblingIndexOffset) {
   assert(siblingIndexOffset != 0);
-  return RelativeConstraintId(siblingIndexOffset);
+  return _RelativeConstraintId(siblingIndexOffset);
 }
 
 class _Align {
-  ConstraintId? id;
+  ConstraintId id;
   _AlignType type;
   double? _margin;
   double? _goneMargin;
@@ -826,8 +904,8 @@ class ConstraintDefine {
   final ConstraintId? id;
 
   ConstraintDefine(this.id)
-      : assert(id is! IndexConstraintId),
-        assert(id is! RelativeConstraintId);
+      : assert(id is! _IndexConstraintId),
+        assert(id is! _RelativeConstraintId);
 
   @override
   bool operator ==(Object other) =>
@@ -2110,19 +2188,19 @@ class _ConstraintRenderBox extends RenderBox
         }
       }
       if (childParentData.left != null) {
-        constraintsIdSet.add(childParentData.left!.id!);
+        constraintsIdSet.add(childParentData.left!.id);
       }
       if (childParentData.top != null) {
-        constraintsIdSet.add(childParentData.top!.id!);
+        constraintsIdSet.add(childParentData.top!.id);
       }
       if (childParentData.right != null) {
-        constraintsIdSet.add(childParentData.right!.id!);
+        constraintsIdSet.add(childParentData.right!.id);
       }
       if (childParentData.bottom != null) {
-        constraintsIdSet.add(childParentData.bottom!.id!);
+        constraintsIdSet.add(childParentData.bottom!.id);
       }
       if (childParentData.baseline != null) {
-        constraintsIdSet.add(childParentData.baseline!.id!);
+        constraintsIdSet.add(childParentData.baseline!.id);
       }
       if (child is _BarrierRenderBox) {
         constraintsIdSet.addAll(childParentData._referencedIds!);
@@ -2139,10 +2217,10 @@ class _ConstraintRenderBox extends RenderBox
 
     /// The id used by all constraints must be defined
     Set<ConstraintId> illegalIdSet = constraintsIdSet.difference(idSet);
-    Set<IndexConstraintId> indexIds =
-        illegalIdSet.whereType<IndexConstraintId>().toSet();
-    Set<RelativeConstraintId> relativeIds =
-        illegalIdSet.whereType<RelativeConstraintId>().toSet();
+    Set<_IndexConstraintId> indexIds =
+        illegalIdSet.whereType<_IndexConstraintId>().toSet();
+    Set<_RelativeConstraintId> relativeIds =
+        illegalIdSet.whereType<_RelativeConstraintId>().toSet();
     if ((indexIds.length + relativeIds.length) != illegalIdSet.length) {
       throw ConstraintLayoutException(
           'These ids ${illegalIdSet.difference(indexIds).difference(relativeIds)} are not yet defined.');
@@ -2286,9 +2364,9 @@ class _ConstraintRenderBox extends RenderBox
         return parentNode;
       }
 
-      if (id is RelativeConstraintId) {
+      if (id is _RelativeConstraintId) {
         int targetIndex = childIndex! + id.siblingIndexOffset;
-        id = IndexConstraintId(targetIndex);
+        id = _IndexConstraintId(targetIndex);
       }
 
       /// Fewer reads to nodesMap for faster constraint building
@@ -2311,25 +2389,25 @@ class _ConstraintRenderBox extends RenderBox
       for (final element in _helperNodeMap.values) {
         if (element.parentData.left != null) {
           element.leftConstraint =
-              _getConstrainedNodeForChild(element.parentData.left!.id!);
+              _getConstrainedNodeForChild(element.parentData.left!.id);
           element.leftAlignType = element.parentData.left!.type;
         }
 
         if (element.parentData.top != null) {
           element.topConstraint =
-              _getConstrainedNodeForChild(element.parentData.top!.id!);
+              _getConstrainedNodeForChild(element.parentData.top!.id);
           element.topAlignType = element.parentData.top!.type;
         }
 
         if (element.parentData.right != null) {
           element.rightConstraint =
-              _getConstrainedNodeForChild(element.parentData.right!.id!);
+              _getConstrainedNodeForChild(element.parentData.right!.id);
           element.rightAlignType = element.parentData.right!.type;
         }
 
         if (element.parentData.bottom != null) {
           element.bottomConstraint =
-              _getConstrainedNodeForChild(element.parentData.bottom!.id!);
+              _getConstrainedNodeForChild(element.parentData.bottom!.id);
           element.bottomAlignType = element.parentData.bottom!.type;
         }
 
@@ -2348,38 +2426,38 @@ class _ConstraintRenderBox extends RenderBox
       childParentData._constrainedNodeMap = nodesMap;
 
       _ConstrainedNode currentNode = _getConstrainedNodeForChild(
-          childParentData.id ?? IndexConstraintId(childIndex));
+          childParentData.id ?? _IndexConstraintId(childIndex));
       currentNode.parentData = childParentData;
       currentNode.index = childIndex;
       currentNode.renderBox = child;
 
       if (childParentData.left != null) {
         currentNode.leftConstraint =
-            _getConstrainedNodeForChild(childParentData.left!.id!, childIndex);
+            _getConstrainedNodeForChild(childParentData.left!.id, childIndex);
         currentNode.leftAlignType = childParentData.left!.type;
       }
 
       if (childParentData.top != null) {
         currentNode.topConstraint =
-            _getConstrainedNodeForChild(childParentData.top!.id!, childIndex);
+            _getConstrainedNodeForChild(childParentData.top!.id, childIndex);
         currentNode.topAlignType = childParentData.top!.type;
       }
 
       if (childParentData.right != null) {
         currentNode.rightConstraint =
-            _getConstrainedNodeForChild(childParentData.right!.id!, childIndex);
+            _getConstrainedNodeForChild(childParentData.right!.id, childIndex);
         currentNode.rightAlignType = childParentData.right!.type;
       }
 
       if (childParentData.bottom != null) {
-        currentNode.bottomConstraint = _getConstrainedNodeForChild(
-            childParentData.bottom!.id!, childIndex);
+        currentNode.bottomConstraint =
+            _getConstrainedNodeForChild(childParentData.bottom!.id, childIndex);
         currentNode.bottomAlignType = childParentData.bottom!.type;
       }
 
       if (childParentData.baseline != null) {
         currentNode.baselineConstraint = _getConstrainedNodeForChild(
-            childParentData.baseline!.id!, childIndex);
+            childParentData.baseline!.id, childIndex);
         currentNode.baselineAlignType = childParentData.baseline!.type;
       }
 
