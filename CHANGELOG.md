@@ -1,3 +1,8 @@
+# v0.9.30-stable
+
+1. enhance margin and goneMargin.
+2. enhance size set.
+
 # v0.9.29-stable
 
 enhance grid again.
