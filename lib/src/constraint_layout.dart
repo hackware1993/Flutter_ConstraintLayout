@@ -785,8 +785,28 @@ ConstraintId sId(int siblingIndexOffset) {
 class _Align {
   ConstraintId? id;
   _AlignType type;
+  double? _margin;
+  double? _goneMargin;
 
   _Align(this.id, this.type);
+
+  _Align margin(double margin) {
+    if (_margin != null || _goneMargin != null) {
+      _margin = margin;
+      return this;
+    } else {
+      return _Align(id, type).._margin = margin;
+    }
+  }
+
+  _Align goneMargin(double goneMargin) {
+    if (_margin != null || _goneMargin != null) {
+      _goneMargin = goneMargin;
+      return this;
+    } else {
+      return _Align(id, type).._goneMargin = goneMargin;
+    }
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -836,8 +856,8 @@ class Constraint extends ConstraintDefine {
 
   /// Both margin and goneMargin can be negative
   final bool percentageMargin;
-  final EdgeInsets margin;
-  final EdgeInsets goneMargin;
+  EdgeInsets margin;
+  EdgeInsets goneMargin;
 
   /// These are the base constraints constraint on sibling id or parent
   /// The essence of constraints is alignment
@@ -1385,6 +1405,71 @@ class Constraint extends ConstraintDefine {
       right = centerBottomRightTo!.right;
       top = centerBottomRightTo!.bottom;
       bottom = centerBottomRightTo!.bottom;
+    }
+
+    if (left != null) {
+      if (left._margin != null) {
+        margin = margin.add(EdgeInsets.only(
+          left: left._margin!,
+        )) as EdgeInsets;
+      }
+      if (left._goneMargin != null) {
+        goneMargin = goneMargin.add(EdgeInsets.only(
+          left: left._goneMargin!,
+        )) as EdgeInsets;
+      }
+    }
+
+    if (top != null) {
+      if (top._margin != null) {
+        margin = margin.add(EdgeInsets.only(
+          top: top._margin!,
+        )) as EdgeInsets;
+      }
+      if (top._goneMargin != null) {
+        goneMargin = goneMargin.add(EdgeInsets.only(
+          top: top._goneMargin!,
+        )) as EdgeInsets;
+      }
+    }
+
+    if (right != null) {
+      if (right._margin != null) {
+        margin = margin.add(EdgeInsets.only(
+          right: right._margin!,
+        )) as EdgeInsets;
+      }
+      if (right._goneMargin != null) {
+        goneMargin = goneMargin.add(EdgeInsets.only(
+          right: right._goneMargin!,
+        )) as EdgeInsets;
+      }
+    }
+
+    if (bottom != null) {
+      if (bottom._margin != null) {
+        margin = margin.add(EdgeInsets.only(
+          bottom: bottom._margin!,
+        )) as EdgeInsets;
+      }
+      if (bottom._goneMargin != null) {
+        goneMargin = goneMargin.add(EdgeInsets.only(
+          bottom: bottom._goneMargin!,
+        )) as EdgeInsets;
+      }
+    }
+
+    if (baseline != null) {
+      if (baseline._margin != null) {
+        margin = margin.add(EdgeInsets.only(
+          bottom: baseline._margin!,
+        )) as EdgeInsets;
+      }
+      if (baseline._goneMargin != null) {
+        goneMargin = goneMargin.add(EdgeInsets.only(
+          bottom: baseline._goneMargin!,
+        )) as EdgeInsets;
+      }
     }
 
     /// Convert wrapper constraints finish
