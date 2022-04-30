@@ -51,8 +51,7 @@ class CodeViewState extends State<CodeViewWidget> {
               ),
             ),
           ).applyConstraint(
-            width: matchParent,
-            height: matchParent,
+            size: matchParent,
           )
         ],
       ),

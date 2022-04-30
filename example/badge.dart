@@ -19,8 +19,7 @@ class BadgeExample extends StatelessWidget {
           Container(
             color: Colors.yellow,
           ).applyConstraint(
-            width: 200,
-            height: 200,
+            size: 200,
             centerTo: parent,
             id: anchor,
           ),
@@ -42,8 +41,7 @@ class BadgeExample extends StatelessWidget {
           Container(
             color: Colors.green,
           ).applyConstraint(
-            width: 100,
-            height: 100,
+            size: 100,
             left: anchor.right,
             right: anchor.right,
             top: anchor.bottom,

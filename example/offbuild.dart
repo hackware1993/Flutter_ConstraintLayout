@@ -14,8 +14,7 @@ class OffBuildExample extends StatelessWidget {
             Container(
               color: Colors.orangeAccent,
             ).offBuild(id: 'id').applyConstraint(
-                  width: 200,
-                  height: 200,
+                  size: 200,
                   topRightTo: parent,
                 )
           ],

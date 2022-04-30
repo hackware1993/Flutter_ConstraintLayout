@@ -38,8 +38,7 @@ class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
           Container(
             color: Colors.yellow,
           ).applyConstraint(
-            width: 500,
-            height: 500,
+            size: 500,
             centerLeftTo: parent,
             margin: const EdgeInsets.only(
               left: 200,
@@ -48,8 +47,7 @@ class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
           Container(
             color: Colors.yellow,
           ).applyConstraint(
-            width: 500,
-            height: 500,
+            size: 500,
             centerRightTo: parent,
             margin: const EdgeInsets.only(
               right: 200,

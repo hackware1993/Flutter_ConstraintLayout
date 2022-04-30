@@ -43,8 +43,7 @@ class ComplexListExample extends StatelessWidget {
               Container(
                 color: colors[index % 6],
               ).applyConstraint(
-                width: matchParent,
-                height: matchParent,
+                size: matchParent,
               ),
               Image.asset(
                 'assets/test.webp',

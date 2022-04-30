@@ -41,8 +41,7 @@ class SummaryExampleState extends State<SummaryExample> {
         childConstraints: [
           Constraint(
             id: box0,
-            width: 200,
-            height: 200,
+            size: 200,
             bottomLeftTo: parent,
             zIndex: 20,
           )
@@ -75,8 +74,7 @@ class SummaryExampleState extends State<SummaryExample> {
           ).applyConstraint(
             // Constraints set with widgets easy way
             id: box2,
-            width: matchConstraint,
-            height: matchConstraint,
+            size: matchConstraint,
             centerHorizontalTo: box3,
             top: box3.bottom,
             bottom: parent.bottom,
@@ -98,8 +96,7 @@ class SummaryExampleState extends State<SummaryExample> {
             child: const Text('box4'),
           ).applyConstraint(
             id: box4,
-            width: 50,
-            height: 50,
+            size: 50,
             bottomRightTo: parent,
           ),
           GestureDetector(
@@ -129,8 +126,7 @@ class SummaryExampleState extends State<SummaryExample> {
             child: const Text('box6'),
           ).applyConstraint(
             id: box6,
-            width: 120,
-            height: 120,
+            size: 120,
             centerVerticalTo: box2,
             verticalBias: 0.8,
             left: box3.right,
@@ -142,8 +138,7 @@ class SummaryExampleState extends State<SummaryExample> {
             child: const Text('box7'),
           ).applyConstraint(
             id: box7,
-            width: matchConstraint,
-            height: matchConstraint,
+            size: matchConstraint,
             left: parent.left,
             right: box3.left,
             centerVerticalTo: parent,
@@ -175,8 +170,7 @@ class SummaryExampleState extends State<SummaryExample> {
             child: const Text(
                 'percentage layout\nwidth: 50% of parent\nheight: 30% of parent'),
           ).applyConstraint(
-            width: matchConstraint,
-            height: matchConstraint,
+            size: matchConstraint,
             widthPercent: 0.5,
             heightPercent: 0.3,
             horizontalBias: 0,

@@ -22,8 +22,7 @@ class BarrierExample extends StatelessWidget {
             color: const Color(0xFF005BBB),
           ).applyConstraint(
             id: leftChild,
-            width: 200,
-            height: 200,
+            size: 200,
             topLeftTo: parent,
           ),
           Container(

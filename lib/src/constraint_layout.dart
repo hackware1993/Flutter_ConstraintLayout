@@ -28,6 +28,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   final double width;
   final double height;
 
+  /// When size is non-null, both width and height are set to size
+  final double? size;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints,
@@ -43,6 +46,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.debugShowChildDepth = false,
     this.width = matchParent,
     this.height = matchParent,
+    this.size,
   }) : super(
           key: key,
           children: children,
@@ -53,6 +57,14 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
     assert(width >= 0 || width == matchParent || width == wrapContent);
     assert(height >= 0 || height == matchParent || height == wrapContent);
+    assert(size == null ||
+        (size! >= 0 || size == matchParent || size == wrapContent));
+    double selfWidth = width;
+    double selfHeight = height;
+    if (size != null) {
+      selfWidth = size!;
+      selfHeight = size!;
+    }
     return _ConstraintRenderBox()
       ..childConstraints = childConstraints
       .._debugShowGuideline = debugShowGuideline
@@ -64,8 +76,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugName = debugName
       .._debugShowZIndex = debugShowZIndex
       .._debugShowChildDepth = debugShowChildDepth
-      .._width = width
-      .._height = height;
+      .._width = selfWidth
+      .._height = selfHeight;
   }
 
   @override
@@ -76,6 +88,14 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     assert(_debugEnsureNotEmptyString('debugName', debugName));
     assert(width >= 0 || width == matchParent || width == wrapContent);
     assert(height >= 0 || height == matchParent || height == wrapContent);
+    assert(size == null ||
+        (size! >= 0 || size == matchParent || size == wrapContent));
+    double selfWidth = width;
+    double selfHeight = height;
+    if (size != null) {
+      selfWidth = size!;
+      selfHeight = size!;
+    }
     (renderObject as _ConstraintRenderBox)
       ..childConstraints = childConstraints
       ..debugShowGuideline = debugShowGuideline
@@ -87,8 +107,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugName = debugName
       ..debugShowZIndex = debugShowZIndex
       ..debugShowChildDepth = debugShowChildDepth
-      ..width = width
-      ..height = height;
+      ..width = selfWidth
+      ..height = selfHeight;
   }
 }
 
@@ -111,6 +131,7 @@ List<Widget> constraintGrid({
   required int columnCount,
   double? itemWidth,
   double? itemHeight,
+  double? itemSize,
   Size Function(int index, int rowIndex, int columnIndex)? itemSizeBuilder,
   required Widget Function(int index, int rowIndex, int columnIndex)
       itemBuilder,
@@ -128,6 +149,11 @@ List<Widget> constraintGrid({
   assert(itemWidth == null || (itemWidth >= 0 || itemWidth != matchConstraint));
   assert(
       itemHeight == null || (itemHeight >= 0 || itemHeight != matchConstraint));
+  assert(itemSize == null || (itemSize >= 0 || itemSize != matchConstraint));
+  if (itemSize != null) {
+    itemWidth = itemSize;
+    itemHeight = itemSize;
+  }
   assert((itemSizeBuilder == null && itemWidth != null && itemHeight != null) ||
       (itemSizeBuilder != null && itemWidth == null && itemHeight == null));
   List<Widget> widgets = [];
@@ -292,8 +318,7 @@ List<Widget> constraintGrid({
 
   widgets.add(const SizedBox().applyConstraint(
     id: id,
-    width: matchConstraint,
-    height: matchConstraint,
+    size: matchConstraint,
     left: leftBarrier.id.left,
     top: topBarrier.id.top,
     right: rightBarrier.id.right,
@@ -377,6 +402,7 @@ extension ConstrainedWidgetsExt on Widget {
     ConstraintId? id,
     double width = wrapContent,
     double height = wrapContent,
+    double? size,
     @_baseConstraint _Align? left,
     @_baseConstraint _Align? top,
     @_baseConstraint _Align? right,
@@ -441,6 +467,7 @@ extension ConstrainedWidgetsExt on Widget {
         id: id,
         width: width,
         height: height,
+        size: size,
         left: left,
         top: top,
         right: right,
@@ -796,8 +823,11 @@ class ConstraintDefine {
 class Constraint extends ConstraintDefine {
   /// 'wrap_content'、'match_parent'、'match_constraint'、'48, etc'
   /// 'match_parent' will be converted to the base constraints
-  final double width;
-  final double height;
+  double width;
+  double height;
+
+  /// When size is non-null, both width and height are set to size
+  final double? size;
 
   /// Expand the click area without changing the actual size
   final EdgeInsets clickPadding;
@@ -933,6 +963,7 @@ class Constraint extends ConstraintDefine {
     ConstraintId? id,
     this.width = wrapContent,
     this.height = wrapContent,
+    this.size,
     @_baseConstraint this.left,
     @_baseConstraint this.top,
     @_baseConstraint this.right,
@@ -1000,6 +1031,7 @@ class Constraint extends ConstraintDefine {
           runtimeType == other.runtimeType &&
           width == other.width &&
           height == other.height &&
+          size == other.size &&
           clickPadding == other.clickPadding &&
           visibility == other.visibility &&
           percentageMargin == other.percentageMargin &&
@@ -1062,6 +1094,7 @@ class Constraint extends ConstraintDefine {
       super.hashCode ^
       width.hashCode ^
       height.hashCode ^
+      size.hashCode ^
       clickPadding.hashCode ^
       visibility.hashCode ^
       percentageMargin.hashCode ^
@@ -1134,6 +1167,7 @@ class Constraint extends ConstraintDefine {
   bool validate() {
     assert(checkSize(width));
     assert(checkSize(height));
+    assert(size == null || checkSize(size!));
     assert(left == null ||
         (left!.type == _AlignType.left || left!.type == _AlignType.right));
     assert(top == null ||
@@ -1184,6 +1218,11 @@ class Constraint extends ConstraintDefine {
     _Align? right = this.right;
     _Align? bottom = this.bottom;
     _Align? baseline = this.baseline;
+
+    if (size != null) {
+      width = size!;
+      height = size!;
+    }
 
     /// Convert wrapper constraints first
 

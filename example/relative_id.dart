@@ -18,15 +18,13 @@ class RelativeIdExample extends StatelessWidget {
           Container(
             color: Colors.yellow,
           ).applyConstraint(
-            width: 200,
-            height: 200,
+            size: 200,
             centerTo: parent,
           ),
           Container(
             color: Colors.redAccent,
           ).applyConstraint(
-            width: 100,
-            height: 100,
+            size: 100,
             left: rId(0).right,
             right: rId(0).right,
             top: rId(0).top,
@@ -35,15 +33,13 @@ class RelativeIdExample extends StatelessWidget {
           Container(
             color: Colors.green,
           ).applyConstraint(
-            width: 50,
-            height: 50,
+            size: 50,
             centerBottomRightTo: sId(-1),
           ),
           Container(
             color: Colors.blue,
           ).applyConstraint(
-            width: 50,
-            height: 50,
+            size: 50,
             centerBottomRightTo: sId(-3),
           )
         ],

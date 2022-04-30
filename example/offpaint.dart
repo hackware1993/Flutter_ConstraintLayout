@@ -13,8 +13,7 @@ class OffPaintExample extends StatelessWidget {
             Container(
               color: Colors.orangeAccent,
             ).offPaint().applyConstraint(
-                  width: 200,
-                  height: 200,
+                  size: 200,
                   topRightTo: parent,
                 )
           ],

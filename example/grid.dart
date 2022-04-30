@@ -30,8 +30,7 @@ class GridExample extends StatelessWidget {
               top: parent.top,
               itemCount: 50,
               columnCount: 8,
-              itemWidth: 100,
-              itemHeight: 100,
+              itemSize: 100,
               itemBuilder: (index, _, __) {
                 return Container(
                   color: colors[index % colors.length],

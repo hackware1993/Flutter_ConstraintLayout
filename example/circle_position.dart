@@ -71,8 +71,7 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
               });
             },
           ).applyConstraint(
-            width: 20,
-            height: 20,
+            size: 20,
             centerTo: parent,
             zIndex: 100,
             translate: Offset(centerTranslateX, centerTranslateY),

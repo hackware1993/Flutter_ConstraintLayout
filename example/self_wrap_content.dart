@@ -15,14 +15,12 @@ class SelfWrapContentExample extends StatelessWidget {
       ),
       body: Center(
         child: ConstraintLayout(
-          width: wrapContent,
-          height: wrapContent,
+          size: wrapContent,
           children: [
             Container(
               color: Colors.blue,
             ).applyConstraint(
-              width: matchParent,
-              height: matchParent,
+              size: matchParent,
             ),
             Container(
               color: Colors.yellow,
@@ -38,8 +36,7 @@ class SelfWrapContentExample extends StatelessWidget {
             Container(
               color: Colors.orange,
             ).applyConstraint(
-              width: 50,
-              height: 50,
+              size: 50,
               topRightTo: parent,
             ),
             const Text(
@@ -54,8 +51,7 @@ class SelfWrapContentExample extends StatelessWidget {
             Container(
               color: Colors.cyan,
             ).applyConstraint(
-              width: 50,
-              height: 50,
+              size: 50,
               centerVerticalTo: parent,
               left: rId(1).right,
               right: rId(2).left,
