@@ -37,3 +37,4 @@ flutter:
     - example/staggered_grid.dart
     - example/circle_position.dart
     - example/self_wrap_content.dart
+    - example/margin.dart

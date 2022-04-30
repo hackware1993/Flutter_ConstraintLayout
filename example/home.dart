@@ -10,6 +10,7 @@ import 'dimension_ratio.dart';
 import 'grid.dart';
 import 'guideline.dart';
 import 'horizontal_list.dart';
+import 'margin.dart';
 import 'percentage_layout.dart';
 import 'relative_id.dart';
 import 'self_wrap_content.dart';
@@ -37,6 +38,7 @@ class ExampleHome extends StatelessWidget {
     'Staggered Grid': const StaggeredGridExample(),
     'Circle Position': const CirclePositionExample(),
     'Self wrapContent': const SelfWrapContentExample(),
+    'Margin': const MarginExample(),
     'Chain (Coming soon)': const ComingSoonWidget(),
   };
 

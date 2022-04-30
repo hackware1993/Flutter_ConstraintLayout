@@ -875,6 +875,43 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
 }
 ```
 
+7. margin [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+
+![margin.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/margin.webp?raw=true)
+
+```dart
+class MarginExample extends StatelessWidget {
+  const MarginExample({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ConstraintLayout(
+        children: [
+          Container(
+            color: const Color(0xFF005BBB),
+          ).applyConstraint(
+            size: 50,
+            topLeftTo: parent,
+            margin: const EdgeInsets.only(
+              left: 20,
+              top: 100,
+            ),
+          ),
+          Container(
+            color: const Color(0xFFFFD500),
+          ).applyConstraint(
+            size: 100,
+            top: sId(-1).bottom,
+            right: parent.right.margin(100),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
 # Performance optimization
 
 1. When the layout is complex, if the child elements need to be repainted frequently, it is
