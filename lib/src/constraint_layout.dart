@@ -1485,6 +1485,9 @@ class Constraint extends ConstraintDefine {
       bottom = centerBottomRightTo!.bottom;
     }
 
+    EdgeInsets margin = this.margin;
+    EdgeInsets goneMargin = this.goneMargin;
+
     if (left != null) {
       if (left._margin != null) {
         margin = margin.add(EdgeInsets.only(
