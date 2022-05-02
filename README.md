@@ -84,16 +84,21 @@ class NestedHell extends StatelessWidget {
     9. baselineToTop
     10. baselineToBottom
     11. baselineToBaseline
-2. margin and goneMargin
-3. clickPadding (quickly expand the click area of child elements without changing their actual size.
-   This means that the click area can be shared between child elements without increasing nesting.
-   Sometimes it may be necessary to combine with e-index)
+2. margin and goneMargin(when the visibility of the dependent element is gone or the actual size of
+   one side is 0, the goneMargin will take effect, otherwise the margin will take effect, even if
+   its own visibility is gone)
+3. clickPadding(quickly expand the click area of child elements without changing their actual size.
+   This means that you can completely follow the layout of the UI prototype without having to think
+   about the click area of the element. This also means that the click area can be shared between
+   child elements without increasing nesting. Sometimes it may be necessary to combine with e-index)
 4. visibility control
     1. visible
     2. invisible
-    3. gone
+    3. gone(sometimes it may be better to use a conditional expression to keep the element from
+       being created)
 5. constraint integrity hint
-6. bias
+6. bias(when there are constraints left and right or up and down, horizontalBias and verticalBias
+   can be used to adjust the offset. The default value is 0.5, which means centering)
 7. z-index(drawing order, default is child index)
 8. translate
 9. percentage layout(when size is set to matchConstraint, the percentage layout will take effect,
@@ -103,6 +108,11 @@ class NestedHell extends StatelessWidget {
 11. constraints and widgets separation
 12. barrier
 13. dimension ratio
+    1. widthHeightRatio: 1 / 3,
+    2. ratioBaseOnWidth: true, (the default value is null, which means automatic inference. The size
+       of the undetermined side will be calculated using the determined side based on the aspect
+       ratio. The undetermined side must be matchConstraint, and the determined side can be
+       matchParent, fixed size(>=0), matchConstraint)
 14. relative id
     1. rId(3) represents the 3th child element, and so on
     2. sId(-1) represents the previous sibling element, and so on
