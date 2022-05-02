@@ -3,6 +3,8 @@
 A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for
 Android and AutoLayout for iOS.
 
+Greatly improve Flutter development experience and efficiency.
+
 No matter how complex the layout is and how deep the constraints are, it has almost the same
 performance as Flex and Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nested hell'.
