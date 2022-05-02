@@ -18,6 +18,7 @@ class CodeViewWidget extends StatefulWidget {
 
 class CodeViewState extends State<CodeViewWidget> {
   String? code;
+  late bool loading;
 
   @override
   void initState() {
@@ -26,8 +27,15 @@ class CodeViewState extends State<CodeViewWidget> {
   }
 
   void loadCode() async {
-    code = await rootBundle.loadString(widget.codePath);
-    setState(() {});
+    setState(() {
+      loading = true;
+    });
+    try {
+      code = await rootBundle.loadString(widget.codePath);
+    } catch (_) {}
+    setState(() {
+      loading = false;
+    });
   }
 
   @override
@@ -36,23 +44,33 @@ class CodeViewState extends State<CodeViewWidget> {
       appBar: const CustomAppBar(),
       body: ConstraintLayout(
         children: [
-          SingleChildScrollView(
-            child: Padding(
-              child: Text(
-                code ?? '',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
+          if (loading)
+            const CircularProgressIndicator().applyConstraint(
+              size: 30,
+              centerTo: parent,
+            ),
+          if (!loading && code == null)
+            const Text('Code loading failed').applyConstraint(
+              centerTo: parent,
+            ),
+          if (code != null)
+            SingleChildScrollView(
+              child: Padding(
+                child: Text(
+                  code ?? '',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                  ),
+                ),
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  top: 20,
                 ),
               ),
-              padding: const EdgeInsets.only(
-                left: 20,
-                top: 20,
-              ),
-            ),
-          ).applyConstraint(
-            size: matchParent,
-          )
+            ).applyConstraint(
+              size: matchParent,
+            )
         ],
       ),
     );
