@@ -96,12 +96,17 @@ class NestedHell extends StatelessWidget {
 6. bias
 7. z-index(drawing order, default is child index)
 8. translate
-9. percentage layout
+9. percentage layout(when size is set to matchConstraint, the percentage layout will take effect,
+   the default percentage is 1 (100%). The relevant properties are widthPercent, heightPercent,
+   widthPercentageAnchor, heightPercentageAnchor)
 10. guideline
 11. constraints and widgets separation
 12. barrier
 13. dimension ratio
 14. relative id
+    1. rId(3) represents the 3th child element, and so on
+    2. sId(-1) represents the previous sibling element, and so on
+    3. sId(1) represents the next sibling element, and so on
 15. wrapper constraints
     1. topLeftTo
     2. topCenterTo
