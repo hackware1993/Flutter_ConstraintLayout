@@ -1,3 +1,7 @@
+# v0.9.32-stable
+
+fix a margin bug.
+
 # v0.9.31-stable
 
 enhance margin and goneMargin again.
