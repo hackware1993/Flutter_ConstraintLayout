@@ -99,7 +99,7 @@ class NestedHell extends StatelessWidget {
     3. gone(sometimes it may be better to use a conditional expression to keep the element from
        being created)
 5. constraint integrity hint
-6. bias(when there are constraints left and right or up and down, horizontalBias and verticalBias
+6. bias(when there are constraints left and right or top and bottom, horizontalBias and verticalBias
    can be used to adjust the offset. The default value is 0.5, which means centering)
 7. z-index(drawing order, default is child index)
 8. translate
