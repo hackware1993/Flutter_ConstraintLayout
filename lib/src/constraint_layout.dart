@@ -921,8 +921,8 @@ class ConstraintDefine {
 class Constraint extends ConstraintDefine {
   /// 'wrap_content'、'match_parent'、'match_constraint'、'48, etc'
   /// 'match_parent' will be converted to the base constraints
-  double width;
-  double height;
+  final double width;
+  final double height;
 
   /// When size is non-null, both width and height are set to size
   final double? size;
@@ -934,8 +934,8 @@ class Constraint extends ConstraintDefine {
 
   /// Both margin and goneMargin can be negative
   final bool percentageMargin;
-  EdgeInsets margin;
-  EdgeInsets goneMargin;
+  final EdgeInsets margin;
+  final EdgeInsets goneMargin;
 
   /// These are the base constraints constraint on sibling id or parent
   /// The essence of constraints is alignment
@@ -1317,6 +1317,8 @@ class Constraint extends ConstraintDefine {
     _Align? bottom = this.bottom;
     _Align? baseline = this.baseline;
 
+    double width = this.width;
+    double height = this.height;
     if (size != null) {
       width = size!;
       height = size!;
