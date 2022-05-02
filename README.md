@@ -6,7 +6,7 @@ Android and AutoLayout for iOS.
 # Greatly improve Flutter development experience and efficiency. Improve application performance
 
 No matter how complex the layout is and how deep the constraints are, it has almost the same
-performance as Flex and Stack. When facing complex layouts, it provides better performance,
+performance as a single Flex or Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nested hell'.
 
 View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
