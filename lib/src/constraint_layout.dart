@@ -782,25 +782,41 @@ class ConstraintId {
     contextCacheNode = node;
   }
 
-  late _Align left = _Align(this, _AlignType.left)
+  late final _Align left = _Align(this, _AlignType.left)
     .._margin = _leftMargin
     .._goneMargin = _leftGoneMargin;
 
-  late _Align top = _Align(this, _AlignType.top)
+  late final _Align top = _Align(this, _AlignType.top)
     .._margin = _topMargin
     .._goneMargin = _topGoneMargin;
 
-  late _Align right = _Align(this, _AlignType.right)
+  late final _Align right = _Align(this, _AlignType.right)
     .._margin = _rightMargin
     .._goneMargin = _rightGoneMargin;
 
-  late _Align bottom = _Align(this, _AlignType.bottom)
+  late final _Align bottom = _Align(this, _AlignType.bottom)
     .._margin = _bottomMargin
     .._goneMargin = _bottomGoneMargin;
 
-  late _Align baseline = _Align(this, _AlignType.baseline)
+  late final _Align baseline = _Align(this, _AlignType.baseline)
     .._margin = _bottomMargin
     .._goneMargin = _bottomGoneMargin;
+
+  late final _Align _leftReverse = _Align(this, _AlignType.left)
+    .._margin = _rightMargin
+    .._goneMargin = _rightGoneMargin;
+
+  late final _Align _topReverse = _Align(this, _AlignType.top)
+    .._margin = _bottomMargin
+    .._goneMargin = _bottomGoneMargin;
+
+  late final _Align _rightReverse = _Align(this, _AlignType.right)
+    .._margin = _leftMargin
+    .._goneMargin = _leftGoneMargin;
+
+  late final _Align _bottomReverse = _Align(this, _AlignType.bottom)
+    .._margin = _topMargin
+    .._goneMargin = _topGoneMargin;
 
   @override
   bool operator ==(Object other) {
@@ -1388,79 +1404,79 @@ class Constraint extends ConstraintDefine {
     }
 
     if (outTopLeftTo != null) {
-      right = outTopLeftTo!.left;
-      bottom = outTopLeftTo!.top;
+      right = outTopLeftTo!._leftReverse;
+      bottom = outTopLeftTo!._topReverse;
     }
 
     if (outTopCenterTo != null) {
       left = outTopCenterTo!.left;
       right = outTopCenterTo!.right;
-      bottom = outTopCenterTo!.top;
+      bottom = outTopCenterTo!._topReverse;
     }
 
     if (outTopRightTo != null) {
-      left = outTopRightTo!.right;
-      bottom = outTopRightTo!.top;
+      left = outTopRightTo!._rightReverse;
+      bottom = outTopRightTo!._topReverse;
     }
 
     if (outCenterLeftTo != null) {
       top = outCenterLeftTo!.top;
       bottom = outCenterLeftTo!.bottom;
-      right = outCenterLeftTo!.left;
+      right = outCenterLeftTo!._leftReverse;
     }
 
     if (outCenterRightTo != null) {
       top = outCenterRightTo!.top;
       bottom = outCenterRightTo!.bottom;
-      left = outCenterRightTo!.right;
+      left = outCenterRightTo!._rightReverse;
     }
 
     if (outBottomLeftTo != null) {
-      right = outBottomLeftTo!.left;
-      top = outBottomLeftTo!.bottom;
+      right = outBottomLeftTo!._leftReverse;
+      top = outBottomLeftTo!._bottomReverse;
     }
 
     if (outBottomCenterTo != null) {
       left = outBottomCenterTo!.left;
       right = outBottomCenterTo!.right;
-      top = outBottomCenterTo!.bottom;
+      top = outBottomCenterTo!._bottomReverse;
     }
 
     if (outBottomRightTo != null) {
-      left = outBottomRightTo!.right;
-      top = outBottomRightTo!.bottom;
+      left = outBottomRightTo!._rightReverse;
+      top = outBottomRightTo!._bottomReverse;
     }
 
     if (centerTopLeftTo != null) {
       left = centerTopLeftTo!.left;
-      right = centerTopLeftTo!.left;
+      right = centerTopLeftTo!._leftReverse;
       top = centerTopLeftTo!.top;
-      bottom = centerTopLeftTo!.top;
+      bottom = centerTopLeftTo!._topReverse;
     }
 
     if (centerTopCenterTo != null) {
       left = centerTopCenterTo!.left;
       right = centerTopCenterTo!.right;
       top = centerTopCenterTo!.top;
-      bottom = centerTopCenterTo!.top;
+      bottom = centerTopCenterTo!._topReverse;
     }
 
     if (centerTopRightTo != null) {
-      left = centerTopRightTo!.right;
+      left = centerTopRightTo!._rightReverse;
       right = centerTopRightTo!.right;
       top = centerTopRightTo!.top;
-      bottom = centerTopRightTo!.top;
+      bottom = centerTopRightTo!._topReverse;
     }
 
     if (centerCenterLeftTo != null) {
       left = centerCenterLeftTo!.left;
-      right = centerCenterLeftTo!.left;
+      right = centerCenterLeftTo!._leftReverse;
       top = centerCenterLeftTo!.top;
       bottom = centerCenterLeftTo!.bottom;
     }
 
     if (centerCenterRightTo != null) {
-      left = centerCenterRightTo!.right;
+      left = centerCenterRightTo!._rightReverse;
       right = centerCenterRightTo!.right;
       top = centerCenterRightTo!.top;
       bottom = centerCenterRightTo!.bottom;
@@ -1468,22 +1484,22 @@ class Constraint extends ConstraintDefine {
 
     if (centerBottomLeftTo != null) {
       left = centerBottomLeftTo!.left;
-      right = centerBottomLeftTo!.left;
-      top = centerBottomLeftTo!.bottom;
+      right = centerBottomLeftTo!._leftReverse;
+      top = centerBottomLeftTo!._bottomReverse;
       bottom = centerBottomLeftTo!.bottom;
     }
 
     if (centerBottomCenterTo != null) {
       left = centerBottomCenterTo!.left;
       right = centerBottomCenterTo!.right;
-      top = centerBottomCenterTo!.bottom;
+      top = centerBottomCenterTo!._bottomReverse;
       bottom = centerBottomCenterTo!.bottom;
     }
 
     if (centerBottomRightTo != null) {
-      left = centerBottomRightTo!.right;
+      left = centerBottomRightTo!._rightReverse;
       right = centerBottomRightTo!.right;
-      top = centerBottomRightTo!.bottom;
+      top = centerBottomRightTo!._bottomReverse;
       bottom = centerBottomRightTo!.bottom;
     }
 

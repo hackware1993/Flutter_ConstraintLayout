@@ -38,6 +38,12 @@ class MarginExample extends StatelessWidget {
             size: 50,
             topRightTo: parent.rightMargin(20).topMargin(50),
           ),
+          Container(
+            color: Colors.pink,
+          ).applyConstraint(
+            size: 50,
+            outBottomCenterTo: sId(-2).topMargin(20),
+          ),
         ],
       ),
     );
