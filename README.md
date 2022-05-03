@@ -115,7 +115,7 @@ class NestedHell extends StatelessWidget {
        of the undetermined side will be calculated using the determined side based on the aspect
        ratio. The undetermined side must be matchConstraint, and the determined side can be
        matchParent, fixed size(>=0), matchConstraint)
-14. relative id
+14. relative id(if an id is defined for a child element, it cannot be referenced using a relative id)
     1. rId(3) represents the 3th child element, and so on
     2. sId(-1) represents the previous sibling element, and so on
     3. sId(1) represents the next sibling element, and so on
