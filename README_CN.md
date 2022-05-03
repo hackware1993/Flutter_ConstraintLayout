@@ -95,7 +95,7 @@ class NestedHell extends StatelessWidget {
     2. invisible
     3. gone（有时更好的做法是使用条件表达式来避免创建子元素，使用 gone 的好处是可以保留状态）
 5. 完善的约束缺失、非法、冗余提示
-6. 偏移（当同时设置了上下或左右约束时，可以使用 horizontalBias 和 verticalBias 来调整偏移。默认值是 0.5，代表居中)
+6. 偏移（当同时设置了上下或左右约束时，可以使用 horizontalBias 和 verticalBias 来调整偏移。默认值是 0.5，代表居中）
 7. z-index（绘制顺序，默认是子元素的顺序）
 8. 平移
 9. 百分比布局（当大小被设置为 matchConstraint 时，就会启用百分比布局，默认的百分比是 1（100%）。相关的属性是
@@ -985,7 +985,7 @@ class OffBuildExample extends StatelessWidget {
 ```
 
 3. 子元素会自动成为 RelayoutBoundary 除非它的宽或高是 wrapContent。可以酌情的减少 wrapContent 的使用，因为当 ConstraintLayout
-   自身的大小发生变化时（通常是窗口大小发生变化，移动端几乎不存在此类情况)，所有宽或高为 wrapContent
+   自身的大小发生变化时（通常是窗口大小发生变化，移动端几乎不存在此类情况），所有宽或高为 wrapContent
    的子元素都会被重新布局。而其他元素由于传递给它们的约束未发生变化，不会触发真正的布局。
 
 4. 如果你在 children 列表中使用 Guideline 或 Barrier， Element 和 RenderObject 将不可避免的被创建，它们会被布局但不会绘制。此时你可以使用
