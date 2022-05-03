@@ -1,35 +1,32 @@
 # Flutter ConstraintLayout
 
-[简体中文](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README_CN.md)
+[English](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README.md)
 
-A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for
-Android and AutoLayout for iOS.
+一个超级强大的 Stack，使用约束构建极为灵活的布局，和 Android 下的 ConstraintLayout 和 iOS 下的 AutoLayout 类似。
 
-# Greatly improve Flutter development experience and efficiency. Improve application performance
+# 大幅提高 Flutter 的开发体验和效率，并提升应用性能
 
-No matter how complex the layout is and how deep the constraints are, it has almost the same
-performance as a single Flex or Stack. When facing complex layouts, it provides better performance,
-flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nested hell'.
+不管布局有多复杂，约束有多深，它始终有媲美单一 Flex 或 Stack
+的性能，在面对复杂的布局时，它能提供更好的性能，更大的灵活性，更少的代码，以及非常扁平的代码层次结构，大大提升代码的可维护性。对”嵌套地狱“说不。
 
-View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+总之一句话，用了就回不去了。
 
-**Flutter ConstraintLayout has extremely high layout performance. It does not require linear
-equations to solve. It is recommended to use ConstraintLayout at the top level. For extremely
-complex layout(One thousand child elements, two thousand constraints), layout and drawing total time
-within 5 milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be
-easily reached 200 fps.**
+改善”嵌套地狱“是我开发 Flutter ConstraintLayout 的初衷，但我不推崇极致地追求一层嵌套，这是不必要的。因此像链这种特性，Flex 本身已经很好的支持了，因此
+ConstraintLayout 不会积极支持它。
 
-**If not necessary, try to be relative to the parent layout, so that you can define less id. Or use
-relative id.**
+查看 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
-**Warning**:
-For layout performance considerations, constraints are always one-way, and there should be no two
-child elements directly or indirectly restrain each other. Each constraint should describe exactly
-where the child elements are located. Although constraints can only be one-way, you can still better
-handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
+**Flutter ConstraintLayout 有极高的布局性能。它不基于 Cassowary 算法，无需线性方程求解。推荐在顶层使用
+ConstraintLayout。对于极端复杂的布局（1000 个子元素，2000 个约束），非首帧布局和绘制的总耗时在 5 毫秒内（在 Windows 10
+调试模式下，发布模式耗时更少），理论上首帧优势会更明显。对于常规复杂布局（50 个子元素，100 个约束），帧率可轻松达到 200 fps。**
 
-Anyone who sends you a harassing message, you can send him Flutter code and use 'nested hell' to
-insult him:
+**如非必要，尽量相对于 parent 布局，这样可以定义更少的 id，或者使用相对 id。**
+
+**警告**:
+为了布局性能的考虑，约束总是单向的，不允许存在两个子元素相互约束对方（比如 A 的右边约束在 B 的左边，而 B 的左边又反过来约束在 A
+的右边）。每一个约束都应该确切的描述子元素是如何定位的。尽管约束只能单向，但你仍然能更好的处理以前双向约束才能做到的事情，比如链（暂时还未支持，请结合 Flex 使用）。
+
+你可以使用以下的”嵌套地狱“代码恶心任何给你发送骚扰信息的人:
 
 ```dart
 class NestedHell extends StatelessWidget {
@@ -76,7 +73,7 @@ class NestedHell extends StatelessWidget {
 
 # Feature
 
-1. build flexible layouts with constraints
+1. 基本约束
     1. leftToLeft
     2. leftToRight
     3. rightToLeft
@@ -88,41 +85,33 @@ class NestedHell extends StatelessWidget {
     9. baselineToTop
     10. baselineToBottom
     11. baselineToBaseline
-2. margin and goneMargin(when the visibility of the dependent element is gone or the actual size of
-   one side is 0, the goneMargin will take effect, otherwise the margin will take effect, even if
-   its own visibility is gone)
-3. clickPadding(quickly expand the click area of child elements without changing their actual size.
-   This means that you can completely follow the layout of the UI prototype without having to think
-   about the click area of the element. This also means that the click area can be shared between
-   child elements without increasing nesting. Sometimes it may be necessary to combine with e-index)
-4. visibility control
+2. margin and goneMargin（当依赖的元素的可见性为 gone 或者其某一边的实际大小为 0 时，goneMargin 就会生效，否则 margin 会生效，即便其自身的可见性为
+   gone）
+3. clickPadding（
+   快速扩大子元素的点击区域而无需改变子元素的实际大小。这意味着你可以完全遵照视觉稿来布局，而不用为了考虑点击区域而做额外的事情，这会提升一定的开发效率。这也意味着子元素之间可以在不增加嵌套的情况下共享点击区域，有时可能需要结合
+   e-index 使用）
+4. 可见性控制
     1. visible
     2. invisible
-    3. gone(sometimes it may be better to use a conditional expression to keep the element from
-       being created)
-5. constraint integrity hint
-6. bias(when there are constraints left and right or top and bottom, horizontalBias and verticalBias
-   can be used to adjust the offset. The default value is 0.5, which means centering)
-7. z-index(drawing order, default is child index)
-8. translate
-9. percentage layout(when size is set to matchConstraint, the percentage layout will take effect,
-   the default percentage is 1 (100%). The relevant properties are widthPercent, heightPercent,
-   widthPercentageAnchor, heightPercentageAnchor)
-10. guideline
-11. constraints and widgets separation
-12. barrier
-13. dimension ratio
+    3. gone（有时更好的做法是使用条件表达式来避免创建子元素，使用 gone 的好处是可以保留状态）
+5. 完善的约束缺失、非法、冗余提示
+6. 偏移（当同时设置了上下或左右约束时，可以使用 horizontalBias 和 verticalBias 来调整偏移。默认值是 0.5，代表居中)
+7. z-index（绘制顺序，默认是子元素的顺序）
+8. 平移
+9. 百分比布局（当大小被设置为 matchConstraint 时，就会启用百分比布局，默认的百分比是 1（100%）。相关的属性是
+   widthPercent，heightPercent，widthPercentageAnchor，heightPercentageAnchor）
+10. 引导线
+11. 约束和 Widget 分离
+12. 栅栏
+13. 比例布局
     1. widthHeightRatio: 1 / 3,
-    2. ratioBaseOnWidth: true, (the default value is null, which means automatic inference. The size
-       of the undetermined side will be calculated using the determined side based on the aspect
-       ratio. The undetermined side must be matchConstraint, and the determined side can be
-       matchParent, fixed size(>=0), matchConstraint)
-14. relative id(if an id is defined for a child element, it cannot be referenced using a relative
-    id)
-    1. rId(3) represents the 3th child element, and so on
-    2. sId(-1) represents the previous sibling element, and so on
-    3. sId(1) represents the next sibling element, and so on
-15. wrapper constraints
+    2. ratioBaseOnWidth: true, （默认值是 null，代表自动推断，未确定边的大小会根据确定边的大小和 widthHeightRatio
+       计算出来。未确定边的大小必须设置为 matchConstraint，确定边的大小可以为 matchParent，固定大小（>=0），matchConstraint）
+14. 相对 id（这是为懒癌患者设计的，因为命名是个麻烦事。如果已经为子元素定义了 id，则不能再使用相对 id 来引用他们）
+    1. rId(3) 代表第三个子元素，以此类推
+    2. sId(-1) 代表上一个兄弟元素，以此类推
+    3. sId(1) 代表下一个子元素，以此类推
+15. 包装约束，是对基本约束的封装，便于使用，最终会转化成基本约束
     1. topLeftTo
     2. topCenterTo
     3. topRightTo
@@ -150,27 +139,26 @@ class NestedHell extends StatelessWidget {
     25. centerBottomLeftTo
     26. centerBottomCenterTo
     27. centerBottomRightTo
-16. staggered grid、grid、list(list is a special staggered grid, grid is also a special staggered
-    grid)
-17. circle position
-18. e-index(event dispatch order, default is z-index)
-19. the size of child widgets can be set to:
-    1. fixed size(>=0)
+16. 瀑布流、网格、列表（列表是一个特殊的瀑布流，网格也是一个特殊的瀑布流）
+17. 圆形定位
+18. e-index（事件分发顺序，默认是 z-index，一般用来处理点击区域）
+19. 子元素的大小可以被设置为：
+    1. 固定大小（>=0）
     2. matchParent
-    3. wrapContent(default, minimum and maximum supported)
+    3. wrapContent（默认值，支持最大、最小设置）
     4. matchConstraint
-20. the size of itself can be set to:
-    1. fixed size(>=0)
-    2. matchParent(default)
-    3. wrapContent(minimum and maximum are temporarily not supported)
+20. 自身的大小可以被设置为：
+    1. 固定大小（>=0）
+    2. matchParent（default）
+    3. wrapContent（暂不支持最大、最小设置）
 
-Coming soon:
+即将支持:
 
-1. chain
-2. constraints visualization
-3. more...
+1. 链
+2. 约束可视化
+3. 更多...
 
-Support platform:
+支持的平台:
 
 1. Android
 2. iOS
@@ -179,9 +167,9 @@ Support platform:
 5. Linux
 6. Web
 
-# Import
+# 导入
 
-Null-safety
+支持空安全
 
 ```yaml
 dependencies:
@@ -200,7 +188,7 @@ dependencies:
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 ```
 
-# Example [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+# 示例 [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
 ![effect.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
 
@@ -411,9 +399,9 @@ class ExampleState extends State<Example> {
 }
 ```
 
-# Advanced usage
+# 高级用法
 
-1. guideline [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+1. 引导线 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![guideline.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/guideline.webp?raw=true)
 
@@ -469,7 +457,7 @@ class GuidelineExample extends StatelessWidget {
 }
 ```
 
-2. barrier [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+2. 栅栏 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![barrier.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/barrier.gif?raw=true)
 
@@ -534,7 +522,7 @@ class BarrierExample extends StatelessWidget {
 }
 ```
 
-3. badge [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+3. 角标 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![badge.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/badge.webp?raw=true)
 
@@ -588,7 +576,7 @@ class BadgeExample extends StatelessWidget {
 }
 ```
 
-4. grid [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+4. 网格 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![grid.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/grid.webp?raw=true)
 
@@ -636,7 +624,7 @@ class GridExample extends StatelessWidget {
 }
 ```
 
-5. staggered grid [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+5. 瀑布流 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![staggered_grid.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/staggered_grid.gif?raw=true)
 
@@ -743,7 +731,7 @@ class StaggeredGridExample extends StatelessWidget {
 }
 ```
 
-6. circle position [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+6. 圆形定位 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![circle_position.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/circle_position.gif?raw=true)
 
@@ -895,7 +883,7 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
 }
 ```
 
-7. margin [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+7. margin [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
 ![margin.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/margin.webp?raw=true)
 
@@ -938,10 +926,9 @@ class MarginExample extends StatelessWidget {
 }
 ```
 
-# Performance optimization
+# 性能优化
 
-1. When the layout is complex, if the child elements need to be repainted frequently, it is
-   recommended to use RepaintBoundary to improve performance.
+1. 当布局复杂时，如果子元素需要频繁重绘，可以考虑使用 RepaintBoundary。当然合成 Layer 也有开销，所以需要合理使用。
 
 ```dart
 class OffPaintExample extends StatelessWidget {
@@ -968,8 +955,7 @@ class OffPaintExample extends StatelessWidget {
 }
 ```
 
-2. Try to use const Widget. If you can't declare a child element as const and it won't change, you
-   can use OffBuildWidget to avoid the rebuilding of the child element.
+2. 尽量使用 const Widget。如果你没法将子元素声明为 const 而它自身又不会改变。可以使用内置的 OffBuildWidget 来避免子元素重复 build。
 
 ```dart
 class OffBuildExample extends StatelessWidget {
@@ -998,16 +984,12 @@ class OffBuildExample extends StatelessWidget {
 }
 ```
 
-3. Child elements will automatically become RelayoutBoundary unless width or height is wrapContent.
-   The use of wrapContent can be reasonably reduced, because after the size of ConstraintLayout
-   changes (usually the size of the window changes), all child elements whose width or height is
-   wrapContent will be re-layout. And since the constraints passed to other child elements won't
-   change, no real re-layout will be triggered.
+3. 子元素会自动成为 RelayoutBoundary 除非它的宽或高是 wrapContent。可以酌情的减少 wrapContent 的使用，因为当 ConstraintLayout
+   自身的大小发生变化时（通常是窗口大小发生变化，移动端几乎不存在此类情况)，所有宽或高为 wrapContent
+   的子元素都会被重新布局。而其他元素由于传递给它们的约束未发生变化，不会触发真正的布局。
 
-4. If you use Guideline or Barrier in the children list, Element and RenderObject will inevitably be
-   generated for them, which will be laid out but not drawn. At this point you can use
-   GuidelineDefine or BarrierDefine to optimize it, no Element and RenderObject will be generated
-   anymore:
+4. 如果你在 children 列表中使用 Guideline 或 Barrier， Element 和 RenderObject 将不可避免的被创建，它们会被布局但不会绘制。此时你可以使用
+   GuidelineDefine 或 BarrierDefine 来优化， Element 和 RenderObject 就不会再创建了。
 
 ```dart
 class BarrierExample extends StatelessWidget {
@@ -1063,17 +1045,17 @@ class BarrierExample extends StatelessWidget {
 }   
 ```
 
-# Support me
+# 支持我
 
-If it helps you a lot, consider sponsoring me a cup of milk tea.
+如果它对你帮助很大，可以考虑赞助我一杯奶茶，毕竟开源不易。或者反手给个 star。
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
 ![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
 
-# Contact
+# 联系方式
 
 hackware1993@gmail.com
 
-# License
+# 协议
 
 ```
 MIT License
