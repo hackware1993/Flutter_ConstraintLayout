@@ -2390,10 +2390,15 @@ class _ConstraintRenderBox extends RenderBox
         id = _IndexConstraintId(targetIndex);
       }
 
-      /// Fewer reads to nodesMap for faster constraint building
-      _ConstrainedNode? node = id.getCacheNode(_buildNodeTreesCount ^ hashCode);
-      if (node != null) {
-        return node;
+      _ConstrainedNode? node;
+      int? contextHash;
+      if (id.runtimeType == ConstraintId) {
+        /// Fewer reads to nodesMap for faster constraint building
+        contextHash = _buildNodeTreesCount ^ hashCode;
+        node = id.getCacheNode(contextHash);
+        if (node != null) {
+          return node;
+        }
       }
 
       node = nodesMap[id];
@@ -2401,7 +2406,11 @@ class _ConstraintRenderBox extends RenderBox
         node = _ConstrainedNode()..nodeId = id;
         nodesMap[id] = node;
       }
-      id.setCacheNode(_buildNodeTreesCount ^ hashCode, node);
+
+      if (id.runtimeType == ConstraintId) {
+        id.setCacheNode(contextHash!, node);
+      }
+
       return node;
     }
 
