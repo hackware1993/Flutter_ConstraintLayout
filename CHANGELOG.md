@@ -1,3 +1,7 @@
+# v1.0.1-stable
+
+optimize self wrapContent calculate.
+
 # v1.0.0-stable
 
 simplified id creation.
