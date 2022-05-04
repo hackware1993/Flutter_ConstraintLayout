@@ -11,7 +11,7 @@
 
 总之一句话，用了就回不去了。
 
-改善”嵌套地狱“是我开发 Flutter ConstraintLayout 的初衷，但我不推崇极致地追求一层嵌套，这是不必要的。因此像链这种特性，Flex 本身已经很好的支持了，因此
+改善”嵌套地狱“是我开发 Flutter ConstraintLayout 的初衷之一，但我不推崇极致地追求一层嵌套，这是不必要的。因此像链这种特性，Flex 本身已经很好的支持了，因此
 ConstraintLayout 不会积极支持它。
 
 查看 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
