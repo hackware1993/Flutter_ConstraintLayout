@@ -876,6 +876,10 @@ ConstraintId sId(int siblingIndexOffset) {
   return _RelativeConstraintId(siblingIndexOffset);
 }
 
+ConstraintId cId(String id) {
+  return ConstraintId(id);
+}
+
 class _Align {
   ConstraintId id;
   _AlignType type;
