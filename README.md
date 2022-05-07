@@ -3,7 +3,8 @@
 [简体中文](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README_CN.md)
 
 A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for
-Android and AutoLayout for iOS.
+Android and AutoLayout for iOS. But the code implementation is much more efficient, it has O(n)
+layout time complexity and no linear equation solving is required.
 
 # Greatly improve Flutter development experience and efficiency. Improve application performance
 

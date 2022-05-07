@@ -2,7 +2,8 @@
 
 [English](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README.md)
 
-一个超级强大的 Stack，使用约束构建极为灵活的布局，和 Android 下的 ConstraintLayout 和 iOS 下的 AutoLayout 类似。
+一个超级强大的 Stack，使用约束构建极为灵活的布局，和 Android 下的 ConstraintLayout 和 iOS 下的 AutoLayout 类似。但代码实现却高效得多，它具有 O(n)
+的布局时间复杂度，无需线性方程求解。
 
 # 大幅提高 Flutter 的开发体验和效率，并提升应用性能
 
