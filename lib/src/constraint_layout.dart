@@ -2373,7 +2373,7 @@ class _ConstraintRenderBox extends RenderBox
 
   Map<ConstraintId, _ConstrainedNode> _buildConstrainedNodeTrees(
       bool selfSizeConfirmed) {
-    Map<ConstraintId, _ConstrainedNode> nodesMap = HashMap();
+    Map<ConstraintId, _ConstrainedNode> nodesMap = {};
     _buildNodeTreesCount++;
     _ConstrainedNode parentNode = _ConstrainedNode()
       ..nodeId = parent
@@ -2616,9 +2616,9 @@ class _ConstraintRenderBox extends RenderBox
 
       _eventOrderList = nodesMap.values.toList();
       _eventOrderList.sort((left, right) {
-        int result = right.eIndex - left.eIndex;
+        int result = left.eIndex - right.eIndex;
         if (result == 0) {
-          result = right.index - left.index;
+          result = left.index - right.index;
         }
         return result;
       });
@@ -3352,16 +3352,16 @@ class _ConstraintRenderBox extends RenderBox
   }) {
     if (_needsReorderEventOrder) {
       _eventOrderList.sort((left, right) {
-        int result = right.eIndex - left.eIndex;
+        int result = left.eIndex - right.eIndex;
         if (result == 0) {
-          result = right.index - left.index;
+          result = left.index - right.index;
         }
         return result;
       });
       _needsReorderEventOrder = false;
     }
 
-    for (final element in _eventOrderList) {
+    for (final element in _eventOrderList.reversed) {
       if (element.shouldNotPaint()) {
         continue;
       }
@@ -3850,16 +3850,26 @@ class _ConstrainedNode {
         parentSizeConfirmed, resolvedWidth, resolvedHeight);
   }
 
+  int getMaxDepth(List<int> depths) {
+    int max = -1;
+    for (final element in depths) {
+      if (element > max) {
+        max = element;
+      }
+    }
+    return max;
+  }
+
   int getDepth(bool? parentSizeConfirmed, double? resolvedWidth,
       double? resolvedHeight) {
     if (depth < 0) {
       if (isBarrier) {
-        List<int> list = [];
-        for (final id in referencedIds!) {
-          list.add(parentData._constrainedNodeMap[id]!
-              .getDepth(parentSizeConfirmed, resolvedWidth, resolvedHeight));
-        }
-        depth = list.reduce(max) + 1;
+        List<int> list = [
+          for (final id in referencedIds!)
+            parentData._constrainedNodeMap[id]!
+                .getDepth(parentSizeConfirmed, resolvedWidth, resolvedHeight)
+        ];
+        depth = getMaxDepth(list) + 1;
       } else {
         List<int> list = [
           if (leftConstraint != null)
@@ -3878,7 +3888,7 @@ class _ConstrainedNode {
             getDepthFor(baselineConstraint!, parentSizeConfirmed, resolvedWidth,
                 resolvedHeight),
         ];
-        depth = list.reduce(max) + 1;
+        depth = getMaxDepth(list) + 1;
       }
     }
     return depth;
