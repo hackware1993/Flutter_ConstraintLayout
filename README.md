@@ -34,6 +34,10 @@ The performance of layout and drawing is almost equivalent to a single Flex or S
 performance of constraint calculation is roughly 0.01 milliseconds (layout of general complexity, 20
 child elements). Constraints are only recalculated after they have changed.
 
+A smaller Widget tree leads to less build time and a smaller Element tree. A very flat layout
+structure results in a smaller RenderObject tree and less rendering time. One thing most people tend
+to overlook is that complex nesting can cause build times to sometimes exceed render times.
+
 It is recommended to use ConstraintLayout at the top level. For extremely complex layout(one
 thousand child elements, two thousand constraints), layout and drawing total time within 5
 milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be easily
