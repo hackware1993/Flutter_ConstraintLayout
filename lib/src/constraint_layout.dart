@@ -3156,27 +3156,28 @@ class _ConstraintRenderBox extends RenderBox
           list.add(node.parentData._constrainedNodeMap[id]!.getBottom());
         }
       }
-      list.sort((left, right) {
-        if (left > right) {
-          return 1;
-        } else if (left == right) {
-          return 0;
-        } else {
-          return -1;
+      double min = double.maxFinite;
+      double max = double.minPositive;
+      for (final element in list) {
+        if (element > max) {
+          max = element;
         }
-      });
+        if (element < min) {
+          min = element;
+        }
+      }
       if (direction == BarrierDirection.left) {
-        offsetX = list.first;
+        offsetX = min;
         offsetY = 0;
       } else if (direction == BarrierDirection.top) {
         offsetX = 0;
-        offsetY = list.first;
+        offsetY = min;
       } else if (direction == BarrierDirection.right) {
-        offsetX = list.last;
+        offsetX = max;
         offsetY = 0;
       } else {
         offsetX = 0;
-        offsetY = list.last;
+        offsetY = max;
       }
     } else {
       /// Calculate child x offset
@@ -3830,11 +3831,8 @@ class _ConstrainedNode {
     return baseline;
   }
 
-  int getDepthFor(_ConstrainedNode? constrainedNode, bool? parentSizeConfirmed,
+  int getDepthFor(_ConstrainedNode constrainedNode, bool? parentSizeConfirmed,
       double? resolvedWidth, double? resolvedHeight) {
-    if (constrainedNode == null) {
-      return -1;
-    }
     if (parentSizeConfirmed == false) {
       if (constrainedNode.isParent()) {
         /// The width and height can be calculated directly without relying on parent
@@ -3861,23 +3859,26 @@ class _ConstrainedNode {
           list.add(parentData._constrainedNodeMap[id]!
               .getDepth(parentSizeConfirmed, resolvedWidth, resolvedHeight));
         }
-        list.sort((left, right) => left - right);
-        depth = list.last + 1;
+        depth = list.reduce(max) + 1;
       } else {
         List<int> list = [
-          getDepthFor(leftConstraint, parentSizeConfirmed, resolvedWidth,
-              resolvedHeight),
-          getDepthFor(topConstraint, parentSizeConfirmed, resolvedWidth,
-              resolvedHeight),
-          getDepthFor(rightConstraint, parentSizeConfirmed, resolvedWidth,
-              resolvedHeight),
-          getDepthFor(bottomConstraint, parentSizeConfirmed, resolvedWidth,
-              resolvedHeight),
-          getDepthFor(baselineConstraint, parentSizeConfirmed, resolvedWidth,
-              resolvedHeight),
+          if (leftConstraint != null)
+            getDepthFor(leftConstraint!, parentSizeConfirmed, resolvedWidth,
+                resolvedHeight),
+          if (topConstraint != null)
+            getDepthFor(topConstraint!, parentSizeConfirmed, resolvedWidth,
+                resolvedHeight),
+          if (rightConstraint != null)
+            getDepthFor(rightConstraint!, parentSizeConfirmed, resolvedWidth,
+                resolvedHeight),
+          if (bottomConstraint != null)
+            getDepthFor(bottomConstraint!, parentSizeConfirmed, resolvedWidth,
+                resolvedHeight),
+          if (baselineConstraint != null)
+            getDepthFor(baselineConstraint!, parentSizeConfirmed, resolvedWidth,
+                resolvedHeight),
         ];
-        list.sort((left, right) => left - right);
-        depth = list.last + 1;
+        depth = list.reduce(max) + 1;
       }
     }
     return depth;
