@@ -1,3 +1,7 @@
+# v1.0.2-stable
+
+optimize layout performance.
+
 # v1.0.1-stable
 
 optimize self wrapContent calculate.
