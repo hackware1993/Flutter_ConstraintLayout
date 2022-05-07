@@ -12,22 +12,43 @@ No matter how complex the layout is and how deep the constraints are, it has alm
 performance as a single Flex or Stack. When facing complex layouts, it provides better performance,
 flexibility, and a very flat code hierarchy than Flex and Stack. Say no to 'nested hell'.
 
+In short, once you use it, you can't go back.
+
+Improving "nested hell" is one of my original intentions for developing Flutter ConstraintLayout,
+but I don't advocate the ultimate pursuit of one level of nesting, which is unnecessary. So features
+like chains are already well supported by Flex itself, so ConstraintLayout will not actively support
+it.
+
 View [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
 
 **Flutter ConstraintLayout has extremely high layout performance. It does not require linear
-equations to solve. It is recommended to use ConstraintLayout at the top level. For extremely
-complex layout(One thousand child elements, two thousand constraints), layout and drawing total time
-within 5 milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be
-easily reached 200 fps.**
+equations to solve.** At any time, each child element will only be laid out once. When its own width
+or height is set to wrapContent, some child elements may calculate the offset twice. The layout
+process of ConstraintLayout consists of the following three steps:
+
+1. Constraint calculation
+2. Layout
+3. Draw
+
+The performance of layout and drawing is almost equivalent to a single Flex or Stack, and the
+performance of constraint calculation is roughly 0.01 milliseconds (layout of general complexity, 20
+child elements). Constraints are only recalculated after they have changed.
+
+It is recommended to use ConstraintLayout at the top level. For extremely complex layout(one
+thousand child elements, two thousand constraints), layout and drawing total time within 5
+milliseconds(debug mode on Windows 10，release mode take less time), the frame rate can be easily
+reached 200 fps.
 
 **If not necessary, try to be relative to the parent layout, so that you can define less id. Or use
 relative id.**
 
 **Warning**:
 For layout performance considerations, constraints are always one-way, and there should be no two
-child elements directly or indirectly restrain each other. Each constraint should describe exactly
-where the child elements are located. Although constraints can only be one-way, you can still better
-handle things that were previously (Android ConstraintLayout) two-way constraints, such as chains.
+child elements directly or indirectly restrain each other(for example, the right side of A is
+constrained to the left side of B, and the left side of B is in turn constrained to A right). Each
+constraint should describe exactly where the child elements are located. Although constraints can
+only be one-way, you can still better handle things that were previously (Android ConstraintLayout)
+two-way constraints, such as chains(not yet supported, please use with Flex).
 
 Anyone who sends you a harassing message, you can send him Flutter code and use 'nested hell' to
 insult him:
@@ -189,12 +210,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.0.2-stable'
+      ref: 'v1.0.3-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.0.2-stable
+  flutter_constraintlayout: ^1.0.3-stable
 ```
 
 ```dart

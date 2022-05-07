@@ -17,9 +17,17 @@ ConstraintLayout 不会积极支持它。
 
 查看 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
 
-**Flutter ConstraintLayout 有极高的布局性能。它不基于 Cassowary 算法，无需线性方程求解。推荐在顶层使用
-ConstraintLayout。对于极端复杂的布局（1000 个子元素，2000 个约束），非首帧布局和绘制的总耗时在 5 毫秒内（在 Windows 10
-调试模式下，发布模式耗时更少），理论上首帧优势会更明显。对于常规复杂布局（50 个子元素，100 个约束），帧率可轻松达到 200 fps。**
+**Flutter ConstraintLayout 有极高的布局性能。它不基于 Cassowary 算法，无需线性方程求解。** 任何时候，每一个子元素都只会被 layout
+一次，当自身的宽或高被设置为 wrapContent 时，部分子元素可能会计算两次 offset。约束布局的布局过程包含以下三个步骤：
+
+1. 约束计算
+2. 布局
+3. 绘制
+
+其中布局和绘制的性能几乎与单一 Flex 或 Stack 相当，约束计算的性能大致为 0.01 毫秒（一般复杂度的布局，20 个子元素）。只有在约束变化后才会重新计算约束。
+
+推荐在顶层使用 ConstraintLayout。对于极端复杂的布局（1000 个子元素，2000 个约束），非首帧布局和绘制的总耗时在 5 毫秒内（在 Windows 10
+调试模式下，发布模式耗时更少），理论上首帧优势会更明显。对于常规复杂布局（50 个子元素，100 个约束），帧率可轻松达到 200 fps。
 
 **如非必要，尽量相对于 parent 布局，这样可以定义更少的 id，或者使用相对 id。**
 
@@ -177,12 +185,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.0.2-stable'
+      ref: 'v1.0.3-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.0.2-stable
+  flutter_constraintlayout: ^1.0.3-stable
 ```
 
 ```dart

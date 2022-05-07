@@ -1,3 +1,8 @@
+# v1.0.3-stable
+
+reduced constraint computation time to 0.01 ms for normal complexity layouts(10 child elements), 80%
+faster performance.
+
 # v1.0.2-stable
 
 optimize layout performance.
