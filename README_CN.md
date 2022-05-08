@@ -38,51 +38,6 @@ build 耗时有时甚至超过渲染耗时。
 为了布局性能的考虑，约束总是单向的，不允许存在两个子元素相互约束对方（比如 A 的右边约束在 B 的左边，而 B 的左边又反过来约束在 A
 的右边）。每一个约束都应该确切的描述子元素是如何定位的。尽管约束只能单向，但你仍然能更好的处理以前双向约束才能做到的事情，比如链（暂时还未支持，请结合 Flex 使用）。
 
-你可以使用以下的”嵌套地狱“代码恶心任何给你发送骚扰信息的人:
-
-```dart
-class NestedHell extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return S(
-      child: U(
-        child: N(
-          child: O(
-            child: F(
-              child: B(
-                child: E(
-                  child: A(
-                    child: C(
-                      child: H(
-                        child: F(
-                          child: U(
-                            child: C(
-                              child: K(
-                                child: Y(
-                                  child: O(
-                                    child: U(
-                                      child: Text('ooooooooo'),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-```
-
 # Feature
 
 1. 基本约束
@@ -188,12 +143,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.0.3-stable'
+      ref: 'v1.0.4-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.0.3-stable
+  flutter_constraintlayout: ^1.0.4-stable
 ```
 
 ```dart

@@ -54,52 +54,6 @@ constraint should describe exactly where the child elements are located. Althoug
 only be one-way, you can still better handle things that were previously (Android ConstraintLayout)
 two-way constraints, such as chains(not yet supported, please use with Flex).
 
-Anyone who sends you a harassing message, you can send him Flutter code and use 'nested hell' to
-insult him:
-
-```dart
-class NestedHell extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return S(
-      child: U(
-        child: N(
-          child: O(
-            child: F(
-              child: B(
-                child: E(
-                  child: A(
-                    child: C(
-                      child: H(
-                        child: F(
-                          child: U(
-                            child: C(
-                              child: K(
-                                child: Y(
-                                  child: O(
-                                    child: U(
-                                      child: Text('ooooooooo'),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-```
-
 # Feature
 
 1. build flexible layouts with constraints
@@ -214,12 +168,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.0.3-stable'
+      ref: 'v1.0.4-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.0.3-stable
+  flutter_constraintlayout: ^1.0.4-stable
 ```
 
 ```dart
