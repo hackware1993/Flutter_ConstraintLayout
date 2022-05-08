@@ -2000,6 +2000,7 @@ class _ConstraintRenderBox extends RenderBox
   late List<_ConstrainedNode> _eventOrderList;
 
   static const int maxTimeUsage = 20;
+  Queue<int> constraintCalculationTimeUsage = Queue();
   Queue<int> layoutTimeUsage = Queue();
   Queue<int> paintTimeUsage = Queue();
 
@@ -2573,6 +2574,11 @@ class _ConstraintRenderBox extends RenderBox
     }
 
     if (_needsRecalculateConstraints) {
+      Stopwatch? constraintCalculationWatch;
+      if (stopwatch != null) {
+        constraintCalculationWatch = Stopwatch()..start();
+      }
+
       assert(() {
         if (_debugCheckConstraints) {
           _debugCheckIds();
@@ -2636,6 +2642,14 @@ class _ConstraintRenderBox extends RenderBox
       _needsRecalculateConstraints = false;
       _needsReorderPaintingOrder = false;
       _needsReorderEventOrder = false;
+
+      if (constraintCalculationWatch != null) {
+        constraintCalculationTimeUsage
+            .add(constraintCalculationWatch.elapsedMicroseconds);
+        if (constraintCalculationTimeUsage.length > maxTimeUsage) {
+          constraintCalculationTimeUsage.removeFirst();
+        }
+      }
     }
 
     _layoutByConstrainedNodeTrees(
@@ -3561,22 +3575,55 @@ class _ConstraintRenderBox extends RenderBox
     PaintingContext context,
     Offset offset,
   ) {
-    Iterator<int> layoutIterator = layoutTimeUsage.iterator;
+    Paint paint = Paint()..color = Colors.white;
+    Iterator<int> constraintCalculateIterator =
+        constraintCalculationTimeUsage.iterator;
     double heightOffset = 0;
+    while (constraintCalculateIterator.moveNext()) {
+      int calculateTime = constraintCalculateIterator.current;
+      ui.ParagraphBuilder paragraphBuilder =
+          ui.ParagraphBuilder(ui.ParagraphStyle(
+        textAlign: TextAlign.left,
+        fontSize: 8,
+      ));
+      if (calculateTime > 1000) {
+        paragraphBuilder.pushStyle(ui.TextStyle(
+          color: Colors.red,
+          background: paint,
+        ));
+      } else {
+        paragraphBuilder.pushStyle(ui.TextStyle(
+          color: Colors.green,
+          background: paint,
+        ));
+      }
+      paragraphBuilder.addText("calculate $calculateTime us");
+      ui.Paragraph paragraph = paragraphBuilder.build();
+      paragraph.layout(const ui.ParagraphConstraints(
+        width: 80,
+      ));
+      context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
+      heightOffset += 10;
+    }
+
+    Iterator<int> layoutIterator = layoutTimeUsage.iterator;
+    heightOffset = 0;
     while (layoutIterator.moveNext()) {
       int layoutTime = layoutIterator.current;
       ui.ParagraphBuilder paragraphBuilder =
           ui.ParagraphBuilder(ui.ParagraphStyle(
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.left,
         fontSize: 8,
       ));
       if (layoutTime > 5000) {
         paragraphBuilder.pushStyle(ui.TextStyle(
           color: Colors.red,
+          background: paint,
         ));
       } else {
         paragraphBuilder.pushStyle(ui.TextStyle(
           color: Colors.green,
+          background: paint,
         ));
       }
       paragraphBuilder.addText("layout $layoutTime us");
@@ -3585,7 +3632,7 @@ class _ConstraintRenderBox extends RenderBox
         width: 80,
       ));
       context.canvas
-          .drawParagraph(paragraph, Offset(20, heightOffset) + offset);
+          .drawParagraph(paragraph, Offset(80, heightOffset) + offset);
       heightOffset += 10;
     }
 
@@ -3601,10 +3648,12 @@ class _ConstraintRenderBox extends RenderBox
       if (paintTime > 5000) {
         paragraphBuilder.pushStyle(ui.TextStyle(
           color: Colors.red,
+          background: paint,
         ));
       } else {
         paragraphBuilder.pushStyle(ui.TextStyle(
           color: Colors.green,
+          background: paint,
         ));
       }
       paragraphBuilder.addText("paint $paintTime us");
@@ -3613,7 +3662,7 @@ class _ConstraintRenderBox extends RenderBox
         width: 80,
       ));
       context.canvas
-          .drawParagraph(paragraph, Offset(100, heightOffset) + offset);
+          .drawParagraph(paragraph, Offset(160, heightOffset) + offset);
       heightOffset += 10;
     }
 
@@ -3624,11 +3673,12 @@ class _ConstraintRenderBox extends RenderBox
     ));
     paragraphBuilder.pushStyle(ui.TextStyle(
       color: Colors.green,
+      background: paint,
     ));
     paragraphBuilder.addText('The bottom one is the latest');
     ui.Paragraph paragraph = paragraphBuilder.build();
     paragraph.layout(const ui.ParagraphConstraints(
-      width: 180,
+      width: 240,
     ));
     context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
   }
