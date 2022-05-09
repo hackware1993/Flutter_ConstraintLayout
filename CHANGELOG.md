@@ -1,3 +1,7 @@
+# v1.0.5-stable
+
+optimize constraint calculation performance.
+
 # v1.0.4-stable
 
 shorten package description.
