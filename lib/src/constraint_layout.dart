@@ -2520,6 +2520,18 @@ class _ConstraintRenderBox extends RenderBox
     _needsReorderEventOrder = true;
   }
 
+  static void insertionSort<E>(List<E> a, int Function(E a, E b) compare) {
+    for (int i = 1, lastIndex = a.length - 1; i <= lastIndex; i++) {
+      var el = a[i];
+      int j = i;
+      while ((j > 0) && (compare(a[j - 1], el) > 0)) {
+        a[j] = a[j - 1];
+        j--;
+      }
+      a[j] = el;
+    }
+  }
+
   @override
   void performLayout() {
     Stopwatch? stopwatch;
@@ -2601,18 +2613,39 @@ class _ConstraintRenderBox extends RenderBox
         return true;
       }());
 
-      /// Sort by the depth of constraint from shallow to deep, the lowest depth is 0, representing parent
-      _layoutOrderList = nodesMap.values.toList();
-      if (!selfSizeConfirmed) {
-        _layoutOrderList.add(parentNode!);
+      if (childCount > 20) {
+        // Count sort by child depth, the complexity is O(n)
+        List<List<_ConstrainedNode>> bucket =
+            List.generate(childCount * 2 + 1, (_) => []);
+        for (final element in nodesMap.values) {
+          bucket[element.getDepth(
+                  selfSizeConfirmed, resolvedWidth, resolvedHeight)]
+              .add(element);
+        }
+        if (!selfSizeConfirmed) {
+          bucket[childCount + 1].add(parentNode!);
+        }
+        _layoutOrderList = [];
+        for (final element in bucket) {
+          if (element.isNotEmpty) {
+            _layoutOrderList.addAll(element);
+          }
+        }
+      } else {
+        _layoutOrderList = nodesMap.values.toList();
+        if (!selfSizeConfirmed) {
+          _layoutOrderList.add(parentNode!);
+        }
+        insertionSort<_ConstrainedNode>(_layoutOrderList, (left, right) {
+          return left.getDepth(
+                  selfSizeConfirmed, resolvedWidth, resolvedHeight) -
+              right.getDepth(selfSizeConfirmed, resolvedWidth, resolvedHeight);
+        });
       }
-      _layoutOrderList.sort((left, right) {
-        return left.getDepth(selfSizeConfirmed, resolvedWidth, resolvedHeight) -
-            right.getDepth(selfSizeConfirmed, resolvedWidth, resolvedHeight);
-      });
 
+      // Most of the time, it is basically ordered, and the complexity is O(n)
       _paintingOrderList = nodesMap.values.toList();
-      _paintingOrderList.sort((left, right) {
+      insertionSort<_ConstrainedNode>(_paintingOrderList, (left, right) {
         int result = left.zIndex - right.zIndex;
         if (result == 0) {
           result = left.index - right.index;
@@ -2620,8 +2653,9 @@ class _ConstraintRenderBox extends RenderBox
         return result;
       });
 
+      // Most of the time, it is basically ordered, and the complexity is O(n)
       _eventOrderList = nodesMap.values.toList();
-      _eventOrderList.sort((left, right) {
+      insertionSort<_ConstrainedNode>(_eventOrderList, (left, right) {
         int result = left.eIndex - right.eIndex;
         if (result == 0) {
           result = left.index - right.index;
