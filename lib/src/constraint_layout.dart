@@ -3399,7 +3399,7 @@ class _ConstraintRenderBox extends RenderBox
     required Offset position,
   }) {
     if (_needsReorderEventOrder) {
-      _eventOrderList.sort((left, right) {
+      insertionSort<_ConstrainedNode>(_eventOrderList, (left, right) {
         int result = left.eIndex - right.eIndex;
         if (result == 0) {
           result = left.index - right.index;
@@ -3474,7 +3474,7 @@ class _ConstraintRenderBox extends RenderBox
     }());
 
     if (_needsReorderPaintingOrder) {
-      _paintingOrderList.sort((left, right) {
+      insertionSort<_ConstrainedNode>(_paintingOrderList, (left, right) {
         int result = left.zIndex - right.zIndex;
         if (result == 0) {
           result = left.index - right.index;
