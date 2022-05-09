@@ -2974,7 +2974,11 @@ class _ConstraintRenderBox extends RenderBox
         minWidth = node.minWidth;
         if (node.maxWidth == matchParent) {
           if (selfSizeConfirmed) {
-            maxWidth = size.width;
+            if (node.renderBox is _ConstraintRenderBox) {
+              maxWidth = double.infinity;
+            } else {
+              maxWidth = size.width;
+            }
           } else {
             maxWidth = double.infinity;
           }
@@ -3062,7 +3066,11 @@ class _ConstraintRenderBox extends RenderBox
         minHeight = node.minHeight;
         if (node.maxHeight == matchParent) {
           if (selfSizeConfirmed) {
-            maxHeight = size.height;
+            if (node.renderBox is _ConstraintRenderBox) {
+              maxHeight = double.infinity;
+            } else {
+              maxHeight = size.height;
+            }
           } else {
             maxHeight = double.infinity;
           }
