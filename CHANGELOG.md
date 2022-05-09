@@ -1,3 +1,7 @@
+# v1.0.6-stable
+
+optimize child wrapContent.
+
 # v1.0.5-stable
 
 optimize constraint calculation performance.
