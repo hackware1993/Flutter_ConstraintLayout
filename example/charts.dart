@@ -48,6 +48,7 @@ class ChartsState extends State<ChartsExample> {
   late int maxValue;
   int current = 6;
   Map<int, Rect> polylineData = HashMap();
+  ScrollController controller = ScrollController();
 
   @override
   void initState() {
@@ -68,7 +69,9 @@ class ChartsState extends State<ChartsExample> {
       ),
       body: Scrollbar(
         isAlwaysShown: true,
+        controller: controller,
         child: SingleChildScrollView(
+          controller: controller,
           child: ConstraintLayout(
             width: wrapContent,
             children: [
@@ -88,7 +91,7 @@ class ChartsState extends State<ChartsExample> {
               Container(
                 color: Colors.black,
               ).applyConstraint(
-                id: cId('base'),
+                id: cId('yAxis'),
                 height: 1,
                 width: matchParent,
                 bottom: parent.bottom.margin(40),
@@ -99,7 +102,7 @@ class ChartsState extends State<ChartsExample> {
                 ).applyConstraint(
                   height: 1,
                   width: matchParent,
-                  bottom: cId('base').bottom.margin(100 * (i + 1).toDouble()),
+                  bottom: cId('yAxis').bottom.margin(100 * (i + 1).toDouble()),
                 ),
               for (int i = 0; i < data.length; i++)
                 GestureDetector(
@@ -108,9 +111,13 @@ class ChartsState extends State<ChartsExample> {
                       current = i;
                     });
                   },
-                  child: Container(
-                    color:
-                        i == current ? Colors.deepOrange : Colors.orangeAccent,
+                  child: MouseRegion(
+                    child: Container(
+                      color: i == current
+                          ? Colors.deepOrange
+                          : Colors.orangeAccent,
+                    ),
+                    cursor: SystemMouseCursors.click,
                   ),
                 ).applyConstraint(
                   id: cId('data$i'),
@@ -138,7 +145,7 @@ class ChartsState extends State<ChartsExample> {
                     ),
                   ),
                 ).applyConstraint(
-                  top: cId('base').bottom,
+                  top: cId('yAxis').bottom,
                   centerHorizontalTo: cId('data$i'),
                 ),
               Container(
