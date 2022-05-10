@@ -38,3 +38,4 @@ flutter:
     - example/circle_position.dart
     - example/self_wrap_content.dart
     - example/margin.dart
+    - example/charts.dart

@@ -3,6 +3,7 @@ import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 import 'badge.dart';
 import 'barrier.dart';
+import 'charts.dart';
 import 'circle_position.dart';
 import 'coming_soon.dart';
 import 'complex_list.dart';
@@ -39,6 +40,7 @@ class ExampleHome extends StatelessWidget {
     'Circle Position': const CirclePositionExample(),
     'Self wrapContent': const SelfWrapContentExample(),
     'Margin': const MarginExample(),
+    'Charts': const ChartsExample(),
     'Chain (Coming soon)': const ComingSoonWidget(),
   };
 
