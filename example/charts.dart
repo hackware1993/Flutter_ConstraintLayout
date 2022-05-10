@@ -13,27 +13,6 @@ class ChartsExample extends StatefulWidget {
   State createState() => ChartsState();
 }
 
-class DotPainter extends CustomPainter {
-  const DotPainter();
-
-  @override
-  bool shouldRepaint(DotPainter oldDelegate) => false;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    double dashWidth = 5;
-    double dashSpace = 2;
-    Paint paint = Paint()
-      ..strokeWidth = 1
-      ..color = Colors.red;
-    double offset = 0;
-    while (offset < size.width) {
-      canvas.drawLine(Offset(offset, 0), Offset(offset + dashWidth, 0), paint);
-      offset += dashWidth + dashSpace;
-    }
-  }
-}
-
 class PolylinePainter extends CustomPainter {
   Map<int, Rect> polylineData;
 
@@ -87,146 +66,150 @@ class ChartsState extends State<ChartsExample> {
         title: 'Charts',
         codePath: 'example/charts.dart',
       ),
-      body: SingleChildScrollView(
-        child: ConstraintLayout(
-          width: wrapContent,
-          children: [
-            Container(
-              color: Colors.black,
-              child: const Text(
-                'Only shows the flexibility of Flutter ConstraintLayout\nplease use as appropriate',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
+      body: Scrollbar(
+        isAlwaysShown: true,
+        child: SingleChildScrollView(
+          child: ConstraintLayout(
+            width: wrapContent,
+            children: [
+              Container(
+                color: Colors.black,
+                child: const Text(
+                  'Only shows the flexibility of Flutter ConstraintLayout\nplease use as appropriate\nswipe right to see all chart',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ).applyConstraint(
-              topLeftTo: parent,
-            ),
-            Container(
-              color: Colors.black,
-            ).applyConstraint(
-              height: 1,
-              width: matchParent,
-              bottom: parent.bottom.margin(32),
-            ),
-            for (int i = 0; i < 8; i++)
-              const CustomPaint(
-                painter: DotPainter(),
               ).applyConstraint(
+                topCenterTo: parent,
+              ),
+              Container(
+                color: Colors.black,
+              ).applyConstraint(
+                id: cId('base'),
                 height: 1,
                 width: matchParent,
-                bottom: parent.bottom.margin(100 * (i + 1).toDouble()),
+                bottom: parent.bottom.margin(40),
               ),
-            for (int i = 0; i < data.length; i++)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    current = i;
-                  });
-                },
-                child: Container(
-                  color: i == current ? Colors.deepOrange : Colors.orangeAccent,
+              for (int i = 0; i < 8; i++)
+                Container(
+                  color: Colors.grey.withAlpha(80),
+                ).applyConstraint(
+                  height: 1,
+                  width: matchParent,
+                  bottom: cId('base').bottom.margin(100 * (i + 1).toDouble()),
                 ),
-              ).applyConstraint(
-                id: cId('data$i'),
-                width: 18,
-                height: (data[i] / maxValue) * 400,
-                left: (i == 0 ? parent.left : cId('data${i - 1}').right)
-                    .margin(44),
-                bottom: parent.bottom.margin(33),
-              ),
-            const SizedBox().applyConstraint(
-              width: 0,
-              left: cId('data${data.length - 1}').right.margin(44),
-              bottom: parent.bottom,
-            ),
-            for (int i = 0; i < xTitles.length; i++)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    current = i;
-                  });
-                },
-                child: Text(
-                  xTitles[i],
-                  style: TextStyle(
-                    color: i == current ? Colors.black : Colors.grey,
+              for (int i = 0; i < data.length; i++)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      current = i;
+                    });
+                  },
+                  child: Container(
+                    color:
+                        i == current ? Colors.deepOrange : Colors.orangeAccent,
                   ),
+                ).applyConstraint(
+                  id: cId('data$i'),
+                  width: 18,
+                  height: (data[i] / maxValue) * 400,
+                  left: parent.left.margin((i + 1) * 44),
+                  bottom: parent.bottom.margin(41),
                 ),
-              ).applyConstraint(
-                bottom: parent.bottom.margin(15),
-                centerHorizontalTo: cId('data$i'),
+              const SizedBox().applyConstraint(
+                width: 0,
+                left: cId('data${data.length - 1}').right.margin(44),
+                bottom: parent.bottom.margin(41),
               ),
-            Container(
-              color: Colors.blue,
-            ).applyConstraint(
-              outTopCenterTo: cId('data$current'),
-              top: parent.top,
-              width: 1,
-              height: matchConstraint,
-            ),
-            CustomPaint(
-              painter: PolylinePainter(polylineData),
-            ).applyConstraint(
-              width: matchParent,
-              height: matchParent,
-              eIndex: 0,
-            ),
-            for (int i = 0; i < compareData.length; i++)
+              for (int i = 0; i < xTitles.length; i++)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      current = i;
+                    });
+                  },
+                  child: Text(
+                    xTitles[i],
+                    style: TextStyle(
+                      color: i == current ? Colors.black : Colors.grey,
+                    ),
+                  ),
+                ).applyConstraint(
+                  top: cId('base').bottom,
+                  centerHorizontalTo: cId('data$i'),
+                ),
               Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  border: Border.all(
-                    width: 1,
-                    color: Colors.green,
+                color: Colors.blue,
+              ).applyConstraint(
+                outTopCenterTo: cId('data$current'),
+                top: parent.top,
+                width: 1,
+                height: matchConstraint,
+              ),
+              CustomPaint(
+                painter: PolylinePainter(polylineData),
+              ).offPaint().applyConstraint(
+                    width: matchParent,
+                    height: matchParent,
+                    eIndex: 0,
+                  ),
+              for (int i = 0; i < compareData.length; i++)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    border: Border.all(
+                      width: 1,
+                      color: Colors.green,
+                    ),
+                  ),
+                ).applyConstraint(
+                  size: 10,
+                  bottomCenterTo: cId('data$i')
+                      .bottomMargin((compareData[i] / maxValue) * 400),
+                  translate: const Offset(0, 0.5),
+                  percentageTranslate: true,
+                  callback: (_, rect) {
+                    polylineData[i] = rect;
+                  },
+                ),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
+                ),
+                child: Text(
+                  '${data[current]}',
+                  style: const TextStyle(
+                    color: Colors.white,
                   ),
                 ),
+                padding: const EdgeInsets.all(5),
               ).applyConstraint(
-                size: 10,
-                bottomCenterTo: cId('data$i')
-                    .bottomMargin((compareData[i] / maxValue) * 400),
-                translate: const Offset(0, 0.5),
-                percentageTranslate: true,
-                callback: (_, rect) {
-                  polylineData[i] = rect;
-                },
+                outTopCenterTo: cId('data$current').bottomMargin(33),
               ),
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.all(Radius.circular(4)),
-              ),
-              child: Text(
-                '${data[current]}',
-                style: const TextStyle(
-                  color: Colors.white,
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
                 ),
-              ),
-              padding: const EdgeInsets.all(5),
-            ).applyConstraint(
-              outTopCenterTo: cId('data$current').bottomMargin(33),
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.grey,
-                borderRadius: BorderRadius.all(Radius.circular(4)),
-              ),
-              child: Text(
-                '${compareData[current]}',
-                style: const TextStyle(
-                  color: Colors.white,
+                child: Text(
+                  '${compareData[current]}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
                 ),
+                padding: const EdgeInsets.all(5),
+              ).applyConstraint(
+                outTopCenterTo: cId('data$current').bottomMargin(65),
               ),
-              padding: const EdgeInsets.all(5),
-            ).applyConstraint(
-              outTopCenterTo: cId('data$current').bottomMargin(65),
-            ),
-          ],
+            ],
+          ),
+          scrollDirection: Axis.horizontal,
         ),
-        scrollDirection: Axis.horizontal,
       ),
     );
   }
