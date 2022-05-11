@@ -39,3 +39,4 @@ flutter:
     - example/self_wrap_content.dart
     - example/margin.dart
     - example/charts.dart
+    - example/pinned_position.dart

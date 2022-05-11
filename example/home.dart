@@ -13,6 +13,7 @@ import 'guideline.dart';
 import 'horizontal_list.dart';
 import 'margin.dart';
 import 'percentage_layout.dart';
+import 'pinned_position.dart';
 import 'relative_id.dart';
 import 'self_wrap_content.dart';
 import 'staggered_grid.dart';
@@ -38,6 +39,7 @@ class ExampleHome extends StatelessWidget {
     'Vertical List': const VerticalListExample(),
     'Staggered Grid': const StaggeredGridExample(),
     'Circle Position': const CirclePositionExample(),
+    'Pinned Position': const PinnedPositionExample(),
     'Self wrapContent': const SelfWrapContentExample(),
     'Margin': const MarginExample(),
     'Charts': const ChartsExample(),
