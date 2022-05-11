@@ -1,3 +1,7 @@
+# v1.1.0-alpha
+
+add pinned position support.
+
 # v1.0.7-stable
 
 optimize key set.

@@ -110,13 +110,14 @@ build 耗时有时甚至超过渲染耗时。
     27. centerBottomRightTo
 16. 瀑布流、网格、列表（列表是一个特殊的瀑布流，网格也是一个特殊的瀑布流）
 17. 圆形定位
-18. e-index（事件分发顺序，默认是 z-index，一般用来处理点击区域）
-19. 子元素的大小可以被设置为：
+18. 图钉定位
+19. e-index（事件分发顺序，默认是 z-index，一般用来处理点击区域）
+20. 子元素的大小可以被设置为：
     1. 固定大小（>=0）
     2. matchParent
     3. wrapContent（默认值，支持最大、最小设置）
     4. matchConstraint
-20. 自身的大小可以被设置为：
+21. 自身的大小可以被设置为：
     1. 固定大小（>=0）
     2. matchParent（default）
     3. wrapContent（暂不支持最大、最小设置）
@@ -145,12 +146,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.0.7-stable'
+      ref: 'v1.1.0-alpha'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.0.7-stable
+  flutter_constraintlayout: ^1.1.0-alpha
 ```
 
 ```dart

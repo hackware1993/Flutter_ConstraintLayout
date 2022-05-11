@@ -136,13 +136,14 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
 16. staggered grid、grid、list(list is a special staggered grid, grid is also a special staggered
     grid)
 17. circle position
-18. e-index(event dispatch order, default is z-index)
-19. the size of child widgets can be set to:
+18. pinned position
+19. e-index(event dispatch order, default is z-index)
+20. the size of child widgets can be set to:
     1. fixed size(>=0)
     2. matchParent
     3. wrapContent(default, minimum and maximum supported)
     4. matchConstraint
-20. the size of itself can be set to:
+21. the size of itself can be set to:
     1. fixed size(>=0)
     2. matchParent(default)
     3. wrapContent(minimum and maximum are temporarily not supported)
@@ -171,12 +172,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.0.7-stable'
+      ref: 'v1.1.0-alpha'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.0.7-stable
+  flutter_constraintlayout: ^1.1.0-alpha
 ```
 
 ```dart
