@@ -1,3 +1,7 @@
+# v1.0.7-stable
+
+optimize key set.
+
 # v1.0.6-stable
 
 optimize child wrapContent.
