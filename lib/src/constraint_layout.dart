@@ -398,7 +398,6 @@ const Object _baseConstraint = Object();
 
 extension ConstrainedWidgetsExt on Widget {
   Constrained applyConstraint({
-    Key? key,
     ConstraintId? id,
     double width = wrapContent,
     double height = wrapContent,
@@ -531,7 +530,6 @@ extension ConstrainedWidgetsExt on Widget {
   }
 
   Constrained apply({
-    Key? key,
     required Constraint constraint,
   }) {
     return Constrained(
@@ -542,7 +540,6 @@ extension ConstrainedWidgetsExt on Widget {
   }
 
   UnConstrained applyConstraintId({
-    Key? key,
     required ConstraintId id,
   }) {
     return UnConstrained(
@@ -554,7 +551,7 @@ extension ConstrainedWidgetsExt on Widget {
 
   /// When the layout is complex, if the child elements need to be repainted frequently, it
   /// is recommended to use RepaintBoundary to improve performance.
-  RepaintBoundary offPaint({Key? key}) {
+  RepaintBoundary offPaint() {
     return RepaintBoundary(
       key: key,
       child: this,
@@ -564,7 +561,6 @@ extension ConstrainedWidgetsExt on Widget {
   /// If you can't declare a child element as const and it won't change, you can use OffBuildWidget
   /// to avoid the rebuilding of the child element.
   OffBuildWidget offBuild({
-    Key? key,
     required String id,
   }) {
     return OffBuildWidget(
