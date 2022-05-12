@@ -31,6 +31,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// When size is non-null, both width and height are set to size
   final double? size;
 
+  final ConstraintVersion? constraintVersion;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints,
@@ -47,6 +49,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.width = matchParent,
     this.height = matchParent,
     this.size,
+    this.constraintVersion,
   }) : super(
           key: key,
           children: children,
@@ -77,7 +80,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugShowZIndex = debugShowZIndex
       .._debugShowChildDepth = debugShowChildDepth
       .._width = selfWidth
-      .._height = selfHeight;
+      .._height = selfHeight
+      .._constraintVersion = constraintVersion?.copy();
   }
 
   @override
@@ -108,7 +112,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugShowZIndex = debugShowZIndex
       ..debugShowChildDepth = debugShowChildDepth
       ..width = selfWidth
-      ..height = selfHeight;
+      ..height = selfHeight
+      ..constraintVersion = constraintVersion?.copy();
   }
 }
 
@@ -1025,6 +1030,68 @@ class PinnedInfo {
       targetPos.hashCode;
 }
 
+class ConstraintVersion {
+  int _constraintsVersion = 1;
+  int _layoutVersion = 1;
+  int _paintVersion = 1;
+  int _paintingOrderVersion = 1;
+  int _eventOrderVersion = 1;
+
+  ConstraintVersion incConstraintsVersion() {
+    _constraintsVersion++;
+    return this;
+  }
+
+  ConstraintVersion incLayoutVersion() {
+    _layoutVersion++;
+    return this;
+  }
+
+  ConstraintVersion incPaintVersion() {
+    _paintVersion++;
+    return this;
+  }
+
+  ConstraintVersion incPaintingOrderVersion() {
+    _paintingOrderVersion++;
+    _eventOrderVersion++;
+    return this;
+  }
+
+  ConstraintVersion incEventOrderVersion() {
+    _eventOrderVersion++;
+    return this;
+  }
+
+  ConstraintVersion copy() {
+    return ConstraintVersion()
+      .._constraintsVersion = _constraintsVersion
+      .._layoutVersion = _layoutVersion
+      .._paintVersion = _paintVersion
+      .._paintingOrderVersion = _paintingOrderVersion
+      .._eventOrderVersion = _eventOrderVersion;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConstraintVersion &&
+          runtimeType == other.runtimeType &&
+          _constraintsVersion == other._constraintsVersion &&
+          _layoutVersion == other._layoutVersion &&
+          _paintVersion == other._paintVersion &&
+          _paintingOrderVersion == other._paintingOrderVersion &&
+          _eventOrderVersion == other._eventOrderVersion;
+
+  @override
+  int get hashCode =>
+      _constraintsVersion.hashCode ^
+      _layoutVersion.hashCode ^
+      _paintVersion.hashCode ^
+      _paintingOrderVersion.hashCode ^
+      _eventOrderVersion.hashCode;
+}
+
 class Constraint extends ConstraintDefine {
   /// 'wrap_content'、'match_parent'、'match_constraint'、'48, etc'
   /// 'match_parent' will be converted to the base constraints
@@ -1422,6 +1489,16 @@ class Constraint extends ConstraintDefine {
     return true;
   }
 
+  static int getMinimalConstraintCount(double size) {
+    if (size == matchParent) {
+      return 0;
+    } else if (size == wrapContent || size >= 0) {
+      return 1;
+    } else {
+      return 2;
+    }
+  }
+
   void applyTo(RenderObject renderObject) {
     _Align? left = this.left;
     _Align? top = this.top;
@@ -1697,6 +1774,45 @@ class Constraint extends ConstraintDefine {
 
     _ConstraintBoxData parentData =
         renderObject.parentData! as _ConstraintBoxData;
+    parentData.clickPadding = clickPadding;
+    parentData.callback = callback;
+
+    if ((renderObject.parent as _ConstraintRenderBox)._constraintVersion !=
+        null) {
+      parentData.id = id;
+      parentData.width = width;
+      parentData.height = height;
+      parentData.visibility = visibility;
+      parentData.percentageMargin = percentageMargin;
+      parentData.margin = margin;
+      parentData.goneMargin = goneMargin;
+      parentData.left = left;
+      parentData.right = right;
+      parentData.top = top;
+      parentData.bottom = bottom;
+      parentData.baseline = baseline;
+      parentData.textBaseline = textBaseline;
+      parentData.zIndex = zIndex;
+      parentData.translateConstraint = translateConstraint;
+      parentData.translate = translate;
+      parentData.widthPercent = widthPercent;
+      parentData.heightPercent = heightPercent;
+      parentData.widthPercentageAnchor = widthPercentageAnchor;
+      parentData.heightPercentageAnchor = heightPercentageAnchor;
+      parentData.horizontalBias = horizontalBias;
+      parentData.verticalBias = verticalBias;
+      parentData.percentageTranslate = percentageTranslate;
+      parentData.minWidth = minWidth;
+      parentData.maxWidth = maxWidth;
+      parentData.minHeight = minHeight;
+      parentData.maxHeight = maxHeight;
+      parentData.widthHeightRatio = widthHeightRatio;
+      parentData.ratioBaseOnWidth = ratioBaseOnWidth;
+      parentData.eIndex = eIndex;
+      parentData.pinnedInfo = pinnedInfo;
+      return;
+    }
+
     bool needsLayout = false;
     bool needsPaint = false;
     bool needsReorderPaintingOrder = false;
@@ -1707,16 +1823,6 @@ class Constraint extends ConstraintDefine {
       parentData.id = id;
       needsRecalculateConstraints = true;
       needsLayout = true;
-    }
-
-    int getMinimalConstraintCount(double size) {
-      if (size == matchParent) {
-        return 0;
-      } else if (size == wrapContent || size >= 0) {
-        return 1;
-      } else {
-        return 2;
-      }
     }
 
     if (parentData.width != width) {
@@ -1742,8 +1848,6 @@ class Constraint extends ConstraintDefine {
       parentData.height = height;
       needsLayout = true;
     }
-
-    parentData.clickPadding = clickPadding;
 
     if (parentData.visibility != visibility) {
       if (parentData.visibility == gone || visibility == gone) {
@@ -1854,8 +1958,6 @@ class Constraint extends ConstraintDefine {
       parentData.verticalBias = verticalBias;
       needsLayout = true;
     }
-
-    parentData.callback = callback;
 
     if (parentData.percentageTranslate != percentageTranslate) {
       parentData.percentageTranslate = percentageTranslate;
@@ -2095,6 +2197,7 @@ class _ConstraintRenderBox extends RenderBox
 
   late double _width;
   late double _height;
+  ConstraintVersion? _constraintVersion;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderPaintingOrder = true;
@@ -2281,6 +2384,35 @@ class _ConstraintRenderBox extends RenderBox
       _height = value;
       markNeedsLayout();
     }
+  }
+
+  set constraintVersion(ConstraintVersion? value) {
+    if (_constraintVersion == null || value == null) {
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
+    } else {
+      if (_constraintVersion!._constraintsVersion !=
+          value._constraintsVersion) {
+        markNeedsRecalculateConstraints();
+        markNeedsLayout();
+      } else {
+        if (_constraintVersion!._layoutVersion != value._layoutVersion) {
+          markNeedsLayout();
+        }
+        if (_constraintVersion!._paintingOrderVersion !=
+            value._paintingOrderVersion) {
+          needsReorderPaintingOrder = true;
+        }
+        if (_constraintVersion!._paintVersion != value._paintVersion) {
+          markNeedsPaint();
+        }
+        if (_constraintVersion!._eventOrderVersion !=
+            value._eventOrderVersion) {
+          needsReorderEventOrder = true;
+        }
+      }
+    }
+    _constraintVersion = value;
   }
 
   @override
