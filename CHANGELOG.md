@@ -1,3 +1,7 @@
+# v1.1.0-stable
+
+fix pinned rotate bug.
+
 # v1.1.0-beta
 
 fully support pinned position.
