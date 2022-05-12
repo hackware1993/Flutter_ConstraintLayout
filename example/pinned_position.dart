@@ -31,6 +31,7 @@ class PinnedPositionExample extends StatelessWidget {
               anchor,
               PinnedPos(0, PinnedType.absolute, 0.5, PinnedType.percent),
               PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
+              rotateDegree: 45,
             ),
           )
         ],
