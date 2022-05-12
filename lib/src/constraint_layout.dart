@@ -998,9 +998,26 @@ class PinnedPos {
       xOffset.hashCode ^ xType.hashCode ^ yOffset.hashCode ^ yType.hashCode;
 }
 
+class PinnedTranslate extends Offset {
+  PinnedInfo pinnedInfo;
+
+  PinnedTranslate(this.pinnedInfo) : super(0, 0);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is PinnedTranslate &&
+          runtimeType == other.runtimeType &&
+          pinnedInfo == other.pinnedInfo;
+
+  @override
+  int get hashCode => super.hashCode ^ pinnedInfo.hashCode;
+}
+
 class PinnedInfo {
   /// [0,360]
-  int rotateDegree;
+  int angle;
   ConstraintId anchorId;
   PinnedPos selfPos;
   PinnedPos targetPos;
@@ -1009,7 +1026,7 @@ class PinnedInfo {
     this.anchorId,
     this.selfPos,
     this.targetPos, {
-    this.rotateDegree = 0,
+    this.angle = 0,
   });
 
   @override
@@ -1017,14 +1034,14 @@ class PinnedInfo {
       identical(this, other) ||
       other is PinnedInfo &&
           runtimeType == other.runtimeType &&
-          rotateDegree == other.rotateDegree &&
+          angle == other.angle &&
           anchorId == other.anchorId &&
           selfPos == other.selfPos &&
           targetPos == other.targetPos;
 
   @override
   int get hashCode =>
-      rotateDegree.hashCode ^
+      angle.hashCode ^
       anchorId.hashCode ^
       selfPos.hashCode ^
       targetPos.hashCode;
@@ -1920,14 +1937,42 @@ class Constraint extends ConstraintDefine {
       needsLayout = true;
     }
 
-    if (parentData.translate != translate) {
-      parentData.translate = translate;
-      if (translateConstraint) {
-        needsLayout = true;
+    if (parentData.translate.runtimeType != translate.runtimeType) {
+      needsRecalculateConstraints = true;
+      needsLayout = true;
+    } else {
+      if (translate.runtimeType == Offset) {
+        if (parentData.translate != translate) {
+          if (translateConstraint) {
+            needsLayout = true;
+          } else {
+            needsPaint = true;
+          }
+        }
       } else {
-        needsPaint = true;
+        PinnedInfo lastInfo =
+            (parentData.translate as PinnedTranslate).pinnedInfo;
+        PinnedInfo currentInto = (translate as PinnedTranslate).pinnedInfo;
+        if (lastInfo.anchorId == currentInto.anchorId) {
+          if (lastInfo.selfPos != currentInto.selfPos ||
+              lastInfo.targetPos != currentInto.targetPos) {
+            if (translateConstraint) {
+              needsLayout = true;
+            } else {
+              needsPaint = true;
+            }
+          } else {
+            if (lastInfo.angle != currentInto.angle) {
+              needsPaint = true;
+            }
+          }
+        } else {
+          needsRecalculateConstraints = true;
+          needsLayout = true;
+        }
       }
     }
+    parentData.translate = translate;
 
     if (parentData.widthPercent != widthPercent) {
       parentData.widthPercent = widthPercent;
@@ -2010,8 +2055,7 @@ class Constraint extends ConstraintDefine {
         } else if (parentData.pinnedInfo!.selfPos != pinnedInfo!.selfPos ||
             parentData.pinnedInfo!.targetPos != pinnedInfo!.targetPos) {
           needsLayout = true;
-        } else if (parentData.pinnedInfo!.rotateDegree !=
-            pinnedInfo!.rotateDegree) {
+        } else if (parentData.pinnedInfo!.angle != pinnedInfo!.angle) {
           needsPaint = true;
         }
       }
@@ -2387,7 +2431,14 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   set constraintVersion(ConstraintVersion? value) {
-    if (_constraintVersion == null || value == null) {
+    if (_constraintVersion == null && value == null) {
+      // do nothing
+    } else if (_constraintVersion == null) {
+      _constraintVersion = value;
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
+    } else if (value == null) {
+      _constraintVersion = value;
       markNeedsRecalculateConstraints();
       markNeedsLayout();
     } else {
@@ -2410,9 +2461,9 @@ class _ConstraintRenderBox extends RenderBox
             value._eventOrderVersion) {
           needsReorderEventOrder = true;
         }
+        _constraintVersion = value;
       }
     }
-    _constraintVersion = value;
   }
 
   @override
@@ -2477,6 +2528,10 @@ class _ConstraintRenderBox extends RenderBox
       }
       if (childParentData.pinnedInfo != null) {
         constraintsIdSet.add(childParentData.pinnedInfo!.anchorId);
+      }
+      if (childParentData.translate is PinnedTranslate) {
+        constraintsIdSet.add(
+            (childParentData.translate as PinnedTranslate).pinnedInfo.anchorId);
       }
       child = childParentData.nextSibling;
     }
@@ -2758,6 +2813,12 @@ class _ConstraintRenderBox extends RenderBox
       if (childParentData.pinnedInfo != null) {
         currentNode.pinnedConstraint = _getConstrainedNodeForChild(
             childParentData.pinnedInfo!.anchorId, childIndex);
+      }
+
+      if (childParentData.translate is PinnedTranslate) {
+        currentNode.pinnedConstraint = _getConstrainedNodeForChild(
+            (childParentData.translate as PinnedTranslate).pinnedInfo.anchorId,
+            childIndex);
       }
 
       child = childParentData.nextSibling;
@@ -3458,9 +3519,14 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   Offset calculateChildOffset(_ConstrainedNode node) {
+    PinnedInfo? pinnedInfo;
     if (node.pinnedInfo != null) {
-      PinnedInfo pinnedInfo = node.pinnedInfo!;
-      Offset selfOffset = pinnedInfo.selfPos.resolve(node.renderBox!.size);
+      pinnedInfo = node.pinnedInfo!;
+    } else if (node.translate is PinnedTranslate && node.translateConstraint) {
+      pinnedInfo = (node.translate as PinnedTranslate).pinnedInfo;
+    }
+    if (pinnedInfo != null) {
+      Offset selfOffset = pinnedInfo.selfPos.resolve(node.getSize());
       Offset targetOffset =
           pinnedInfo.targetPos.resolve(node.pinnedConstraint!.getSize(this));
       double offsetX =
@@ -3674,6 +3740,12 @@ class _ConstraintRenderBox extends RenderBox
       }
     }
 
+    if (node.translateConstraint) {
+      Offset translate = node.translate;
+      offsetX += translate.dx;
+      offsetY += translate.dy;
+    }
+
     return Offset(offsetX, offsetY);
   }
 
@@ -3778,15 +3850,33 @@ class _ConstraintRenderBox extends RenderBox
         paintShift = element.translate;
       }
 
+      PinnedInfo? pinnedInfo;
       if (element.pinnedInfo != null) {
+        pinnedInfo = element.pinnedInfo;
+      } else if (element.translate is PinnedTranslate) {
+        pinnedInfo = (element.translate as PinnedTranslate).pinnedInfo;
+        if (!element.translateConstraint) {
+          Offset selfOffset = pinnedInfo.selfPos.resolve(element.getSize());
+          Offset targetOffset = pinnedInfo.targetPos
+              .resolve(element.pinnedConstraint!.getSize(this));
+          double offsetX = element.pinnedConstraint!.getX() +
+              targetOffset.dx -
+              selfOffset.dx -
+              element.getX();
+          double offsetY = element.pinnedConstraint!.getY() +
+              targetOffset.dy -
+              selfOffset.dy -
+              element.getY();
+          paintShift = Offset(offsetX, offsetY);
+        }
+      }
+      if (pinnedInfo != null) {
         context.canvas.save();
-        Offset anchorOffset =
-            element.pinnedInfo!.selfPos.resolve(element.getSize());
+        Offset anchorOffset = pinnedInfo.selfPos.resolve(element.getSize());
         context.canvas.translate(
             element.offset.dx + offset.dx + paintShift.dx + anchorOffset.dx,
             element.offset.dy + offset.dy + paintShift.dy + anchorOffset.dy);
-        context.canvas
-            .rotate(pi + pi * (element.pinnedInfo!.rotateDegree / 180));
+        context.canvas.rotate(pi + pi * (pinnedInfo.angle / 180));
         context.paintChild(
             element.renderBox!,
             Offset(-element.getMeasuredWidth() + anchorOffset.dx,
@@ -4049,16 +4139,10 @@ class _ConstrainedNode {
 
   bool laidOutLater = false;
 
-  Offset get offset {
-    if (translateConstraint) {
-      return parentData.offset + translate;
-    } else {
-      return parentData.offset;
-    }
-  }
+  Offset get offset => parentData.offset;
 
   Offset get translate {
-    if (!percentageTranslate) {
+    if (!percentageTranslate || parentData.translate is PinnedTranslate) {
       return parentData.translate!;
     } else {
       double dx = renderBox!.size.width * parentData.translate!.dx;

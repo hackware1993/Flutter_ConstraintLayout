@@ -58,7 +58,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
               anchor,
               PinnedPos(0.2, PinnedType.percent, 0.2, PinnedType.percent),
               PinnedPos(1, PinnedType.percent, 1, PinnedType.percent),
-              rotateDegree: angle,
+              angle: angle,
             ),
           ),
           Container(
@@ -69,7 +69,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
               anchor,
               PinnedPos(1, PinnedType.percent, 1, PinnedType.percent),
               PinnedPos(0, PinnedType.percent, 0, PinnedType.percent),
-              rotateDegree: 360 - angle,
+              angle: 360 - angle,
             ),
           ),
           Container(
@@ -80,7 +80,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
               anchor,
               PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
               PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
-              rotateDegree: angle,
+              angle: angle,
             ),
           ),
           Container(
