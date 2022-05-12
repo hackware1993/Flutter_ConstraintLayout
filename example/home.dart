@@ -53,7 +53,7 @@ class ExampleHome extends StatelessWidget {
       body: ConstraintLayout(
         children: [
           const Text(
-            'Flutter ConstraintLayout Example\nby hackeware',
+            'Flutter ConstraintLayout Example\nby hackware',
             style: TextStyle(
               fontSize: 32,
               height: 1.5,
