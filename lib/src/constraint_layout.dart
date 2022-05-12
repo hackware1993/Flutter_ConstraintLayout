@@ -3780,21 +3780,17 @@ class _ConstraintRenderBox extends RenderBox
 
       if (element.pinnedInfo != null) {
         context.canvas.save();
+        Offset anchorOffset =
+            element.pinnedInfo!.selfPos.resolve(element.getSize());
         context.canvas.translate(
-            element.offset.dx +
-                offset.dx +
-                paintShift.dx +
-                element.getMeasuredWidth() / 2,
-            element.offset.dy +
-                offset.dy +
-                paintShift.dy +
-                element.getMeasuredHeight() / 2);
+            element.offset.dx + offset.dx + paintShift.dx + anchorOffset.dx,
+            element.offset.dy + offset.dy + paintShift.dy + anchorOffset.dy);
         context.canvas
             .rotate(pi + pi * (element.pinnedInfo!.rotateDegree / 180));
         context.paintChild(
             element.renderBox!,
-            Offset(-element.getMeasuredWidth() / 2,
-                -element.getMeasuredHeight() / 2));
+            Offset(-element.getMeasuredWidth() + anchorOffset.dx,
+                -element.getMeasuredHeight() + anchorOffset.dy));
         context.canvas.restore();
       } else {
         context.paintChild(
