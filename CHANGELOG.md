@@ -1,3 +1,7 @@
+# v1.1.0-beta
+
+fully support pinned position.
+
 # v1.1.0-alpha
 
 add pinned position support.
