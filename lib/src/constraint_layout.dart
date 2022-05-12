@@ -31,6 +31,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// When size is non-null, both width and height are set to size
   final double? size;
 
+  final ConstraintVersion? constraintVersion;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints,
@@ -47,6 +49,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.width = matchParent,
     this.height = matchParent,
     this.size,
+    this.constraintVersion,
   }) : super(
           key: key,
           children: children,
@@ -77,7 +80,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugShowZIndex = debugShowZIndex
       .._debugShowChildDepth = debugShowChildDepth
       .._width = selfWidth
-      .._height = selfHeight;
+      .._height = selfHeight
+      .._constraintVersion = constraintVersion?.copy();
   }
 
   @override
@@ -108,7 +112,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugShowZIndex = debugShowZIndex
       ..debugShowChildDepth = debugShowChildDepth
       ..width = selfWidth
-      ..height = selfHeight;
+      ..height = selfHeight
+      ..constraintVersion = constraintVersion?.copy();
   }
 }
 
@@ -459,6 +464,7 @@ extension ConstrainedWidgetsExt on Widget {
     double? widthHeightRatio,
     bool? ratioBaseOnWidth,
     int? eIndex,
+    PinnedInfo? pinnedInfo,
   }) {
     return Constrained(
       key: key,
@@ -524,6 +530,7 @@ extension ConstrainedWidgetsExt on Widget {
         centerBottomCenterTo: centerBottomCenterTo,
         centerBottomRightTo: centerBottomRightTo,
         eIndex: eIndex,
+        pinnedInfo: pinnedInfo,
       ),
       child: this,
     );
@@ -934,6 +941,157 @@ class ConstraintDefine {
   int get hashCode => id.hashCode;
 }
 
+enum PinnedType {
+  absolute,
+  percent,
+}
+
+class PinnedPos {
+  double xOffset;
+  PinnedType xType;
+  double yOffset;
+  PinnedType yType;
+
+  PinnedPos(this.xOffset, this.xType, this.yOffset, this.yType);
+
+  void checkBounds(double value, PinnedType pinnedType, double base) {
+    if (pinnedType == PinnedType.absolute) {
+      assert(value >= 0 && value <= base);
+    } else {
+      assert(value >= 0 && value <= 1);
+    }
+  }
+
+  Offset resolve(Size size) {
+    assert(() {
+      checkBounds(xOffset, xType, size.width);
+      checkBounds(yOffset, yType, size.height);
+      return true;
+    }());
+    double x;
+    double y;
+    if (xType == PinnedType.absolute) {
+      x = xOffset;
+    } else {
+      x = xOffset * size.width;
+    }
+    if (yType == PinnedType.absolute) {
+      y = yOffset;
+    } else {
+      y = yOffset * size.height;
+    }
+    return Offset(x, y);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PinnedPos &&
+          runtimeType == other.runtimeType &&
+          xOffset == other.xOffset &&
+          xType == other.xType &&
+          yOffset == other.yOffset &&
+          yType == other.yType;
+
+  @override
+  int get hashCode =>
+      xOffset.hashCode ^ xType.hashCode ^ yOffset.hashCode ^ yType.hashCode;
+}
+
+class PinnedInfo {
+  /// [0,360]
+  int rotateDegree;
+  ConstraintId anchorId;
+  PinnedPos selfPos;
+  PinnedPos targetPos;
+
+  PinnedInfo(
+    this.anchorId,
+    this.selfPos,
+    this.targetPos, {
+    this.rotateDegree = 0,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PinnedInfo &&
+          runtimeType == other.runtimeType &&
+          rotateDegree == other.rotateDegree &&
+          anchorId == other.anchorId &&
+          selfPos == other.selfPos &&
+          targetPos == other.targetPos;
+
+  @override
+  int get hashCode =>
+      rotateDegree.hashCode ^
+      anchorId.hashCode ^
+      selfPos.hashCode ^
+      targetPos.hashCode;
+}
+
+class ConstraintVersion {
+  int _constraintsVersion = 1;
+  int _layoutVersion = 1;
+  int _paintVersion = 1;
+  int _paintingOrderVersion = 1;
+  int _eventOrderVersion = 1;
+
+  ConstraintVersion incConstraintsVersion() {
+    _constraintsVersion++;
+    return this;
+  }
+
+  ConstraintVersion incLayoutVersion() {
+    _layoutVersion++;
+    return this;
+  }
+
+  ConstraintVersion incPaintVersion() {
+    _paintVersion++;
+    return this;
+  }
+
+  ConstraintVersion incPaintingOrderVersion() {
+    _paintingOrderVersion++;
+    _eventOrderVersion++;
+    return this;
+  }
+
+  ConstraintVersion incEventOrderVersion() {
+    _eventOrderVersion++;
+    return this;
+  }
+
+  ConstraintVersion copy() {
+    return ConstraintVersion()
+      .._constraintsVersion = _constraintsVersion
+      .._layoutVersion = _layoutVersion
+      .._paintVersion = _paintVersion
+      .._paintingOrderVersion = _paintingOrderVersion
+      .._eventOrderVersion = _eventOrderVersion;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConstraintVersion &&
+          runtimeType == other.runtimeType &&
+          _constraintsVersion == other._constraintsVersion &&
+          _layoutVersion == other._layoutVersion &&
+          _paintVersion == other._paintVersion &&
+          _paintingOrderVersion == other._paintingOrderVersion &&
+          _eventOrderVersion == other._eventOrderVersion;
+
+  @override
+  int get hashCode =>
+      _constraintsVersion.hashCode ^
+      _layoutVersion.hashCode ^
+      _paintVersion.hashCode ^
+      _paintingOrderVersion.hashCode ^
+      _eventOrderVersion.hashCode;
+}
+
 class Constraint extends ConstraintDefine {
   /// 'wrap_content'、'match_parent'、'match_constraint'、'48, etc'
   /// 'match_parent' will be converted to the base constraints
@@ -1073,6 +1231,8 @@ class Constraint extends ConstraintDefine {
 
   final int? eIndex;
 
+  final PinnedInfo? pinnedInfo;
+
   Constraint({
     ConstraintId? id,
     this.width = wrapContent,
@@ -1135,6 +1295,7 @@ class Constraint extends ConstraintDefine {
     this.widthHeightRatio,
     this.ratioBaseOnWidth,
     this.eIndex,
+    this.pinnedInfo,
   }) : super(id);
 
   @override
@@ -1201,7 +1362,8 @@ class Constraint extends ConstraintDefine {
           maxHeight == other.maxHeight &&
           widthHeightRatio == other.widthHeightRatio &&
           ratioBaseOnWidth == other.ratioBaseOnWidth &&
-          eIndex == other.eIndex;
+          eIndex == other.eIndex &&
+          pinnedInfo == other.pinnedInfo;
 
   @override
   int get hashCode =>
@@ -1264,7 +1426,8 @@ class Constraint extends ConstraintDefine {
       maxHeight.hashCode ^
       widthHeightRatio.hashCode ^
       ratioBaseOnWidth.hashCode ^
-      eIndex.hashCode;
+      eIndex.hashCode ^
+      pinnedInfo.hashCode;
 
   bool checkSize(double size) {
     if (size == matchParent || size == wrapContent || size == matchConstraint) {
@@ -1324,6 +1487,16 @@ class Constraint extends ConstraintDefine {
     assert(maxHeight == matchParent || maxHeight >= minHeight);
     assert(widthHeightRatio == null || widthHeightRatio! > 0);
     return true;
+  }
+
+  static int getMinimalConstraintCount(double size) {
+    if (size == matchParent) {
+      return 0;
+    } else if (size == wrapContent || size >= 0) {
+      return 1;
+    } else {
+      return 2;
+    }
   }
 
   void applyTo(RenderObject renderObject) {
@@ -1601,6 +1774,45 @@ class Constraint extends ConstraintDefine {
 
     _ConstraintBoxData parentData =
         renderObject.parentData! as _ConstraintBoxData;
+    parentData.clickPadding = clickPadding;
+    parentData.callback = callback;
+
+    if ((renderObject.parent as _ConstraintRenderBox)._constraintVersion !=
+        null) {
+      parentData.id = id;
+      parentData.width = width;
+      parentData.height = height;
+      parentData.visibility = visibility;
+      parentData.percentageMargin = percentageMargin;
+      parentData.margin = margin;
+      parentData.goneMargin = goneMargin;
+      parentData.left = left;
+      parentData.right = right;
+      parentData.top = top;
+      parentData.bottom = bottom;
+      parentData.baseline = baseline;
+      parentData.textBaseline = textBaseline;
+      parentData.zIndex = zIndex;
+      parentData.translateConstraint = translateConstraint;
+      parentData.translate = translate;
+      parentData.widthPercent = widthPercent;
+      parentData.heightPercent = heightPercent;
+      parentData.widthPercentageAnchor = widthPercentageAnchor;
+      parentData.heightPercentageAnchor = heightPercentageAnchor;
+      parentData.horizontalBias = horizontalBias;
+      parentData.verticalBias = verticalBias;
+      parentData.percentageTranslate = percentageTranslate;
+      parentData.minWidth = minWidth;
+      parentData.maxWidth = maxWidth;
+      parentData.minHeight = minHeight;
+      parentData.maxHeight = maxHeight;
+      parentData.widthHeightRatio = widthHeightRatio;
+      parentData.ratioBaseOnWidth = ratioBaseOnWidth;
+      parentData.eIndex = eIndex;
+      parentData.pinnedInfo = pinnedInfo;
+      return;
+    }
+
     bool needsLayout = false;
     bool needsPaint = false;
     bool needsReorderPaintingOrder = false;
@@ -1611,16 +1823,6 @@ class Constraint extends ConstraintDefine {
       parentData.id = id;
       needsRecalculateConstraints = true;
       needsLayout = true;
-    }
-
-    int getMinimalConstraintCount(double size) {
-      if (size == matchParent) {
-        return 0;
-      } else if (size == wrapContent || size >= 0) {
-        return 1;
-      } else {
-        return 2;
-      }
     }
 
     if (parentData.width != width) {
@@ -1646,8 +1848,6 @@ class Constraint extends ConstraintDefine {
       parentData.height = height;
       needsLayout = true;
     }
-
-    parentData.clickPadding = clickPadding;
 
     if (parentData.visibility != visibility) {
       if (parentData.visibility == gone || visibility == gone) {
@@ -1759,8 +1959,6 @@ class Constraint extends ConstraintDefine {
       needsLayout = true;
     }
 
-    parentData.callback = callback;
-
     if (parentData.percentageTranslate != percentageTranslate) {
       parentData.percentageTranslate = percentageTranslate;
       needsPaint = true;
@@ -1799,6 +1997,25 @@ class Constraint extends ConstraintDefine {
     if (parentData.eIndex != eIndex) {
       parentData.eIndex = eIndex;
       needsReorderEventOrder = true;
+    }
+
+    if (parentData.pinnedInfo != pinnedInfo) {
+      if (parentData.pinnedInfo == null || pinnedInfo == null) {
+        needsRecalculateConstraints = true;
+        needsLayout = true;
+      } else {
+        if (parentData.pinnedInfo!.anchorId != pinnedInfo!.anchorId) {
+          needsRecalculateConstraints = true;
+          needsLayout = true;
+        } else if (parentData.pinnedInfo!.selfPos != pinnedInfo!.selfPos ||
+            parentData.pinnedInfo!.targetPos != pinnedInfo!.targetPos) {
+          needsLayout = true;
+        } else if (parentData.pinnedInfo!.rotateDegree !=
+            pinnedInfo!.rotateDegree) {
+          needsPaint = true;
+        }
+      }
+      parentData.pinnedInfo = pinnedInfo;
     }
 
     if (needsLayout) {
@@ -1875,6 +2092,7 @@ class _ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   double? widthHeightRatio;
   bool? ratioBaseOnWidth;
   int? eIndex;
+  PinnedInfo? pinnedInfo;
 
   // for internal use
   late Map<ConstraintId, _ConstrainedNode> _constrainedNodeMap;
@@ -1979,6 +2197,7 @@ class _ConstraintRenderBox extends RenderBox
 
   late double _width;
   late double _height;
+  ConstraintVersion? _constraintVersion;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderPaintingOrder = true;
@@ -2167,6 +2386,35 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
+  set constraintVersion(ConstraintVersion? value) {
+    if (_constraintVersion == null || value == null) {
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
+    } else {
+      if (_constraintVersion!._constraintsVersion !=
+          value._constraintsVersion) {
+        markNeedsRecalculateConstraints();
+        markNeedsLayout();
+      } else {
+        if (_constraintVersion!._layoutVersion != value._layoutVersion) {
+          markNeedsLayout();
+        }
+        if (_constraintVersion!._paintingOrderVersion !=
+            value._paintingOrderVersion) {
+          needsReorderPaintingOrder = true;
+        }
+        if (_constraintVersion!._paintVersion != value._paintVersion) {
+          markNeedsPaint();
+        }
+        if (_constraintVersion!._eventOrderVersion !=
+            value._eventOrderVersion) {
+          needsReorderEventOrder = true;
+        }
+      }
+    }
+    _constraintVersion = value;
+  }
+
   @override
   void setupParentData(covariant RenderObject child) {
     if (child.parentData is! _ConstraintBoxData) {
@@ -2227,6 +2475,9 @@ class _ConstraintRenderBox extends RenderBox
       if (child is _BarrierRenderBox) {
         constraintsIdSet.addAll(childParentData._referencedIds!);
       }
+      if (childParentData.pinnedInfo != null) {
+        constraintsIdSet.add(childParentData.pinnedInfo!.anchorId);
+      }
       child = childParentData.nextSibling;
     }
 
@@ -2265,6 +2516,18 @@ class _ConstraintRenderBox extends RenderBox
   /// Each child element must have complete constraints both horizontally and vertically
   static void _debugCheckConstraintsIntegrity(List<_ConstrainedNode> nodeList) {
     for (final element in nodeList) {
+      if (element.pinnedInfo != null) {
+        if (element.width != wrapContent && element.width < 0) {
+          throw ConstraintLayoutException(
+              'When setting pinnedInfo, width and height must be wrapContent or fixed size.');
+        }
+        if (element.height != wrapContent && element.height < 0) {
+          throw ConstraintLayoutException(
+              'When setting pinnedInfo, width and height must be wrapContent or fixed size.');
+        }
+        continue;
+      }
+
       /// Check constraint integrity in the horizontal direction
       if (element.width == wrapContent || element.width >= 0) {
         if (element.leftConstraint == null && element.rightConstraint == null) {
@@ -2490,6 +2753,11 @@ class _ConstraintRenderBox extends RenderBox
         currentNode.baselineConstraint = _getConstrainedNodeForChild(
             childParentData.baseline!.id, childIndex);
         currentNode.baselineAlignType = childParentData.baseline!.type;
+      }
+
+      if (childParentData.pinnedInfo != null) {
+        currentNode.pinnedConstraint = _getConstrainedNodeForChild(
+            childParentData.pinnedInfo!.anchorId, childIndex);
       }
 
       child = childParentData.nextSibling;
@@ -2814,7 +3082,7 @@ class _ConstraintRenderBox extends RenderBox
             } else if (sizeConfirmedChild.rightConstraint != null) {
               childSpanWidth += size.width - sizeConfirmedChild.getRight();
             } else {
-              /// It is not possible to execute this branch
+              childSpanWidth += sizeConfirmedChild.getX();
             }
 
             if (sizeConfirmedChild.topConstraint != null &&
@@ -2824,7 +3092,7 @@ class _ConstraintRenderBox extends RenderBox
             } else if (sizeConfirmedChild.bottomConstraint != null) {
               childSpanHeight += size.height - sizeConfirmedChild.getBottom();
             } else {
-              /// It is not possible to execute this branch
+              childSpanHeight += sizeConfirmedChild.getY();
             }
 
             if (childSpanWidth > contentWidth) {
@@ -3190,6 +3458,18 @@ class _ConstraintRenderBox extends RenderBox
   }
 
   Offset calculateChildOffset(_ConstrainedNode node) {
+    if (node.pinnedInfo != null) {
+      PinnedInfo pinnedInfo = node.pinnedInfo!;
+      Offset selfOffset = pinnedInfo.selfPos.resolve(node.renderBox!.size);
+      Offset targetOffset =
+          pinnedInfo.targetPos.resolve(node.pinnedConstraint!.getSize(this));
+      double offsetX =
+          node.pinnedConstraint!.getX() + targetOffset.dx - selfOffset.dx;
+      double offsetY =
+          node.pinnedConstraint!.getY() + targetOffset.dy - selfOffset.dy;
+      return Offset(offsetX, offsetY);
+    }
+
     EdgeInsets margin = node.margin;
     EdgeInsets goneMargin = node.goneMargin;
     double offsetX = 0;
@@ -3497,8 +3777,29 @@ class _ConstraintRenderBox extends RenderBox
       if (!element.translateConstraint) {
         paintShift = element.translate;
       }
-      context.paintChild(
-          element.renderBox!, element.offset + offset + paintShift);
+
+      if (element.pinnedInfo != null) {
+        context.canvas.save();
+        context.canvas.translate(
+            element.offset.dx +
+                offset.dx +
+                paintShift.dx +
+                element.getMeasuredWidth() / 2,
+            element.offset.dy +
+                offset.dy +
+                paintShift.dy +
+                element.getMeasuredHeight() / 2);
+        context.canvas
+            .rotate(pi + pi * (element.pinnedInfo!.rotateDegree / 180));
+        context.paintChild(
+            element.renderBox!,
+            Offset(-element.getMeasuredWidth() / 2,
+                -element.getMeasuredHeight() / 2));
+        context.canvas.restore();
+      } else {
+        context.paintChild(
+            element.renderBox!, element.offset + offset + paintShift);
+      }
 
       /// Draw child's click area
       assert(() {
@@ -3730,6 +4031,7 @@ class _ConstrainedNode {
   _ConstrainedNode? rightConstraint;
   _ConstrainedNode? bottomConstraint;
   _ConstrainedNode? baselineConstraint;
+  _ConstrainedNode? pinnedConstraint;
   _AlignType? leftAlignType;
   _AlignType? topAlignType;
   _AlignType? rightAlignType;
@@ -3823,6 +4125,8 @@ class _ConstrainedNode {
 
   Size? get helperSize => parentData._helperSize;
 
+  PinnedInfo? get pinnedInfo => parentData.pinnedInfo;
+
   set helperSize(Size? size) {
     parentData._helperSize = size;
   }
@@ -3884,6 +4188,13 @@ class _ConstrainedNode {
       return parent!.size.height;
     }
     return getY() + getMeasuredHeight();
+  }
+
+  Size getSize([RenderBox? parent]) {
+    if (isParent()) {
+      return parent!.size;
+    }
+    return renderBox!.size;
   }
 
   double getMeasuredWidth() {
@@ -3975,6 +4286,9 @@ class _ConstrainedNode {
           if (baselineConstraint != null)
             getDepthFor(baselineConstraint!, parentSizeConfirmed, resolvedWidth,
                 resolvedHeight),
+          if (pinnedConstraint != null)
+            getDepthFor(pinnedConstraint!, parentSizeConfirmed, resolvedWidth,
+                resolvedHeight),
         ];
         depth = getMaxDepth(list) + 1;
       }
@@ -4051,6 +4365,13 @@ class _ConstrainedNode {
           map['baselineConstraint'] = baselineConstraint!.toJson();
         }
       }
+      if (pinnedConstraint != null) {
+        if (pinnedConstraint!.isParent()) {
+          map['pinnedConstraint'] = 'parent';
+        } else {
+          map['pinnedConstraint'] = pinnedConstraint!.toJson();
+        }
+      }
     }
     map['depth'] = getDepth(null, null, null);
     return map;
@@ -4090,6 +4411,7 @@ class _HelperBox extends RenderBox {
     constraintBoxData.widthHeightRatio = null;
     constraintBoxData.ratioBaseOnWidth = null;
     constraintBoxData.eIndex = null;
+    constraintBoxData.pinnedInfo = null;
     constraintBoxData._direction = null;
     constraintBoxData._referencedIds = null;
     constraintBoxData._isGuideline = false;
