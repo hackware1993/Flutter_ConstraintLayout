@@ -1,3 +1,7 @@
+# v1.1.1-stable
+
+add pinned translate support.
+
 # v1.1.0-stable
 
 fix pinned rotate bug.
