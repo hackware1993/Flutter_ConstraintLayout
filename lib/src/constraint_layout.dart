@@ -766,6 +766,8 @@ class ConstraintId {
     .._margin = _topMargin
     .._goneMargin = _topGoneMargin;
 
+  late final _Align center = _Align(this, AlignType.center);
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) {
@@ -834,11 +836,12 @@ class _Align {
   final AlignType _type;
   double? _margin;
   double? _goneMargin;
+  double? _bias;
 
   _Align(this._id, this._type);
 
   _Align margin(double margin) {
-    if (_margin != null || _goneMargin != null) {
+    if (_margin != null || _goneMargin != null || _bias != null) {
       _margin = margin;
       return this;
     } else {
@@ -847,11 +850,20 @@ class _Align {
   }
 
   _Align goneMargin(double goneMargin) {
-    if (_margin != null || _goneMargin != null) {
+    if (_margin != null || _goneMargin != null || _bias != null) {
       _goneMargin = goneMargin;
       return this;
     } else {
       return _Align(_id, _type).._goneMargin = goneMargin;
+    }
+  }
+
+  _Align bias(double bias) {
+    if (_margin != null || _goneMargin != null || _bias != null) {
+      _bias = bias;
+      return this;
+    } else {
+      return _Align(_id, _type).._bias = bias;
     }
   }
 
@@ -861,10 +873,11 @@ class _Align {
       other is _Align &&
           runtimeType == other.runtimeType &&
           _id == other._id &&
-          _type == other._type;
+          _type == other._type &&
+          _bias == other._bias;
 
   @override
-  int get hashCode => _id.hashCode ^ _type.hashCode;
+  int get hashCode => _id.hashCode ^ _type.hashCode ^ _bias.hashCode;
 }
 
 typedef OnLayoutCallback = void Function(RenderObject renderObject, Rect rect);
@@ -1428,15 +1441,24 @@ class Constraint extends ConstraintDefine {
     assert(_checkSize(height));
     assert(size == null || _checkSize(size!));
     assert(left == null ||
-        (left!._type == AlignType.left || left!._type == AlignType.right));
+        (left!._type == AlignType.left ||
+            left!._type == AlignType.center ||
+            left!._type == AlignType.right));
     assert(top == null ||
-        (top!._type == AlignType.top || top!._type == AlignType.bottom));
+        (top!._type == AlignType.top ||
+            top!._type == AlignType.center ||
+            top!._type == AlignType.bottom));
     assert(right == null ||
-        (right!._type == AlignType.left || right!._type == AlignType.right));
+        (right!._type == AlignType.left ||
+            right!._type == AlignType.center ||
+            right!._type == AlignType.right));
     assert(bottom == null ||
-        (bottom!._type == AlignType.top || bottom!._type == AlignType.bottom));
+        (bottom!._type == AlignType.top ||
+            bottom!._type == AlignType.center ||
+            bottom!._type == AlignType.bottom));
     assert(baseline == null ||
         (baseline!._type == AlignType.top ||
+            baseline!._type == AlignType.center ||
             baseline!._type == AlignType.bottom ||
             baseline!._type == AlignType.baseline));
     assert(_debugEnsurePercent('widthPercent', widthPercent));
@@ -2085,6 +2107,7 @@ enum AlignType {
   top,
   bottom,
   baseline,
+  center,
 }
 
 class ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
@@ -3362,12 +3385,18 @@ class _ConstraintRenderBox extends RenderBox
             double left;
             if (node.leftAlignType == AlignType.left) {
               left = node.leftConstraint!.getX();
+            } else if (node.leftAlignType == AlignType.center) {
+              left = node.leftConstraint!
+                  .getXPercent(node.parentData.left!._bias ?? 0.5, this);
             } else {
               left = node.leftConstraint!.getRight(this);
             }
             double right;
             if (node.rightAlignType == AlignType.left) {
               right = node.rightConstraint!.getX();
+            } else if (node.rightAlignType == AlignType.center) {
+              right = node.rightConstraint!
+                  .getXPercent(node.parentData.right!._bias ?? 0.5, this);
             } else {
               right = node.rightConstraint!.getRight(this);
             }
@@ -3454,12 +3483,18 @@ class _ConstraintRenderBox extends RenderBox
             double top;
             if (node.topAlignType == AlignType.top) {
               top = node.topConstraint!.getY();
+            } else if (node.topAlignType == AlignType.center) {
+              top = node.topConstraint!
+                  .getYPercent(node.parentData.top!._bias ?? 0.5, this);
             } else {
               top = node.topConstraint!.getBottom(this);
             }
             double bottom;
             if (node.bottomAlignType == AlignType.top) {
               bottom = node.bottomConstraint!.getY();
+            } else if (node.bottomAlignType == AlignType.center) {
+              bottom = node.bottomConstraint!
+                  .getYPercent(node.parentData.bottom!._bias ?? 0.5, this);
             } else {
               bottom = node.bottomConstraint!.getBottom(this);
             }
@@ -3617,12 +3652,18 @@ class _ConstraintRenderBox extends RenderBox
         double left;
         if (node.leftAlignType == AlignType.left) {
           left = node.leftConstraint!.getX();
+        } else if (node.leftAlignType == AlignType.center) {
+          left = node.leftConstraint!
+              .getXPercent(node.parentData.left!._bias ?? 0.5, this);
         } else {
           left = node.leftConstraint!.getRight(this);
         }
         double right;
         if (node.rightAlignType == AlignType.left) {
           right = node.rightConstraint!.getX();
+        } else if (node.rightAlignType == AlignType.center) {
+          right = node.rightConstraint!
+              .getXPercent(node.parentData.right!._bias ?? 0.5, this);
         } else {
           right = node.rightConstraint!.getRight(this);
         }
@@ -3654,6 +3695,9 @@ class _ConstraintRenderBox extends RenderBox
         double left;
         if (node.leftAlignType == AlignType.left) {
           left = node.leftConstraint!.getX();
+        } else if (node.leftAlignType == AlignType.center) {
+          left = node.leftConstraint!
+              .getXPercent(node.parentData.left!._bias ?? 0.5, this);
         } else {
           left = node.leftConstraint!.getRight(this);
         }
@@ -3667,6 +3711,9 @@ class _ConstraintRenderBox extends RenderBox
         double right;
         if (node.rightAlignType == AlignType.left) {
           right = node.rightConstraint!.getX();
+        } else if (node.rightAlignType == AlignType.center) {
+          right = node.rightConstraint!
+              .getXPercent(node.parentData.right!._bias ?? 0.5, this);
         } else {
           right = node.rightConstraint!.getRight(this);
         }
@@ -3686,12 +3733,18 @@ class _ConstraintRenderBox extends RenderBox
         double top;
         if (node.topAlignType == AlignType.top) {
           top = node.topConstraint!.getY();
+        } else if (node.topAlignType == AlignType.center) {
+          top = node.topConstraint!
+              .getYPercent(node.parentData.top!._bias ?? 0.5, this);
         } else {
           top = node.topConstraint!.getBottom(this);
         }
         double bottom;
         if (node.bottomAlignType == AlignType.top) {
           bottom = node.bottomConstraint!.getY();
+        } else if (node.bottomAlignType == AlignType.center) {
+          bottom = node.bottomConstraint!
+              .getYPercent(node.parentData.bottom!._bias ?? 0.5, this);
         } else {
           bottom = node.bottomConstraint!.getBottom(this);
         }
@@ -3722,6 +3775,9 @@ class _ConstraintRenderBox extends RenderBox
         double top;
         if (node.topAlignType == AlignType.top) {
           top = node.topConstraint!.getY();
+        } else if (node.topAlignType == AlignType.center) {
+          top = node.topConstraint!
+              .getYPercent(node.parentData.top!._bias ?? 0.5, this);
         } else {
           top = node.topConstraint!.getBottom(this);
         }
@@ -3735,6 +3791,9 @@ class _ConstraintRenderBox extends RenderBox
         double bottom;
         if (node.bottomAlignType == AlignType.top) {
           bottom = node.bottomConstraint!.getY();
+        } else if (node.bottomAlignType == AlignType.center) {
+          bottom = node.bottomConstraint!
+              .getYPercent(node.parentData.bottom!._bias ?? 0.5, this);
         } else {
           bottom = node.bottomConstraint!.getBottom(this);
         }
@@ -3748,6 +3807,10 @@ class _ConstraintRenderBox extends RenderBox
       } else if (node.baselineConstraint != null) {
         if (node.baselineAlignType == AlignType.top) {
           offsetY = node.baselineConstraint!.getY() -
+              node.getDistanceToBaseline(node.textBaseline, false);
+        } else if (node.baselineAlignType == AlignType.center) {
+          offsetY = node.baselineConstraint!
+                  .getYPercent(node.parentData.baseline!._bias ?? 0.5) -
               node.getDistanceToBaseline(node.textBaseline, false);
         } else if (node.baselineAlignType == AlignType.bottom) {
           offsetY = node.baselineConstraint!.getBottom(this) -
@@ -4286,11 +4349,25 @@ class ConstrainedNode {
     return offset.dx;
   }
 
+  double getXPercent(double percent, [RenderBox? parent]) {
+    if (isParent()) {
+      return parent!.size.width * percent;
+    }
+    return offset.dx + getMeasuredWidth() * percent;
+  }
+
   double getY() {
     if (isParent()) {
       return 0;
     }
     return offset.dy;
+  }
+
+  double getYPercent(double percent, [RenderBox? parent]) {
+    if (isParent()) {
+      return parent!.size.height * percent;
+    }
+    return offset.dy + getMeasuredHeight() * percent;
   }
 
   double getRight([RenderBox? parent]) {
@@ -4427,6 +4504,8 @@ class ConstrainedNode {
       if (leftConstraint != null) {
         if (leftAlignType == AlignType.left) {
           map['leftAlignType'] = 'toLeft';
+        } else if (leftAlignType == AlignType.center) {
+          map['leftAlignType'] = 'toCenter';
         } else {
           map['leftAlignType'] = 'toRight';
         }
@@ -4439,6 +4518,8 @@ class ConstrainedNode {
       if (topConstraint != null) {
         if (topAlignType == AlignType.top) {
           map['topAlignType'] = 'toTop';
+        } else if (topAlignType == AlignType.center) {
+          map['topAlignType'] = 'toCenter';
         } else {
           map['topAlignType'] = 'toBottom';
         }
@@ -4451,6 +4532,8 @@ class ConstrainedNode {
       if (rightConstraint != null) {
         if (rightAlignType == AlignType.left) {
           map['rightAlignType'] = 'toLeft';
+        } else if (rightAlignType == AlignType.center) {
+          map['rightAlignType'] = 'toCenter';
         } else {
           map['rightAlignType'] = 'toRight';
         }
@@ -4463,6 +4546,8 @@ class ConstrainedNode {
       if (bottomConstraint != null) {
         if (bottomAlignType == AlignType.top) {
           map['bottomAlignType'] = 'toTop';
+        } else if (bottomAlignType == AlignType.center) {
+          map['bottomAlignType'] = 'toCenter';
         } else {
           map['bottomAlignType'] = 'toBottom';
         }
@@ -4475,6 +4560,8 @@ class ConstrainedNode {
       if (baselineConstraint != null) {
         if (baselineAlignType == AlignType.top) {
           map['baselineAlignType'] = 'toTop';
+        } else if (baselineAlignType == AlignType.center) {
+          map['baselineAlignType'] = 'toCenter';
         } else if (baselineAlignType == AlignType.bottom) {
           map['baselineAlignType'] = 'toBottom';
         } else {
