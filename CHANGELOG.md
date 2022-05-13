@@ -1,3 +1,7 @@
+# v1.2.0-stable
+
+add arbitrary position support.
+
 # v1.1.1-stable
 
 add pinned translate support.

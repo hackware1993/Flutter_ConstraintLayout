@@ -137,18 +137,19 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
     grid)
 17. circle position
 18. pinned position
-19. e-index(event dispatch order, default is z-index)
-20. the size of child widgets can be set to:
+19. arbitrary position
+20. e-index(event dispatch order, default is z-index)
+21. the size of child widgets can be set to:
     1. fixed size(>=0)
     2. matchParent
     3. wrapContent(default, minimum and maximum supported)
     4. matchConstraint
-21. the size of itself can be set to:
+22. the size of itself can be set to:
     1. fixed size(>=0)
     2. matchParent(default)
     3. wrapContent(minimum and maximum are temporarily not supported)
 
-Coming soon:
+Follow-up development plan:
 
 1. chain
 2. constraints visualization
@@ -172,12 +173,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.1.1-stable'
+      ref: 'v1.2.0-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.1.1-stable
+  flutter_constraintlayout: ^1.2.0-stable
 ```
 
 ```dart
@@ -189,7 +190,7 @@ import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 ![effect.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/effect.gif?raw=true)
 
 ```dart
-class ExampleState extends State<Example> {
+class SummaryExampleState extends State<SummaryExample> {
   double x = 0;
   double y = 0;
 
@@ -205,190 +206,173 @@ class ExampleState extends State<Example> {
   ConstraintId box9 = ConstraintId('box9');
   ConstraintId box10 = ConstraintId('box10');
   ConstraintId box11 = ConstraintId('box11');
+  ConstraintId barrier = ConstraintId('barrier');
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        backgroundColor: Colors.black,
-        body: ConstraintLayout(
-          // Constraints can be separated from widgets
-          childConstraints: [
-            Constraint(
-              id: box0,
-              width: 200,
-              height: 200,
-              bottomLeftTo: parent,
-              zIndex: 20,
-            )
-          ],
-          children: [
-            Container(
-              color: Colors.redAccent,
-              alignment: Alignment.center,
-              child: const Text('box0'),
-            ).applyConstraintId(
-              id: box0, // Constraints can be separated from widgets
-            ),
-            Container(
-              color: Colors.redAccent,
-              alignment: Alignment.center,
-              child: const Text('box1'),
-            ).apply(
-              constraint: Constraint(
-                // Constraints set with widgets
-                id: box1,
-                width: 200,
-                height: 100,
-                topRightTo: parent,
-              ),
-            ),
-            Container(
-              color: Colors.blue,
-              alignment: Alignment.center,
-              child: const Text('box2'),
-            ).applyConstraint(
-              // Constraints set with widgets easy way
-              id: box2,
-              width: matchConstraint,
-              height: matchConstraint,
-              centerHorizontalTo: box3,
-              top: box3.bottom,
-              bottom: parent.bottom,
-            ),
-            Container(
-              color: Colors.orange,
-              width: 200,
-              height: 150,
-              alignment: Alignment.center,
-              child: const Text('box3'),
-            ).applyConstraint(
-              id: box3,
-              width: wrapContent,
-              height: wrapContent,
-              right: box1.left,
-              top: box1.bottom,
-            ),
-            Container(
-              color: Colors.redAccent,
-              alignment: Alignment.center,
-              child: const Text('box4'),
-            ).applyConstraint(
-              id: box4,
-              width: 50,
-              height: 50,
-              bottomRightTo: parent,
-            ),
-            GestureDetector(
-              child: Container(
-                color: Colors.pink,
-                alignment: Alignment.center,
-                child: const Text('box5 draggable'),
-              ),
-              onPanUpdate: (details) {
-                setState(() {
-                  x += details.delta.dx;
-                  y += details.delta.dy;
-                });
-              },
-            ).applyConstraint(
-              id: box5,
-              width: 120,
-              height: 100,
-              centerTo: parent,
-              zIndex: 100,
-              translate: Offset(x, y),
-              translateConstraint: true,
-            ),
-            Container(
-              color: Colors.lightGreen,
-              alignment: Alignment.center,
-              child: const Text('box6'),
-            ).applyConstraint(
-              id: box6,
-              width: 120,
-              height: 120,
-              centerVerticalTo: box2,
-              verticalBias: 0.8,
-              left: box3.right,
-              right: parent.right,
-            ),
-            Container(
-              color: Colors.lightGreen,
-              alignment: Alignment.center,
-              child: const Text('box7'),
-            ).applyConstraint(
-              id: box7,
-              width: matchConstraint,
-              height: matchConstraint,
-              left: parent.left,
-              right: box3.left,
-              centerVerticalTo: parent,
-              margin: const EdgeInsets.all(50),
-            ),
-            Container(
-              color: Colors.cyan,
-              alignment: Alignment.center,
-              child: const Text('child[7] pinned to the top right'),
-            ).applyConstraint(
+    return Scaffold(
+      appBar: const CustomAppBar(
+        title: 'Summary',
+        codePath: 'example/summary.dart',
+      ),
+      backgroundColor: Colors.black,
+      body: ConstraintLayout(
+        // Constraints can be separated from widgets
+        childConstraints: [
+          Constraint(
+            id: box0,
+            size: 200,
+            bottomLeftTo: parent,
+            zIndex: 20,
+          )
+        ],
+        children: [
+          Container(
+            color: Colors.redAccent,
+            alignment: Alignment.center,
+            child: const Text('box0'),
+          ).applyConstraintId(
+            id: box0, // Constraints can be separated from widgets
+          ),
+          Container(
+            color: Colors.redAccent,
+            alignment: Alignment.center,
+            child: const Text('box1'),
+          ).apply(
+            constraint: Constraint(
+              // Constraints set with widgets
+              id: box1,
               width: 200,
               height: 100,
-              left: box5.right,
-              bottom: box5.top,
+              topRightTo: parent,
             ),
-            const Text(
-              'box9 baseline to box7',
-              style: TextStyle(
-                color: Colors.white,
-              ),
-            ).applyConstraint(
-              id: box9,
-              width: wrapContent,
-              height: wrapContent,
-              baseline: box7.baseline,
-              left: box7.left,
+          ),
+          Container(
+            color: Colors.blue,
+            alignment: Alignment.center,
+            child: const Text('box2'),
+          ).applyConstraint(
+            // Constraints set with widgets easy way
+            id: box2,
+            size: matchConstraint,
+            centerHorizontalTo: box3,
+            top: box3.bottom,
+            bottom: parent.bottom,
+          ),
+          Container(
+            color: Colors.orange,
+            width: 200,
+            height: 150,
+            alignment: Alignment.center,
+            child: const Text('box3'),
+          ).applyConstraint(
+            id: box3,
+            right: box1.left,
+            top: box1.bottom,
+          ),
+          Container(
+            color: Colors.redAccent,
+            alignment: Alignment.center,
+            child: const Text('box4'),
+          ).applyConstraint(
+            id: box4,
+            size: 50,
+            bottomRightTo: parent,
+          ),
+          GestureDetector(
+            child: Container(
+              color: Colors.pink,
+              alignment: Alignment.center,
+              child: const Text('box5 draggable'),
             ),
-            ...horizontalChain(
-              centerHorizontalTo: parent,
-              hChainList: [
-                Container(
-                  color: Colors.redAccent,
-                  alignment: Alignment.center,
-                  child: const Text('chain item 1'),
-                ).applyConstraint(
-                  id: box10,
-                  width: matchConstraint,
-                  height: 200,
-                  top: parent.top,
-                ),
-                Container(
-                  color: Colors.redAccent,
-                  alignment: Alignment.center,
-                  child: const Text('chain item 2'),
-                ).applyConstraint(
-                  id: box11,
-                  width: matchConstraint,
-                  height: 200,
-                  top: parent.top,
-                ),
-              ],
+            onPanUpdate: (details) {
+              setState(() {
+                x += details.delta.dx;
+                y += details.delta.dy;
+              });
+            },
+          ).applyConstraint(
+            id: box5,
+            width: 120,
+            height: 100,
+            centerTo: parent,
+            zIndex: 100,
+            translate: Offset(x, y),
+            translateConstraint: true,
+          ),
+          Container(
+            color: Colors.lightGreen,
+            alignment: Alignment.center,
+            child: const Text('box6'),
+          ).applyConstraint(
+            id: box6,
+            size: 120,
+            centerVerticalTo: box2,
+            verticalBias: 0.8,
+            left: box3.right,
+            right: parent.right,
+          ),
+          Container(
+            color: Colors.lightGreen,
+            alignment: Alignment.center,
+            child: const Text('box7'),
+          ).applyConstraint(
+            id: box7,
+            size: matchConstraint,
+            left: parent.left,
+            right: box3.left,
+            centerVerticalTo: parent,
+            margin: const EdgeInsets.all(50),
+          ),
+          Container(
+            color: Colors.cyan,
+            alignment: Alignment.center,
+            child: const Text('child[7] pinned to the top right'),
+          ).applyConstraint(
+            width: 200,
+            height: 100,
+            left: box5.right,
+            bottom: box5.top,
+          ),
+          const Text(
+            'box9 baseline to box7',
+            style: TextStyle(
+              color: Colors.white,
             ),
-            Container(
-              color: Colors.yellow,
-              alignment: Alignment.bottomCenter,
-              child: const Text(
-                  'percentage layout\nwidth: 50% of parent\nheight: 30% of parent'),
-            ).applyConstraint(
-              width: matchConstraint,
-              height: matchConstraint,
-              widthPercent: 0.5,
-              heightPercent: 0.3,
-              horizontalBias: 0,
-              verticalBias: 0,
-              centerTo: parent,
-            ),
-          ],
-        ),
+          ).applyConstraint(
+            id: box9,
+            baseline: box7.baseline,
+            left: box7.left,
+          ),
+          Container(
+            color: Colors.yellow,
+            alignment: Alignment.bottomCenter,
+            child: const Text(
+                'percentage layout\nwidth: 50% of parent\nheight: 30% of parent'),
+          ).applyConstraint(
+            size: matchConstraint,
+            widthPercent: 0.5,
+            heightPercent: 0.3,
+            horizontalBias: 0,
+            verticalBias: 0,
+            centerTo: parent,
+          ),
+          Barrier(
+            id: barrier,
+            direction: BarrierDirection.left,
+            referencedIds: [box6, box5],
+          ),
+          Container(
+            color: const Color(0xFFFFD500),
+            alignment: Alignment.center,
+            child: const Text('align to barrier'),
+          ).applyConstraint(
+            width: 100,
+            height: 200,
+            top: box5.top,
+            right: barrier.left,
+          )
+        ],
       ),
     );
   }
@@ -973,7 +957,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
               anchor,
               PinnedPos(0.2, PinnedType.percent, 0.2, PinnedType.percent),
               PinnedPos(1, PinnedType.percent, 1, PinnedType.percent),
-              rotateDegree: angle,
+              angle: angle,
             ),
           ),
           Container(
@@ -984,7 +968,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
               anchor,
               PinnedPos(1, PinnedType.percent, 1, PinnedType.percent),
               PinnedPos(0, PinnedType.percent, 0, PinnedType.percent),
-              rotateDegree: 360 - angle,
+              angle: 360 - angle,
             ),
           ),
           Container(
@@ -995,7 +979,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
               anchor,
               PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
               PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
-              rotateDegree: angle,
+              angle: angle,
             ),
           ),
           Container(
@@ -1157,9 +1141,62 @@ class BarrierExample extends StatelessWidget {
 }   
 ```
 
+5. Every frame, ConstraintLayout compares the parameters and decides the following things:
+    1. Does the constraint need to be recalculated?
+    2. Does it need to be rearranged?
+    3. Does it need to be redrawn?
+    4. Do you need to rearrange the drawing order?
+    5. Do you need to rearrange the order of event distribution?
+
+These comparisons will not be a performance bottleneck, but will increase CPU usage. If you know
+enough about the internals of ConstraintLayout, you can use ConstraintVersion to manually trigger
+these operations to stop parameter comparison.
+
+```dart
+class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
+  double x = 0;
+  double y = 0;
+  ConstraintVersion constraintVersion = ConstraintVersion();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const CustomAppBar(
+        title: 'Constraint Version',
+        codePath: 'example/constraint_version.dart',
+      ),
+      body: ConstraintLayout(
+        constraintVersion: constraintVersion,
+        children: [
+          GestureDetector(
+            child: Container(
+              color: Colors.pink,
+              alignment: Alignment.center,
+              child: const Text('box draggable'),
+            ),
+            onPanUpdate: (details) {
+              setState(() {
+                x += details.delta.dx;
+                y += details.delta.dy;
+                constraintVersion.incPaintVersion();
+              });
+            },
+          ).applyConstraint(
+            size: 200,
+            centerTo: parent,
+            translate: Offset(x, y),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
 # Support me
 
-If it helps you a lot, consider sponsoring me a cup of milk tea.
+If it helps you a lot, consider sponsoring me a cup of milk tea, or giving a star. Your support is
+the driving force for me to continue to maintain.
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
 ![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
 

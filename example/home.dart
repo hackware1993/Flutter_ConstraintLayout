@@ -8,6 +8,7 @@ import 'charts.dart';
 import 'circle_position.dart';
 import 'coming_soon.dart';
 import 'complex_list.dart';
+import 'constraint_version.dart';
 import 'dimension_ratio.dart';
 import 'grid.dart';
 import 'guideline.dart';
@@ -42,6 +43,7 @@ class ExampleHome extends StatelessWidget {
     'Circle Position': const CirclePositionExample(),
     'Pinned Position': const PinnedPositionExample(),
     'Arbitrary Position': const ArbitraryPositionExample(),
+    'Constraint Version': const ConstraintVersionExample(),
     'Self wrapContent': const SelfWrapContentExample(),
     'Margin': const MarginExample(),
     'Charts': const ChartsExample(),

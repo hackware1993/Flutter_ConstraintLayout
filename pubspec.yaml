@@ -1,6 +1,6 @@
 name: flutter_constraintlayout
 description: A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for Android and AutoLayout for iOS.
-version: 1.1.1-stable
+version: 1.2.0-stable
 anthor: hackware
 homepage: https://github.com/hackware1993/Flutter-ConstraintLayout
 
@@ -41,3 +41,4 @@ flutter:
     - example/charts.dart
     - example/pinned_position.dart
     - example/arbitrary_position.dart
+    - example/constraint_version.dart
