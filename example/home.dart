@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
+import 'arbitrary_position.dart';
 import 'badge.dart';
 import 'barrier.dart';
 import 'charts.dart';
@@ -40,6 +41,7 @@ class ExampleHome extends StatelessWidget {
     'Staggered Grid': const StaggeredGridExample(),
     'Circle Position': const CirclePositionExample(),
     'Pinned Position': const PinnedPositionExample(),
+    'Arbitrary Position': const ArbitraryPositionExample(),
     'Self wrapContent': const SelfWrapContentExample(),
     'Margin': const MarginExample(),
     'Charts': const ChartsExample(),
