@@ -21,7 +21,6 @@ class ArbitraryPositionExampleState extends State<ArbitraryPositionExample> {
         codePath: 'example/arbitrary_position.dart',
       ),
       body: ConstraintLayout(
-        debugPrintLayoutTime: true,
         children: [
           Container(
             color: Colors.black,
