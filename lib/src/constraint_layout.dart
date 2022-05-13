@@ -2461,8 +2461,8 @@ class _ConstraintRenderBox extends RenderBox
             value._eventOrderVersion) {
           needsReorderEventOrder = true;
         }
-        _constraintVersion = value;
       }
+      _constraintVersion = value;
     }
   }
 
