@@ -4580,6 +4580,13 @@ class ConstrainedNode {
           map['pinnedConstraint'] = pinnedConstraint!.toJson();
         }
       }
+      if (anchors != null) {
+        List<Map<String, dynamic>> anchorsJson = [];
+        for (final element in anchors!) {
+          anchorsJson.add(element.toJson());
+        }
+        map['anchors'] = anchorsJson;
+      }
     }
     map['depth'] = getDepth(null, null, null);
     return map;

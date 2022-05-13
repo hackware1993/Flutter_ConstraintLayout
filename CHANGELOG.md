@@ -1,3 +1,7 @@
+# v1.3.0-stable
+
+enhance base constraints.
+
 # v1.2.0-stable
 
 add arbitrary position support.

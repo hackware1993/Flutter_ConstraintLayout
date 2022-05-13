@@ -60,17 +60,27 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
 # Feature
 
 1. build flexible layouts with constraints
-    1. leftToLeft
-    2. leftToRight
-    3. rightToLeft
-    4. rightToRight
-    5. topToTop
-    6. topToBottom
-    7. bottomToTop
-    8. bottomToBottom
-    9. baselineToTop
-    10. baselineToBottom
-    11. baselineToBaseline
+    1. left
+        1. toLeft
+        2. toCenter(with bias, the default value is 0.5)
+        3. toRight
+    2. right
+        1. toLeft
+        2. toCenter(with bias, the default value is 0.5)
+        3. toRight
+    3. top
+        1. toTop
+        2. toCenter(with bias, the default value is 0.5)
+        3. toBottom
+    4. bottom
+        1. toTop
+        2. toCenter(with bias, the default value is 0.5)
+        3. toBottom
+    5. baseline
+        1. toTop
+        2. toCenter(with bias, the default value is 0.5)
+        3. toBaseline
+        4. toBottom
 2. margin and goneMargin(when the visibility of the dependent element is gone or the actual size of
    one side is 0, the goneMargin will take effect, otherwise the margin will take effect, even if
    its own visibility is gone)
@@ -173,12 +183,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.2.0-stable'
+      ref: 'v1.3.0-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.2.0-stable
+  flutter_constraintlayout: ^1.3.0-stable
 ```
 
 ```dart

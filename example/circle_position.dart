@@ -115,9 +115,8 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
           ).applyConstraint(
             width: 5,
             height: 80,
-            centerTo: rId(0),
-            translate: const Offset(0, 0.5),
-            percentageTranslate: true,
+            top: rId(0).center,
+            centerHorizontalTo: rId(0),
           ),
           Transform.rotate(
             angle: pi + pi * (minute * 6 / 180),
@@ -128,9 +127,8 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
           ).applyConstraint(
             width: 5,
             height: 120,
-            centerTo: rId(0),
-            translate: const Offset(0, 0.5),
-            percentageTranslate: true,
+            top: rId(0).center,
+            centerHorizontalTo: rId(0),
           ),
           Transform.rotate(
             angle: pi + pi * (second * 6 / 180),
@@ -141,9 +139,8 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
           ).applyConstraint(
             width: 5,
             height: 180,
-            centerTo: rId(0),
-            translate: const Offset(0, 0.5),
-            percentageTranslate: true,
+            top: rId(0).center,
+            centerHorizontalTo: rId(0),
           ),
           Text(
             '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:${second.toString().padLeft(2, '0')}',
