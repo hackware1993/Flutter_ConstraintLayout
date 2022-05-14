@@ -498,6 +498,8 @@ class PinnedTranslate extends Offset {
 
   PinnedTranslate(this._pinnedInfo) : super(0, 0);
 
+  PinnedTranslate._shift(this._pinnedInfo, double x, double y) : super(x, y);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -505,6 +507,10 @@ class PinnedTranslate extends Offset {
           other is PinnedTranslate &&
           runtimeType == other.runtimeType &&
           _pinnedInfo == other._pinnedInfo;
+
+  @override
+  PinnedTranslate operator +(Offset other) =>
+      PinnedTranslate._shift(_pinnedInfo, other.dx, other.dy);
 
   @override
   int get hashCode => super.hashCode ^ _pinnedInfo.hashCode;

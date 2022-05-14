@@ -1,3 +1,7 @@
+# v1.4.1-stable
+
+1. add pinned & circle translate support.
+
 # v1.4.0-stable
 
 1. code refactoring, extracting non-core functions.
