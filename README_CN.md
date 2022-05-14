@@ -941,8 +941,8 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
             size: 100,
             pinnedInfo: PinnedInfo(
               anchor,
-              PinnedPos(0.2, PinnedType.percent, 0.2, PinnedType.percent),
-              PinnedPos(1, PinnedType.percent, 1, PinnedType.percent),
+              Anchor(0.2, AnchorType.percent, 0.2, AnchorType.percent),
+              Anchor(1, AnchorType.percent, 1, AnchorType.percent),
               angle: angle,
             ),
           ),
@@ -952,8 +952,8 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
             size: 60,
             pinnedInfo: PinnedInfo(
               anchor,
-              PinnedPos(1, PinnedType.percent, 1, PinnedType.percent),
-              PinnedPos(0, PinnedType.percent, 0, PinnedType.percent),
+              Anchor(1, AnchorType.percent, 1, AnchorType.percent),
+              Anchor(0, AnchorType.percent, 0, AnchorType.percent),
               angle: 360 - angle,
             ),
           ),
@@ -963,8 +963,8 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
             size: 60,
             pinnedInfo: PinnedInfo(
               anchor,
-              PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
-              PinnedPos(0.5, PinnedType.percent, 0.5, PinnedType.percent),
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
               angle: angle,
             ),
           ),
@@ -994,7 +994,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
           ).applyConstraint(
             size: 10,
             centerTo: anchor,
-          ),
+          )
         ],
       ),
     );
