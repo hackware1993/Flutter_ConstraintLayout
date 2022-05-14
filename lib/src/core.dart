@@ -517,8 +517,8 @@ class PinnedTranslate extends Offset {
 }
 
 class PinnedInfo {
-  /// [0,360]
-  int angle;
+  /// [0.0,360.0]
+  double angle;
   final ConstraintId? targetId;
   final Anchor selfAnchor;
   final Anchor? targetAnchor;
@@ -528,7 +528,7 @@ class PinnedInfo {
     this.selfAnchor,
     this.targetAnchor, {
     this.angle = 0,
-  }) : assert(angle >= 0 && angle <= 360);
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -1851,15 +1851,18 @@ class _ConstraintRenderBox extends RenderBox
       _debugPrintConstraints = value;
       if (value) {
         markNeedsRecalculateConstraints();
+        markNeedsLayout();
       }
-      markNeedsLayout();
     }
   }
 
   set debugPrintLayoutTime(bool value) {
     if (_debugPrintLayoutTime != value) {
       _debugPrintLayoutTime = value;
-      markNeedsLayout();
+      if (value) {
+        markNeedsRecalculateConstraints();
+        markNeedsLayout();
+      }
     }
   }
 
@@ -1868,15 +1871,18 @@ class _ConstraintRenderBox extends RenderBox
       _debugCheckConstraints = value;
       if (value) {
         markNeedsRecalculateConstraints();
+        markNeedsLayout();
       }
-      markNeedsLayout();
     }
   }
 
   set releasePrintLayoutTime(bool value) {
     if (_releasePrintLayoutTime != value) {
       _releasePrintLayoutTime = value;
-      markNeedsLayout();
+      if (value) {
+        markNeedsRecalculateConstraints();
+        markNeedsLayout();
+      }
     }
   }
 
@@ -1885,8 +1891,8 @@ class _ConstraintRenderBox extends RenderBox
       _debugName = value;
       if (value != null) {
         markNeedsRecalculateConstraints();
+        markNeedsLayout();
       }
-      markNeedsLayout();
     }
   }
 

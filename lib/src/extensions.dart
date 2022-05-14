@@ -243,10 +243,11 @@ extension ConstrainedWidgetsExt on Widget {
 /// For circle position
 Offset circleTranslate({
   required double radius,
-  required int angle,
+
+  /// [0.0,360.0]
+  required double angle,
 }) {
   assert(radius >= 0 && radius != double.infinity);
-  assert(angle >= 0 && angle <= 360);
   double xTranslate = sin((angle / 180) * pi) * radius;
   double yTranslate = -cos((angle / 180) * pi) * radius;
   return Offset(xTranslate, yTranslate);

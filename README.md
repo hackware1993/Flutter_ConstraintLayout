@@ -185,12 +185,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.4.3-stable'
+      ref: 'v1.4.4-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.4.3-stable
+  flutter_constraintlayout: ^1.4.4-stable
 ```
 
 ```dart
@@ -925,7 +925,7 @@ class MarginExample extends StatelessWidget {
 ```dart
 class PinnedPositionExampleState extends State<PinnedPositionExample> {
   late Timer timer;
-  int angle = 0;
+  double angle = 0;
 
   @override
   void initState() {
@@ -933,7 +933,6 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
     timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       setState(() {
         angle++;
-        angle %= 360;
       });
     });
   }
@@ -1035,15 +1034,16 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
 ```dart
 class TranslateExampleState extends State<TranslateExample> {
   late Timer timer;
-  int angle = 0;
+  double angle = 0;
+  double earthRevolutionAngle = 0;
 
   @override
   void initState() {
     super.initState();
     timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       setState(() {
-        angle++;
-        angle %= 360;
+        angle += 1;
+        earthRevolutionAngle += 0.1;
       });
     });
   }
@@ -1065,11 +1065,84 @@ class TranslateExampleState extends State<TranslateExample> {
       body: ConstraintLayout(
         children: [
           Container(
+            decoration: const BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.all(Radius.circular(1000)),
+            ),
+            child: const Text('----'),
+            alignment: Alignment.center,
+          ).applyConstraint(
+            id: cId('sun'),
+            size: 200,
+            pinnedInfo: PinnedInfo(
+              parent,
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+              Anchor(0.3, AnchorType.percent, 0.5, AnchorType.percent),
+              angle: earthRevolutionAngle * 365 / 25.4,
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.all(Radius.circular(1000)),
+            ),
+            child: const Text('----'),
+            alignment: Alignment.center,
+          ).applyConstraint(
+            id: cId('earth'),
+            size: 100,
+            pinnedInfo: PinnedInfo(
+              cId('sun'),
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+              angle: earthRevolutionAngle * 365,
+            ),
+            translate: circleTranslate(
+              radius: 250,
+              angle: earthRevolutionAngle,
+            ),
+            translateConstraint: true,
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.grey,
+              borderRadius: BorderRadius.all(Radius.circular(1000)),
+            ),
+            child: const Text('----'),
+            alignment: Alignment.center,
+          ).applyConstraint(
+            id: cId('moon'),
+            size: 50,
+            pinnedInfo: PinnedInfo(
+              cId('earth'),
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+              Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+              angle: earthRevolutionAngle * 365 / 27.32,
+            ),
+            translate: circleTranslate(
+              radius: 100,
+              angle: earthRevolutionAngle * 365 / 27.32,
+            ),
+            translateConstraint: true,
+          ),
+          Text('Sun rotates ${(earthRevolutionAngle * 365 / 25.4) ~/ 360} times')
+              .applyConstraint(
+            outTopCenterTo: cId('sun'),
+          ),
+          Text('Earth rotates ${earthRevolutionAngle * 365 ~/ 360} times')
+              .applyConstraint(
+            outTopCenterTo: cId('earth'),
+          ),
+          Text('Moon rotates ${(earthRevolutionAngle * 365 / 27.32) ~/ 360} times')
+              .applyConstraint(
+            outTopCenterTo: cId('moon'),
+          ),
+          Container(
             color: Colors.yellow,
           ).applyConstraint(
             id: anchor,
-            size: 150,
-            centerTo: parent,
+            size: 250,
+            centerRightTo: parent.rightMargin(300),
           ),
           Container(
             color: Colors.red,
@@ -1256,7 +1329,7 @@ class BarrierExample extends StatelessWidget {
 
 5. Every frame, ConstraintLayout compares the parameters and decides the following things:
     1. Does the constraint need to be recalculated?
-    2. Does it need to be rearranged?
+    2. Does it need to be relayout?
     3. Does it need to be redrawn?
     4. Do you need to rearrange the drawing order?
     5. Do you need to rearrange the order of event distribution?

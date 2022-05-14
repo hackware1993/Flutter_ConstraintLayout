@@ -14,7 +14,7 @@ class PinnedPositionExample extends StatefulWidget {
 
 class PinnedPositionExampleState extends State<PinnedPositionExample> {
   late Timer timer;
-  int angle = 0;
+  double angle = 0;
 
   @override
   void initState() {
@@ -22,7 +22,6 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
     timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       setState(() {
         angle++;
-        angle %= 360;
       });
     });
   }

@@ -1,3 +1,7 @@
+# v1.4.4-stable
+
+optimize rotate.
+
 # v1.4.3-stable
 
 fix a pinned position bug.

@@ -14,18 +14,16 @@ class TranslateExample extends StatefulWidget {
 
 class TranslateExampleState extends State<TranslateExample> {
   late Timer timer;
-  int angle = 0;
-  int earthAngle = 0;
+  double angle = 0;
+  double earthRevolutionAngle = 0;
 
   @override
   void initState() {
     super.initState();
     timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       setState(() {
-        angle += 5;
-        angle %= 360;
-        earthAngle += 1;
-        earthAngle %= 360;
+        angle += 1;
+        earthRevolutionAngle += 0.1;
       });
     });
   }
@@ -51,14 +49,16 @@ class TranslateExampleState extends State<TranslateExample> {
               color: Colors.redAccent,
               borderRadius: BorderRadius.all(Radius.circular(1000)),
             ),
-            child: const Text('Sun'),
+            child: const Text('----'),
             alignment: Alignment.center,
           ).applyConstraint(
+            id: cId('sun'),
             size: 200,
             pinnedInfo: PinnedInfo(
               parent,
               Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
               Anchor(0.3, AnchorType.percent, 0.5, AnchorType.percent),
+              angle: earthRevolutionAngle * 365 / 25.4,
             ),
           ),
           Container(
@@ -66,19 +66,20 @@ class TranslateExampleState extends State<TranslateExample> {
               color: Colors.blue,
               borderRadius: BorderRadius.all(Radius.circular(1000)),
             ),
-            child: const Text('Earth'),
+            child: const Text('----'),
             alignment: Alignment.center,
           ).applyConstraint(
+            id: cId('earth'),
             size: 100,
             pinnedInfo: PinnedInfo(
-              sId(-1),
+              cId('sun'),
               Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
               Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
-              angle: earthAngle,
+              angle: earthRevolutionAngle * 365,
             ),
             translate: circleTranslate(
-              radius: 350,
-              angle: earthAngle,
+              radius: 250,
+              angle: earthRevolutionAngle,
             ),
             translateConstraint: true,
           ),
@@ -87,26 +88,40 @@ class TranslateExampleState extends State<TranslateExample> {
               color: Colors.grey,
               borderRadius: BorderRadius.all(Radius.circular(1000)),
             ),
-            child: const Text('Moon'),
+            child: const Text('----'),
             alignment: Alignment.center,
           ).applyConstraint(
+            id: cId('moon'),
             size: 50,
             pinnedInfo: PinnedInfo(
-              sId(-1),
+              cId('earth'),
               Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
               Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
-              angle: angle,
+              angle: earthRevolutionAngle * 365 / 27.32,
             ),
             translate: circleTranslate(
               radius: 100,
-              angle: angle,
+              angle: earthRevolutionAngle * 365 / 27.32,
             ),
+            translateConstraint: true,
+          ),
+          Text('Sun rotates ${(earthRevolutionAngle * 365 / 25.4) ~/ 360} times')
+              .applyConstraint(
+            outTopCenterTo: cId('sun'),
+          ),
+          Text('Earth rotates ${earthRevolutionAngle * 365 ~/ 360} times')
+              .applyConstraint(
+            outTopCenterTo: cId('earth'),
+          ),
+          Text('Moon rotates ${(earthRevolutionAngle * 365 / 27.32) ~/ 360} times')
+              .applyConstraint(
+            outTopCenterTo: cId('moon'),
           ),
           Container(
             color: Colors.yellow,
           ).applyConstraint(
             id: anchor,
-            size: 150,
+            size: 250,
             centerRightTo: parent.rightMargin(300),
           ),
           Container(
