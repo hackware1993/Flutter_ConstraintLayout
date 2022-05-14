@@ -2930,28 +2930,18 @@ class _ConstraintRenderBox extends RenderBox
           list.add(node.parentData._constrainedNodeMap[id]!.getBottom());
         }
       }
-      double min = double.maxFinite;
-      double max = double.minPositive;
-      for (final element in list) {
-        if (element > max) {
-          max = element;
-        }
-        if (element < min) {
-          min = element;
-        }
-      }
       if (direction == BarrierDirection.left) {
-        offsetX = min;
+        offsetX = getMinDouble(list);
         offsetY = 0;
       } else if (direction == BarrierDirection.top) {
         offsetX = 0;
-        offsetY = min;
+        offsetY = getMinDouble(list);
       } else if (direction == BarrierDirection.right) {
-        offsetX = max;
+        offsetX = getMaxDouble(list);
         offsetY = 0;
       } else {
         offsetX = 0;
-        offsetY = max;
+        offsetY = getMaxDouble(list);
       }
     } else {
       /// Calculate child x offset
@@ -3581,7 +3571,7 @@ class ConstrainedNode {
             parentData._constrainedNodeMap[id]!
                 .getDepth(parentSizeConfirmed, resolvedWidth, resolvedHeight)
         ];
-        depth = getMax(list) + 1;
+        depth = getMaxInt(list) + 1;
       } else {
         List<int> list = [
           if (leftConstraint != null)
@@ -3607,7 +3597,7 @@ class ConstrainedNode {
               getDepthFor(
                   element, parentSizeConfirmed, resolvedWidth, resolvedHeight),
         ];
-        depth = getMax(list) + 1;
+        depth = getMaxInt(list) + 1;
       }
     }
     return depth;

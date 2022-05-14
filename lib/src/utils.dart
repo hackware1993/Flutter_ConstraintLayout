@@ -478,14 +478,34 @@ void debugShowPerformance(
   context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
 }
 
-int getMax(List<int> list) {
-  int max = -1;
+int getMaxInt(List<int> list) {
+  int max = 1 << 63;
   for (final element in list) {
     if (element > max) {
       max = element;
     }
   }
   return max;
+}
+
+double getMaxDouble(List<double> list) {
+  double max = double.minPositive;
+  for (final element in list) {
+    if (element > max) {
+      max = element;
+    }
+  }
+  return max;
+}
+
+double getMinDouble(List<double> list) {
+  double min = double.maxFinite;
+  for (final element in list) {
+    if (element < min) {
+      min = element;
+    }
+  }
+  return min;
 }
 
 /// For debug message print
