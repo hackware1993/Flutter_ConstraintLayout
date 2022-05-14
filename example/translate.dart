@@ -51,12 +51,9 @@ class TranslateExampleState extends State<TranslateExample> {
             centerTo: parent,
           ),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.red,
-            ),
+            color: Colors.red,
             child: const Text('pinned translate'),
           ).applyConstraint(
-            size: wrapContent,
             centerTo: anchor,
             translate: PinnedTranslate(
               PinnedInfo(
@@ -68,9 +65,7 @@ class TranslateExampleState extends State<TranslateExample> {
             ),
           ),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.blue,
-            ),
+            color: Colors.blue,
             child: const Text('circle translate'),
           ).applyConstraint(
             size: wrapContent,
@@ -81,12 +76,9 @@ class TranslateExampleState extends State<TranslateExample> {
             ),
           ),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.cyan,
-            ),
+            color: Colors.cyan,
             child: const Text('pinned & circle translate'),
           ).applyConstraint(
-            size: wrapContent,
             centerTo: anchor,
             translate: PinnedTranslate(
                   PinnedInfo(
@@ -102,9 +94,7 @@ class TranslateExampleState extends State<TranslateExample> {
                 ),
           ),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.orange,
-            ),
+            color: Colors.orange,
             child: const Text('normal translate'),
           ).applyConstraint(
             size: wrapContent,

@@ -3271,11 +3271,8 @@ class _ConstraintRenderBox extends RenderBox
         context.canvas.translate(
             element.offset.dx + offset.dx + paintShift.dx + anchorOffset.dx,
             element.offset.dy + offset.dy + paintShift.dy + anchorOffset.dy);
-        context.canvas.rotate(pi + pi * (pinnedInfo.angle / 180));
-        context.paintChild(
-            element.renderBox!,
-            Offset(-element.getMeasuredWidth() + anchorOffset.dx,
-                -element.getMeasuredHeight() + anchorOffset.dy));
+        context.canvas.rotate(pinnedInfo.angle * pi / 180);
+        context.paintChild(element.renderBox!, -anchorOffset);
         context.canvas.restore();
       } else {
         context.paintChild(

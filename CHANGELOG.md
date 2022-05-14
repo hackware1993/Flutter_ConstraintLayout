@@ -1,6 +1,10 @@
+# v1.4.2-stable
+
+fix a rotate bug.
+
 # v1.4.1-stable
 
-1. add pinned & circle translate support.
+add pinned & circle translate support.
 
 # v1.4.0-stable
 
