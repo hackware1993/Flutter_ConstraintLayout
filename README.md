@@ -1097,9 +1097,30 @@ class TranslateExampleState extends State<TranslateExample> {
             size: wrapContent,
             centerTo: anchor,
             translate: circleTranslate(
-              radius: 150,
+              radius: 100,
               angle: angle,
             ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.cyan,
+            ),
+            child: const Text('pinned & circle translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            centerTo: anchor,
+            translate: PinnedTranslate(
+              PinnedInfo(
+                null,
+                Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+                null,
+                angle: angle,
+              ),
+            ) +
+                circleTranslate(
+                  radius: 150,
+                  angle: angle,
+                ),
           ),
           Container(
             decoration: const BoxDecoration(
