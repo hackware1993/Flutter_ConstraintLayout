@@ -1266,7 +1266,9 @@ class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
 ConstraintLayout 基于约束的布局算法极其强大和灵活，似乎可以成为了一个通用的布局框架。你只需要生成约束，将布局的任务交给 ConstraintLayout
 即可。部分内置功能比如圆形定位、瀑布流、网格、列表以扩展的形式提供。
 
-在线示例中的图表就是一个典型的扩展。欢迎为 ConstraintLayout 开发扩展。
+在线示例中的图表就是一个典型的扩展：
+![charts.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/charts.gif?raw=true)
+欢迎为 ConstraintLayout 开发扩展。
 
 # 支持我
 

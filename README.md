@@ -1302,8 +1302,9 @@ seems that it can become a general layout framework. You just need to generate c
 over the task of layout to ConstraintLayout. Some built-in features like circle position, staggered
 grid, grid, and list are available in extended form.
 
-The charts in the online example is a typical extension. Extensions for ConstraintLayout are
-welcome.
+The charts in the online example is a typical extension:
+![charts.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/charts.gif?raw=true)
+Extensions for ConstraintLayout are welcome.
 
 # Support me
 
