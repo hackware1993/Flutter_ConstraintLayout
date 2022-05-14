@@ -2898,7 +2898,11 @@ class _ConstraintRenderBox extends RenderBox
             node.pinnedConstraint!.getX() + targetOffset.dx - selfOffset.dx;
         double offsetY =
             node.pinnedConstraint!.getY() + targetOffset.dy - selfOffset.dy;
-        return Offset(offsetX, offsetY);
+        Offset offset = Offset(offsetX, offsetY);
+        if (node.pinnedInfo != null && node.translateConstraint) {
+          offset += node.translate;
+        }
+        return offset;
       }
     }
 

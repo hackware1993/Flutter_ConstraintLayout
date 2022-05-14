@@ -158,6 +158,10 @@ void debugCheckConstraintsIntegrity(List<ConstrainedNode> nodeList) {
         throw ConstraintLayoutException(
             'When setting pinnedInfo, targetAnchor can not be null.');
       }
+      if (element.translate is PinnedTranslate) {
+        throw ConstraintLayoutException(
+            'When setting pinnedInfo, pinned translate can not be set.');
+      }
       continue;
     }
 
