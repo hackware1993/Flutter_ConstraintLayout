@@ -5,6 +5,8 @@
 一个超级强大的 Stack，使用约束构建极为灵活的布局，和 Android 下的 ConstraintLayout 和 iOS 下的 AutoLayout 类似。但代码实现却高效得多，它具有 O(n)
 的布局时间复杂度，无需线性方程求解。
 
+它是一个布局，也是一个更现代化的通用布局框架。
+
 # 大幅提高 Flutter 的开发体验和效率，并提升应用性能
 
 不管布局有多复杂，约束有多深，它始终有媲美单一 Flex 或 Stack
@@ -76,7 +78,7 @@ build 耗时有时甚至超过渲染耗时。
 5. 完善的约束缺失、非法、冗余提示
 6. 偏移（当同时设置了上下或左右约束时，可以使用 horizontalBias 和 verticalBias 来调整偏移。默认值是 0.5，代表居中）
 7. z-index（绘制顺序，默认是子元素的顺序）
-8. 平移
+8. 平移、旋转
 9. 百分比布局（当大小被设置为 matchConstraint 时，就会启用百分比布局，默认的百分比是 1（100%）。相关的属性是
    widthPercent，heightPercent，widthPercentageAnchor，heightPercentageAnchor）
 10. 引导线
@@ -157,12 +159,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.3.0-stable'
+      ref: 'v1.4.0-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.3.0-stable
+  flutter_constraintlayout: ^1.4.0-stable
 ```
 
 ```dart
@@ -1000,6 +1002,96 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
 }
 ```
 
+9. 平移 [Flutter Web 在线示例](https://constraintlayout.flutterfirst.cn)
+
+![translate.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/translate.gif?raw=true)
+
+```dart
+class TranslateExampleState extends State<TranslateExample> {
+  late Timer timer;
+  int angle = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      setState(() {
+        angle++;
+        angle %= 360;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ConstraintId anchor = ConstraintId('anchor');
+    return Scaffold(
+      appBar: const CustomAppBar(
+        title: 'Translate',
+        codePath: 'example/translate.dart',
+      ),
+      body: ConstraintLayout(
+        children: [
+          Container(
+            color: Colors.yellow,
+          ).applyConstraint(
+            id: anchor,
+            size: 150,
+            centerTo: parent,
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.red,
+            ),
+            child: const Text('pinned translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            centerTo: anchor,
+            translate: PinnedTranslate(
+              PinnedInfo(
+                null,
+                Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+                null,
+                angle: angle,
+              ),
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: const Text('circle translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            centerTo: anchor,
+            translate: circleTranslate(
+              radius: 150,
+              angle: angle,
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+            ),
+            child: const Text('normal translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            outBottomCenterTo: anchor,
+            translate: Offset(0, angle / 5),
+          )
+        ],
+      ),
+    );
+  }
+}
+```
+
 # 性能优化
 
 1. 当布局复杂时，如果子元素需要频繁重绘，可以考虑使用 RepaintBoundary。当然合成 Layer 也有开销，所以需要合理使用。
@@ -1168,6 +1260,13 @@ class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
   }
 }
 ```
+
+# 扩展
+
+ConstraintLayout 基于约束的布局算法极其强大和灵活，似乎可以成为了一个通用的布局框架。你只需要生成约束，将布局的任务交给 ConstraintLayout
+即可。部分内置功能比如圆形定位、瀑布流、网格、列表以扩展的形式提供。
+
+在线示例中的图表就是一个典型的扩展。欢迎为 ConstraintLayout 开发扩展。
 
 # 支持我
 

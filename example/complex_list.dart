@@ -18,7 +18,7 @@ class ComplexListExample extends StatelessWidget {
       Colors.deepPurpleAccent,
       Colors.black,
       Colors.cyan,
-      Colors.pink,
+      Colors.pink
     ];
 
     return Scaffold(

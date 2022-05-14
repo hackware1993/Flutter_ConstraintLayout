@@ -1,11 +1,11 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+
+import 'utils.dart';
 
 /// author: hackware
 /// home page: https:///github.com/hackware1993
@@ -57,7 +57,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    assert(_debugEnsureNotEmptyString('debugName', debugName));
+    assert(debugEnsureNotEmptyString('debugName', debugName));
     assert(width >= 0 || width == matchParent || width == wrapContent);
     assert(height >= 0 || height == matchParent || height == wrapContent);
     assert(size == null ||
@@ -89,7 +89,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     BuildContext context,
     covariant RenderObject renderObject,
   ) {
-    assert(_debugEnsureNotEmptyString('debugName', debugName));
+    assert(debugEnsureNotEmptyString('debugName', debugName));
     assert(width >= 0 || width == matchParent || width == wrapContent);
     assert(height >= 0 || height == matchParent || height == wrapContent);
     assert(size == null ||
@@ -117,470 +117,9 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   }
 }
 
-Offset circleTranslate({
-  required double radius,
-  required int angle,
-}) {
-  assert(radius >= 0 && radius != double.infinity);
-  assert(angle >= 0 && angle <= 360);
-  double xTranslate = sin((angle / 180) * pi) * radius;
-  double yTranslate = -cos((angle / 180) * pi) * radius;
-  return Offset(xTranslate, yTranslate);
-}
-
-List<Widget> constraintGrid({
-  required ConstraintId id,
-  required _Align left,
-  required _Align top,
-  required int itemCount,
-  required int columnCount,
-  double? itemWidth,
-  double? itemHeight,
-  double? itemSize,
-  Size Function(int index, int rowIndex, int columnIndex)? itemSizeBuilder,
-  required Widget Function(int index, int rowIndex, int columnIndex)
-      itemBuilder,
-  EdgeInsets Function(int index, int rowIndex, int columnIndex)?
-      itemMarginBuilder,
-  int Function(int index)? itemSpanBuilder,
-  EdgeInsets margin = EdgeInsets.zero,
-  CLVisibility visibility = visible,
-  Offset translate = Offset.zero,
-  bool translateConstraint = false,
-  int? zIndex,
-}) {
-  assert(itemCount > 0);
-  assert(columnCount > 0);
-  assert(itemWidth == null || (itemWidth >= 0 || itemWidth != matchConstraint));
-  assert(
-      itemHeight == null || (itemHeight >= 0 || itemHeight != matchConstraint));
-  assert(itemSize == null || (itemSize >= 0 || itemSize != matchConstraint));
-  if (itemSize != null) {
-    itemWidth = itemSize;
-    itemHeight = itemSize;
-  }
-  assert((itemSizeBuilder == null && itemWidth != null && itemHeight != null) ||
-      (itemSizeBuilder != null && itemWidth == null && itemHeight == null));
-  List<Widget> widgets = [];
-  _Align leftAnchor = left;
-  _Align topAnchor = top;
-
-  EdgeInsets leftMargin = EdgeInsets.only(
-    left: margin.left,
-  );
-  EdgeInsets topMargin = EdgeInsets.only(
-    top: margin.top,
-  );
-
-  List<ConstraintId> allChildIds = [];
-  List<ConstraintId> leftChildIds = [];
-  List<ConstraintId> topChildIds = [];
-  List<ConstraintId> rightChildIds = [];
-  List<ConstraintId> bottomChildIds = [];
-  int totalAvailableSpanCount = (itemCount / columnCount).ceil() * columnCount;
-  int currentRowIndex = -1;
-  int currentRowUsedSpanCount = columnCount + 1;
-  int totalUsedSpanCount = 0;
-  late int currentRowBarrierCount;
-  List<ConstraintId?> currentSpanSlot = List.filled(columnCount + 1, null);
-  for (int i = 0; i < itemCount; i++) {
-    ConstraintId itemId = ConstraintId(id._id + '_grid_item_$i');
-    allChildIds.add(itemId);
-
-    int itemSpan = itemSpanBuilder?.call(i) ?? 1;
-    assert(itemSpan >= 1 && itemSpan <= columnCount);
-    currentRowUsedSpanCount += itemSpan;
-    totalUsedSpanCount += itemSpan;
-
-    late EdgeInsets childMargin;
-
-    /// New row start
-    if (currentRowUsedSpanCount > columnCount) {
-      currentRowIndex++;
-      currentRowUsedSpanCount = itemSpan;
-      currentRowBarrierCount = 0;
-      if (i > 0) {
-        if (!rightChildIds.contains(allChildIds[i - 1])) {
-          /// Last column
-          rightChildIds.add(allChildIds[i - 1]);
-        }
-      } else {
-        if (itemSpan == columnCount) {
-          /// Last column
-          rightChildIds.add(itemId);
-        }
-      }
-
-      /// First column
-      leftAnchor = left;
-      leftChildIds.add(itemId);
-      childMargin = (itemMarginBuilder?.call(
-                  i, currentRowIndex, currentRowUsedSpanCount - 1) ??
-              EdgeInsets.zero)
-          .add(leftMargin) as EdgeInsets;
-    } else {
-      childMargin = itemMarginBuilder?.call(
-              i, currentRowIndex, currentRowUsedSpanCount - 1) ??
-          EdgeInsets.zero;
-    }
-
-    // First row
-    if (currentRowIndex == 0) {
-      childMargin = childMargin.add(topMargin) as EdgeInsets;
-      topChildIds.add(itemId);
-    }
-
-    // Last row
-    if (totalAvailableSpanCount - totalUsedSpanCount < columnCount) {
-      bottomChildIds.add(itemId);
-    }
-
-    if (currentRowIndex > 0) {
-      if (itemSpan == 1) {
-        topAnchor = currentSpanSlot[currentRowUsedSpanCount]!.bottom;
-      } else {
-        List<ConstraintId> referencedIds = [];
-        for (int i = 0; i < itemSpan; i++) {
-          ConstraintId id = currentSpanSlot[currentRowUsedSpanCount - i]!;
-          if (!referencedIds.contains(id)) {
-            referencedIds.add(id);
-          }
-        }
-        ConstraintId rowBarrierId = ConstraintId(id._id +
-            '_row_${currentRowIndex}_bottom_barrier_$currentRowBarrierCount');
-        Barrier rowBottomBarrier = Barrier(
-          id: rowBarrierId,
-          direction: BarrierDirection.bottom,
-          referencedIds: referencedIds,
-        );
-        widgets.add(rowBottomBarrier);
-        topAnchor = rowBarrierId.bottom;
-        currentRowBarrierCount++;
-      }
-    }
-
-    Widget widget =
-        itemBuilder(i, currentRowIndex, currentRowUsedSpanCount - 1);
-    Size? itemSize =
-        itemSizeBuilder?.call(i, currentRowIndex, currentRowUsedSpanCount - 1);
-    double width = itemWidth ?? itemSize!.width;
-    double height = itemHeight ?? itemSize!.height;
-
-    widgets.add(Constrained(
-      child: widget,
-      constraint: Constraint(
-        id: itemId,
-        width: width,
-        height: height,
-        left: width == matchParent ? null : leftAnchor,
-        top: height == matchParent ? null : topAnchor,
-        zIndex: zIndex,
-        translate: translate,
-        visibility: visibility,
-        margin: childMargin,
-        goneMargin: childMargin,
-      ),
-    ));
-
-    leftAnchor = itemId.right;
-    for (int i = 0; i < itemSpan; i++) {
-      currentSpanSlot[currentRowUsedSpanCount - i] = itemId;
-    }
-  }
-
-  if (!rightChildIds.contains(allChildIds.last)) {
-    rightChildIds.add(allChildIds.last);
-  }
-
-  Barrier leftBarrier = Barrier(
-    id: ConstraintId(id._id + '_left_barrier'),
-    direction: BarrierDirection.left,
-    referencedIds: leftChildIds,
-  );
-
-  Barrier topBarrier = Barrier(
-    id: ConstraintId(id._id + '_top_barrier'),
-    direction: BarrierDirection.top,
-    referencedIds: topChildIds,
-  );
-
-  Barrier rightBarrier = Barrier(
-    id: ConstraintId(id._id + '_right_barrier'),
-    direction: BarrierDirection.right,
-    referencedIds: rightChildIds,
-  );
-
-  Barrier bottomBarrier = Barrier(
-    id: ConstraintId(id._id + '_bottom_barrier'),
-    direction: BarrierDirection.bottom,
-    referencedIds: bottomChildIds,
-  );
-
-  widgets.add(leftBarrier);
-  widgets.add(topBarrier);
-  widgets.add(rightBarrier);
-  widgets.add(bottomBarrier);
-
-  widgets.add(const SizedBox().applyConstraint(
-    id: id,
-    size: matchConstraint,
-    left: leftBarrier.id.left,
-    top: topBarrier.id.top,
-    right: rightBarrier.id.right,
-    bottom: bottomBarrier.id.bottom,
-    zIndex: -1,
-    translate: translate,
-    translateConstraint: translateConstraint,
-    visibility: invisible,
-  ));
-
-  return widgets;
-}
-
 /// Wrapper constraints design for simplicity of use, it will eventually convert to base constraints.
 const Object _wrapperConstraint = Object();
 const Object _baseConstraint = Object();
-
-extension ConstrainedWidgetsExt on Widget {
-  Constrained applyConstraint({
-    ConstraintId? id,
-    double width = wrapContent,
-    double height = wrapContent,
-    double? size,
-    @_baseConstraint _Align? left,
-    @_baseConstraint _Align? top,
-    @_baseConstraint _Align? right,
-    @_baseConstraint _Align? bottom,
-    @_baseConstraint _Align? baseline,
-    EdgeInsets clickPadding = EdgeInsets.zero,
-    CLVisibility visibility = visible,
-    bool percentageMargin = false,
-    EdgeInsets margin = EdgeInsets.zero,
-    EdgeInsets goneMargin = EdgeInsets.zero,
-    TextBaseline textBaseline = TextBaseline.alphabetic,
-    int? zIndex, // default is child index
-    Offset translate = Offset.zero,
-    bool translateConstraint = false,
-    double widthPercent = 1,
-    double heightPercent = 1,
-    PercentageAnchor widthPercentageAnchor = PercentageAnchor.constraint,
-    PercentageAnchor heightPercentageAnchor = PercentageAnchor.constraint,
-    double horizontalBias = 0.5,
-    double verticalBias = 0.5,
-    @_wrapperConstraint ConstraintId? topLeftTo,
-    @_wrapperConstraint ConstraintId? topCenterTo,
-    @_wrapperConstraint ConstraintId? topRightTo,
-    @_wrapperConstraint ConstraintId? centerLeftTo,
-    @_wrapperConstraint ConstraintId? centerTo,
-    @_wrapperConstraint ConstraintId? centerRightTo,
-    @_wrapperConstraint ConstraintId? bottomLeftTo,
-    @_wrapperConstraint ConstraintId? bottomCenterTo,
-    @_wrapperConstraint ConstraintId? bottomRightTo,
-    @_wrapperConstraint ConstraintId? centerHorizontalTo,
-    @_wrapperConstraint ConstraintId? centerVerticalTo,
-    @_wrapperConstraint ConstraintId? outTopLeftTo,
-    @_wrapperConstraint ConstraintId? outTopCenterTo,
-    @_wrapperConstraint ConstraintId? outTopRightTo,
-    @_wrapperConstraint ConstraintId? outCenterLeftTo,
-    @_wrapperConstraint ConstraintId? outCenterRightTo,
-    @_wrapperConstraint ConstraintId? outBottomLeftTo,
-    @_wrapperConstraint ConstraintId? outBottomCenterTo,
-    @_wrapperConstraint ConstraintId? outBottomRightTo,
-    @_wrapperConstraint ConstraintId? centerTopLeftTo,
-    @_wrapperConstraint ConstraintId? centerTopCenterTo,
-    @_wrapperConstraint ConstraintId? centerTopRightTo,
-    @_wrapperConstraint ConstraintId? centerCenterLeftTo,
-    @_wrapperConstraint ConstraintId? centerCenterRightTo,
-    @_wrapperConstraint ConstraintId? centerBottomLeftTo,
-    @_wrapperConstraint ConstraintId? centerBottomCenterTo,
-    @_wrapperConstraint ConstraintId? centerBottomRightTo,
-    OnLayoutCallback? callback,
-    double chainWeight = 1,
-    bool percentageTranslate = false,
-    double minWidth = 0,
-    double maxWidth = matchParent,
-    double minHeight = 0,
-    double maxHeight = matchParent,
-    double? widthHeightRatio,
-    bool? ratioBaseOnWidth,
-    int? eIndex,
-    PinnedInfo? pinnedInfo,
-    List<ConstraintId>? anchors,
-    CalcSizeCallback? calcSizeCallback,
-    CalcOffsetCallback? calcOffsetCallback,
-  }) {
-    return Constrained(
-      key: key,
-      constraint: Constraint(
-        id: id,
-        width: width,
-        height: height,
-        size: size,
-        left: left,
-        top: top,
-        right: right,
-        bottom: bottom,
-        baseline: baseline,
-        clickPadding: clickPadding,
-        visibility: visibility,
-        percentageMargin: percentageMargin,
-        margin: margin,
-        goneMargin: goneMargin,
-        textBaseline: textBaseline,
-        zIndex: zIndex,
-        translate: translate,
-        translateConstraint: translateConstraint,
-        widthPercent: widthPercent,
-        heightPercent: heightPercent,
-        widthPercentageAnchor: widthPercentageAnchor,
-        heightPercentageAnchor: heightPercentageAnchor,
-        horizontalBias: horizontalBias,
-        verticalBias: verticalBias,
-        topLeftTo: topLeftTo,
-        topCenterTo: topCenterTo,
-        topRightTo: topRightTo,
-        centerLeftTo: centerLeftTo,
-        centerTo: centerTo,
-        centerRightTo: centerRightTo,
-        bottomLeftTo: bottomLeftTo,
-        bottomCenterTo: bottomCenterTo,
-        bottomRightTo: bottomRightTo,
-        centerHorizontalTo: centerHorizontalTo,
-        centerVerticalTo: centerVerticalTo,
-        callback: callback,
-        percentageTranslate: percentageTranslate,
-        minWidth: minWidth,
-        maxWidth: maxWidth,
-        minHeight: minHeight,
-        maxHeight: maxHeight,
-        widthHeightRatio: widthHeightRatio,
-        ratioBaseOnWidth: ratioBaseOnWidth,
-        outTopLeftTo: outTopLeftTo,
-        outTopCenterTo: outTopCenterTo,
-        outTopRightTo: outTopRightTo,
-        outCenterLeftTo: outCenterLeftTo,
-        outCenterRightTo: outCenterRightTo,
-        outBottomLeftTo: outBottomLeftTo,
-        outBottomCenterTo: outBottomCenterTo,
-        outBottomRightTo: outBottomRightTo,
-        centerTopLeftTo: centerTopLeftTo,
-        centerTopCenterTo: centerTopCenterTo,
-        centerTopRightTo: centerTopRightTo,
-        centerCenterLeftTo: centerCenterLeftTo,
-        centerCenterRightTo: centerCenterRightTo,
-        centerBottomLeftTo: centerBottomLeftTo,
-        centerBottomCenterTo: centerBottomCenterTo,
-        centerBottomRightTo: centerBottomRightTo,
-        eIndex: eIndex,
-        pinnedInfo: pinnedInfo,
-        anchors: anchors,
-        calcSizeCallback: calcSizeCallback,
-        calcOffsetCallback: calcOffsetCallback,
-      ),
-      child: this,
-    );
-  }
-
-  Constrained apply({
-    required Constraint constraint,
-  }) {
-    return Constrained(
-      key: key,
-      constraint: constraint,
-      child: this,
-    );
-  }
-
-  UnConstrained applyConstraintId({
-    required ConstraintId id,
-  }) {
-    return UnConstrained(
-      key: key,
-      id: id,
-      child: this,
-    );
-  }
-
-  /// When the layout is complex, if the child elements need to be repainted frequently, it
-  /// is recommended to use RepaintBoundary to improve performance.
-  RepaintBoundary offPaint() {
-    return RepaintBoundary(
-      key: key,
-      child: this,
-    );
-  }
-
-  /// If you can't declare a child element as const and it won't change, you can use OffBuildWidget
-  /// to avoid the rebuilding of the child element.
-  OffBuildWidget offBuild({
-    required String id,
-  }) {
-    return OffBuildWidget(
-      key: key,
-      id: id,
-      child: this,
-    );
-  }
-
-  Widget debugWrap([Color? color]) {
-    return Center(
-      child: Container(
-        color: color ?? Colors.black,
-        child: this,
-      ),
-    );
-  }
-}
-
-class OffBuildWidget extends StatelessWidget {
-  final String id;
-  final Widget child;
-
-  const OffBuildWidget({
-    Key? key,
-    required this.id,
-    required this.child,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
-  }
-
-  @override
-  // ignore: invalid_override_of_non_virtual_member
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OffBuildWidget &&
-          runtimeType == other.runtimeType &&
-          id == (other).id;
-
-  @override
-  // ignore: invalid_override_of_non_virtual_member
-  int get hashCode => id.hashCode;
-}
-
-bool _debugEnsureNotEmptyString(String name, String? value) {
-  if (value != null && value.trim().isEmpty) {
-    throw ConstraintLayoutException(
-        '$name can be null, but not an empty string.');
-  }
-  return true;
-}
-
-bool _debugEnsurePercent(String name, double? percent) {
-  if (percent == null || percent < 0 || percent > 1) {
-    throw ConstraintLayoutException('$name is between [0,1].');
-  }
-  return true;
-}
-
-bool _debugEnsureNegativePercent(String name, double? percent) {
-  if (percent == null || percent < -1 || percent > 1) {
-    throw ConstraintLayoutException('$name is between [-1,1].');
-  }
-  return true;
-}
 
 final ConstraintId parent = ConstraintId('parent');
 const double matchConstraint = -3.1415926;
@@ -596,12 +135,6 @@ enum CLVisibility {
   invisible,
 }
 
-enum ChainStyle {
-  spread,
-  spreadInside,
-  packet,
-}
-
 enum BarrierDirection {
   left,
   top,
@@ -609,13 +142,19 @@ enum BarrierDirection {
   bottom,
 }
 
+/// For percentage layout
 enum PercentageAnchor {
+  /// Based on the size of the constraint
   constraint,
+
+  /// Based on the size of the parent
   parent,
 }
 
 class ConstraintId {
-  final String _id;
+  final String id;
+
+  /// To simplify the setting of margins
   double? _leftMargin;
   double? _topMargin;
   double? _rightMargin;
@@ -625,14 +164,15 @@ class ConstraintId {
   double? _rightGoneMargin;
   double? _bottomGoneMargin;
 
+  /// Speed up constraint calculation
   ConstrainedNode? _contextCacheNode;
   int? _contextHash;
 
-  ConstraintId(this._id);
+  ConstraintId(this.id);
 
   @protected
   ConstraintId _copy() {
-    return ConstraintId(_id);
+    return ConstraintId(id);
   }
 
   bool _isMarginSet() {
@@ -730,43 +270,53 @@ class ConstraintId {
     _contextCacheNode = node;
   }
 
-  late final _Align left = _Align(this, AlignType.left)
-    .._margin = _leftMargin
-    .._goneMargin = _leftGoneMargin;
+  late final ConstraintAlign left =
+      ConstraintAlign(this, ConstraintAlignType.left)
+        .._margin = _leftMargin
+        .._goneMargin = _leftGoneMargin;
 
-  late final _Align top = _Align(this, AlignType.top)
-    .._margin = _topMargin
-    .._goneMargin = _topGoneMargin;
+  late final ConstraintAlign top =
+      ConstraintAlign(this, ConstraintAlignType.top)
+        .._margin = _topMargin
+        .._goneMargin = _topGoneMargin;
 
-  late final _Align right = _Align(this, AlignType.right)
-    .._margin = _rightMargin
-    .._goneMargin = _rightGoneMargin;
+  late final ConstraintAlign right =
+      ConstraintAlign(this, ConstraintAlignType.right)
+        .._margin = _rightMargin
+        .._goneMargin = _rightGoneMargin;
 
-  late final _Align bottom = _Align(this, AlignType.bottom)
-    .._margin = _bottomMargin
-    .._goneMargin = _bottomGoneMargin;
+  late final ConstraintAlign bottom =
+      ConstraintAlign(this, ConstraintAlignType.bottom)
+        .._margin = _bottomMargin
+        .._goneMargin = _bottomGoneMargin;
 
-  late final _Align baseline = _Align(this, AlignType.baseline)
-    .._margin = _bottomMargin
-    .._goneMargin = _bottomGoneMargin;
+  late final ConstraintAlign baseline =
+      ConstraintAlign(this, ConstraintAlignType.baseline)
+        .._margin = _bottomMargin
+        .._goneMargin = _bottomGoneMargin;
 
-  late final _Align _leftReverse = _Align(this, AlignType.left)
-    .._margin = _rightMargin
-    .._goneMargin = _rightGoneMargin;
+  late final ConstraintAlign _leftReverse =
+      ConstraintAlign(this, ConstraintAlignType.left)
+        .._margin = _rightMargin
+        .._goneMargin = _rightGoneMargin;
 
-  late final _Align _topReverse = _Align(this, AlignType.top)
-    .._margin = _bottomMargin
-    .._goneMargin = _bottomGoneMargin;
+  late final ConstraintAlign _topReverse =
+      ConstraintAlign(this, ConstraintAlignType.top)
+        .._margin = _bottomMargin
+        .._goneMargin = _bottomGoneMargin;
 
-  late final _Align _rightReverse = _Align(this, AlignType.right)
-    .._margin = _leftMargin
-    .._goneMargin = _leftGoneMargin;
+  late final ConstraintAlign _rightReverse =
+      ConstraintAlign(this, ConstraintAlignType.right)
+        .._margin = _leftMargin
+        .._goneMargin = _leftGoneMargin;
 
-  late final _Align _bottomReverse = _Align(this, AlignType.bottom)
-    .._margin = _topMargin
-    .._goneMargin = _topGoneMargin;
+  late final ConstraintAlign _bottomReverse =
+      ConstraintAlign(this, ConstraintAlignType.bottom)
+        .._margin = _topMargin
+        .._goneMargin = _topGoneMargin;
 
-  late final _Align center = _Align(this, AlignType.center);
+  late final ConstraintAlign center =
+      ConstraintAlign(this, ConstraintAlignType.center);
 
   @override
   bool operator ==(Object other) {
@@ -779,17 +329,17 @@ class ConstraintId {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    return (other)._id == _id;
+    return (other).id == id;
   }
 
   @override
   int get hashCode {
-    return _id.hashCode;
+    return id.hashCode;
   }
 
   @override
   String toString() {
-    return 'ConstraintId{name: $_id}';
+    return 'ConstraintId{name: $id}';
   }
 }
 
@@ -805,11 +355,6 @@ class IndexConstraintId extends ConstraintId {
   }
 }
 
-ConstraintId rId(int childIndex) {
-  assert(childIndex >= 0);
-  return IndexConstraintId(childIndex);
-}
-
 class RelativeConstraintId extends ConstraintId {
   final int _siblingIndexOffset;
 
@@ -822,55 +367,46 @@ class RelativeConstraintId extends ConstraintId {
   }
 }
 
-ConstraintId sId(int siblingIndexOffset) {
-  assert(siblingIndexOffset != 0);
-  return RelativeConstraintId(siblingIndexOffset);
-}
-
-ConstraintId cId(String id) {
-  return ConstraintId(id);
-}
-
-class _Align {
+class ConstraintAlign {
   final ConstraintId _id;
-  final AlignType _type;
+  final ConstraintAlignType _type;
   double? _margin;
   double? _goneMargin;
   double? _bias;
 
-  _Align(this._id, this._type);
+  ConstraintAlign(this._id, this._type);
 
-  _Align margin(double margin) {
+  ConstraintAlign margin(double margin) {
     if (_margin != null || _goneMargin != null || _bias != null) {
       _margin = margin;
       return this;
     } else {
-      return _Align(_id, _type).._margin = margin;
+      return ConstraintAlign(_id, _type).._margin = margin;
     }
   }
 
-  _Align goneMargin(double goneMargin) {
+  ConstraintAlign goneMargin(double goneMargin) {
     if (_margin != null || _goneMargin != null || _bias != null) {
       _goneMargin = goneMargin;
       return this;
     } else {
-      return _Align(_id, _type).._goneMargin = goneMargin;
+      return ConstraintAlign(_id, _type).._goneMargin = goneMargin;
     }
   }
 
-  _Align bias(double bias) {
+  ConstraintAlign bias(double bias) {
     if (_margin != null || _goneMargin != null || _bias != null) {
       _bias = bias;
       return this;
     } else {
-      return _Align(_id, _type).._bias = bias;
+      return ConstraintAlign(_id, _type).._bias = bias;
     }
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is _Align &&
+      other is ConstraintAlign &&
           runtimeType == other.runtimeType &&
           _id == other._id &&
           _type == other._type &&
@@ -883,7 +419,7 @@ class _Align {
 typedef OnLayoutCallback = void Function(RenderObject renderObject, Rect rect);
 
 typedef CalcSizeCallback = BoxConstraints Function(
-    RenderObject parent, List<ConstrainedNode> anchors);
+    RenderBox parent, List<ConstrainedNode> anchors);
 
 typedef CalcOffsetCallback = Offset Function(
     RenderBox parent, ConstrainedNode self, List<ConstrainedNode> anchors);
@@ -892,6 +428,8 @@ class ConstraintDefine {
   final ConstraintId? _id;
 
   ConstraintDefine(this._id)
+
+      /// You cannot define a relative id for yourself
       : assert(_id is! IndexConstraintId),
         assert(_id is! RelativeConstraintId);
 
@@ -906,41 +444,33 @@ class ConstraintDefine {
   int get hashCode => _id.hashCode;
 }
 
-enum PinnedType {
+enum AnchorType {
   absolute,
   percent,
 }
 
-class PinnedPos {
+class Anchor {
   final double _xOffset;
-  final PinnedType _xType;
+  final AnchorType _xType;
   final double _yOffset;
-  final PinnedType _yType;
+  final AnchorType _yType;
 
-  PinnedPos(this._xOffset, this._xType, this._yOffset, this._yType);
-
-  void _checkBounds(double value, PinnedType pinnedType, double base) {
-    if (pinnedType == PinnedType.absolute) {
-      assert(value >= 0 && value <= base);
-    } else {
-      assert(value >= 0 && value <= 1);
-    }
-  }
+  Anchor(this._xOffset, this._xType, this._yOffset, this._yType);
 
   Offset _resolve(Size size) {
     assert(() {
-      _checkBounds(_xOffset, _xType, size.width);
-      _checkBounds(_yOffset, _yType, size.height);
+      debugCheckAnchorBounds(_xOffset, _xType, size.width);
+      debugCheckAnchorBounds(_yOffset, _yType, size.height);
       return true;
     }());
     double x;
     double y;
-    if (_xType == PinnedType.absolute) {
+    if (_xType == AnchorType.absolute) {
       x = _xOffset;
     } else {
       x = _xOffset * size.width;
     }
-    if (_yType == PinnedType.absolute) {
+    if (_yType == AnchorType.absolute) {
       y = _yOffset;
     } else {
       y = _yOffset * size.height;
@@ -951,7 +481,7 @@ class PinnedPos {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PinnedPos &&
+      other is Anchor &&
           runtimeType == other.runtimeType &&
           _xOffset == other._xOffset &&
           _xType == other._xType &&
@@ -983,16 +513,16 @@ class PinnedTranslate extends Offset {
 class PinnedInfo {
   /// [0,360]
   int angle;
-  final ConstraintId _anchorId;
-  final PinnedPos _selfPos;
-  final PinnedPos _targetPos;
+  final ConstraintId? targetId;
+  final Anchor selfAnchor;
+  final Anchor? targetAnchor;
 
   PinnedInfo(
-    this._anchorId,
-    this._selfPos,
-    this._targetPos, {
+    this.targetId,
+    this.selfAnchor,
+    this.targetAnchor, {
     this.angle = 0,
-  });
+  }) : assert(angle >= 0 && angle <= 360);
 
   @override
   bool operator ==(Object other) =>
@@ -1000,16 +530,16 @@ class PinnedInfo {
       other is PinnedInfo &&
           runtimeType == other.runtimeType &&
           angle == other.angle &&
-          _anchorId == other._anchorId &&
-          _selfPos == other._selfPos &&
-          _targetPos == other._targetPos;
+          targetId == other.targetId &&
+          selfAnchor == other.selfAnchor &&
+          targetAnchor == other.targetAnchor;
 
   @override
   int get hashCode =>
       angle.hashCode ^
-      _anchorId.hashCode ^
-      _selfPos.hashCode ^
-      _targetPos.hashCode;
+      targetId.hashCode ^
+      selfAnchor.hashCode ^
+      targetAnchor.hashCode;
 }
 
 class ConstraintVersion {
@@ -1096,15 +626,15 @@ class Constraint extends ConstraintDefine {
   /// These are the base constraints constraint on sibling id or parent
   /// The essence of constraints is alignment
   @_baseConstraint
-  _Align? left;
+  ConstraintAlign? left;
   @_baseConstraint
-  _Align? top;
+  ConstraintAlign? top;
   @_baseConstraint
-  _Align? right;
+  ConstraintAlign? right;
   @_baseConstraint
-  _Align? bottom;
+  ConstraintAlign? bottom;
   @_baseConstraint
-  _Align? baseline;
+  ConstraintAlign? baseline;
 
   /// When setting baseline alignment, height must be wrap_content or fixed size, other vertical constraints will be illegal.
   /// Warning: Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
@@ -1424,67 +954,55 @@ class Constraint extends ConstraintDefine {
       calcSizeCallback.hashCode ^
       calcOffsetCallback.hashCode;
 
-  bool _checkSize(double size) {
-    if (size == matchParent || size == wrapContent || size == matchConstraint) {
-      return true;
-    } else {
-      if (size == double.infinity || size < 0) {
-        throw ConstraintLayoutException(
-            'width or height can not be infinity or negative.');
-      }
-      return true;
-    }
-  }
-
   bool _validate() {
-    assert(_checkSize(width));
-    assert(_checkSize(height));
-    assert(size == null || _checkSize(size!));
+    assert(debugCheckSize(width));
+    assert(debugCheckSize(height));
+    assert(size == null || debugCheckSize(size!));
     assert(left == null ||
-        (left!._type == AlignType.left ||
-            left!._type == AlignType.center ||
-            left!._type == AlignType.right));
+        (left!._type == ConstraintAlignType.left ||
+            left!._type == ConstraintAlignType.center ||
+            left!._type == ConstraintAlignType.right));
     assert(top == null ||
-        (top!._type == AlignType.top ||
-            top!._type == AlignType.center ||
-            top!._type == AlignType.bottom));
+        (top!._type == ConstraintAlignType.top ||
+            top!._type == ConstraintAlignType.center ||
+            top!._type == ConstraintAlignType.bottom));
     assert(right == null ||
-        (right!._type == AlignType.left ||
-            right!._type == AlignType.center ||
-            right!._type == AlignType.right));
+        (right!._type == ConstraintAlignType.left ||
+            right!._type == ConstraintAlignType.center ||
+            right!._type == ConstraintAlignType.right));
     assert(bottom == null ||
-        (bottom!._type == AlignType.top ||
-            bottom!._type == AlignType.center ||
-            bottom!._type == AlignType.bottom));
+        (bottom!._type == ConstraintAlignType.top ||
+            bottom!._type == ConstraintAlignType.center ||
+            bottom!._type == ConstraintAlignType.bottom));
     assert(baseline == null ||
-        (baseline!._type == AlignType.top ||
-            baseline!._type == AlignType.center ||
-            baseline!._type == AlignType.bottom ||
-            baseline!._type == AlignType.baseline));
-    assert(_debugEnsurePercent('widthPercent', widthPercent));
-    assert(_debugEnsurePercent('heightPercent', heightPercent));
-    assert(_debugEnsurePercent('horizontalBias', horizontalBias));
-    assert(_debugEnsurePercent('verticalBias', verticalBias));
+        (baseline!._type == ConstraintAlignType.top ||
+            baseline!._type == ConstraintAlignType.center ||
+            baseline!._type == ConstraintAlignType.bottom ||
+            baseline!._type == ConstraintAlignType.baseline));
+    assert(debugEnsurePercent('widthPercent', widthPercent));
+    assert(debugEnsurePercent('heightPercent', heightPercent));
+    assert(debugEnsurePercent('horizontalBias', horizontalBias));
+    assert(debugEnsurePercent('verticalBias', verticalBias));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('leftMargin', margin.left));
+        debugEnsureNegativePercent('leftMargin', margin.left));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('topMargin', margin.top));
+        debugEnsureNegativePercent('topMargin', margin.top));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('rightMargin', margin.right));
+        debugEnsureNegativePercent('rightMargin', margin.right));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('bottomMargin', margin.bottom));
+        debugEnsureNegativePercent('bottomMargin', margin.bottom));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('leftGoneMargin', goneMargin.left));
+        debugEnsureNegativePercent('leftGoneMargin', goneMargin.left));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('topGoneMargin', goneMargin.top));
+        debugEnsureNegativePercent('topGoneMargin', goneMargin.top));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('rightGoneMargin', goneMargin.right));
+        debugEnsureNegativePercent('rightGoneMargin', goneMargin.right));
     assert(!percentageMargin ||
-        _debugEnsureNegativePercent('bottomGoneMargin', goneMargin.bottom));
+        debugEnsureNegativePercent('bottomGoneMargin', goneMargin.bottom));
     assert(!percentageTranslate ||
-        _debugEnsureNegativePercent('xTranslate', translate.dx));
+        debugEnsureNegativePercent('xTranslate', translate.dx));
     assert(!percentageTranslate ||
-        _debugEnsureNegativePercent('yTranslate', translate.dy));
+        debugEnsureNegativePercent('yTranslate', translate.dy));
     assert(minWidth >= 0);
     assert(maxWidth == matchParent || maxWidth >= minWidth);
     assert(minHeight >= 0);
@@ -1493,22 +1011,12 @@ class Constraint extends ConstraintDefine {
     return true;
   }
 
-  static int _getMinimalConstraintCount(double size) {
-    if (size == matchParent) {
-      return 0;
-    } else if (size == wrapContent || size >= 0) {
-      return 1;
-    } else {
-      return 2;
-    }
-  }
-
   void _applyTo(RenderObject renderObject) {
-    _Align? left = this.left;
-    _Align? top = this.top;
-    _Align? right = this.right;
-    _Align? bottom = this.bottom;
-    _Align? baseline = this.baseline;
+    ConstraintAlign? left = this.left;
+    ConstraintAlign? top = this.top;
+    ConstraintAlign? right = this.right;
+    ConstraintAlign? bottom = this.bottom;
+    ConstraintAlign? baseline = this.baseline;
 
     double width = this.width;
     double height = this.height;
@@ -1835,8 +1343,8 @@ class Constraint extends ConstraintDefine {
     if (parentData.width != width) {
       needsRecalculateConstraints = true;
       if (parentData.width != null) {
-        if (_getMinimalConstraintCount(parentData.width!) ==
-            _getMinimalConstraintCount(width)) {
+        if (getMinimalConstraintCount(parentData.width!) ==
+            getMinimalConstraintCount(width)) {
           needsRecalculateConstraints = false;
         }
       }
@@ -1847,8 +1355,8 @@ class Constraint extends ConstraintDefine {
     if (parentData.height != height) {
       needsRecalculateConstraints = true;
       if (parentData.height != null) {
-        if (_getMinimalConstraintCount(parentData.height!) ==
-            _getMinimalConstraintCount(height)) {
+        if (getMinimalConstraintCount(parentData.height!) ==
+            getMinimalConstraintCount(height)) {
           needsRecalculateConstraints = false;
         }
       }
@@ -1943,9 +1451,9 @@ class Constraint extends ConstraintDefine {
         PinnedInfo lastInfo =
             (parentData.translate as PinnedTranslate)._pinnedInfo;
         PinnedInfo currentInto = (translate as PinnedTranslate)._pinnedInfo;
-        if (lastInfo._anchorId == currentInto._anchorId) {
-          if (lastInfo._selfPos != currentInto._selfPos ||
-              lastInfo._targetPos != currentInto._targetPos) {
+        if (lastInfo.targetId == currentInto.targetId) {
+          if (lastInfo.selfAnchor != currentInto.selfAnchor ||
+              lastInfo.targetAnchor != currentInto.targetAnchor) {
             if (translateConstraint) {
               needsLayout = true;
             } else {
@@ -2039,11 +1547,12 @@ class Constraint extends ConstraintDefine {
         needsRecalculateConstraints = true;
         needsLayout = true;
       } else {
-        if (parentData.pinnedInfo!._anchorId != pinnedInfo!._anchorId) {
+        if (parentData.pinnedInfo!.targetId != pinnedInfo!.targetId) {
           needsRecalculateConstraints = true;
           needsLayout = true;
-        } else if (parentData.pinnedInfo!._selfPos != pinnedInfo!._selfPos ||
-            parentData.pinnedInfo!._targetPos != pinnedInfo!._targetPos) {
+        } else if (parentData.pinnedInfo!.selfAnchor !=
+                pinnedInfo!.selfAnchor ||
+            parentData.pinnedInfo!.targetAnchor != pinnedInfo!.targetAnchor) {
           needsLayout = true;
         } else if (parentData.pinnedInfo!.angle != pinnedInfo!.angle) {
           needsPaint = true;
@@ -2101,7 +1610,7 @@ class Constraint extends ConstraintDefine {
   }
 }
 
-enum AlignType {
+enum ConstraintAlignType {
   left,
   right,
   top,
@@ -2119,11 +1628,11 @@ class ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   bool? percentageMargin;
   EdgeInsets? margin;
   EdgeInsets? goneMargin;
-  _Align? left;
-  _Align? top;
-  _Align? right;
-  _Align? bottom;
-  _Align? baseline;
+  ConstraintAlign? left;
+  ConstraintAlign? top;
+  ConstraintAlign? right;
+  ConstraintAlign? bottom;
+  ConstraintAlign? baseline;
   TextBaseline? textBaseline;
   int? zIndex;
   Offset? translate;
@@ -2521,13 +2030,15 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       if (childParentData.pinnedInfo != null) {
-        referencedIdSet.add(childParentData.pinnedInfo!._anchorId);
+        referencedIdSet.add(childParentData.pinnedInfo!.targetId!);
       }
 
       if (childParentData.translate is PinnedTranslate) {
-        referencedIdSet.add((childParentData.translate as PinnedTranslate)
-            ._pinnedInfo
-            ._anchorId);
+        ConstraintId? targetId =
+            (childParentData.translate as PinnedTranslate)._pinnedInfo.targetId;
+        if (targetId != null) {
+          referencedIdSet.add(targetId);
+        }
       }
 
       if (childParentData.anchors != null &&
@@ -2557,151 +2068,6 @@ class _ConstraintRenderBox extends RenderBox
     if ((indexIds.length + relativeIds.length) != undeclaredIdSet.length) {
       throw ConstraintLayoutException(
           'These ids ${undeclaredIdSet.difference(indexIds).difference(relativeIds)} are not yet defined.');
-    }
-  }
-
-  /// There should be no loop constraints
-  static void debugCheckLoopConstraints(List<ConstrainedNode> nodeList,
-      bool selfSizeConfirmed, double resolvedWidth, double resolvedHeight) {
-    for (final element in nodeList) {
-      try {
-        element.getDepth(selfSizeConfirmed, resolvedWidth, resolvedHeight);
-      } on StackOverflowError catch (_) {
-        throw ConstraintLayoutException(
-            'There are some loop constraints, please check the code. For layout performance considerations, constraints are always one-way, and there should be no two child elements directly or indirectly restrain each other. Each constraint should describe exactly where the child elements are located. Use Guideline to break loop constraints.');
-      }
-    }
-  }
-
-  /// Each child element must have complete constraints both horizontally and vertically
-  static void debugCheckConstraintsIntegrity(List<ConstrainedNode> nodeList) {
-    for (final element in nodeList) {
-      if (element.pinnedInfo != null) {
-        if (element.width != wrapContent && element.width < 0) {
-          throw ConstraintLayoutException(
-              'When setting pinnedInfo, width and height must be wrapContent or fixed size.');
-        }
-        if (element.height != wrapContent && element.height < 0) {
-          throw ConstraintLayoutException(
-              'When setting pinnedInfo, width and height must be wrapContent or fixed size.');
-        }
-        continue;
-      }
-
-      if (element.anchors != null) {
-        if (element.width != matchConstraint ||
-            element.height != matchConstraint) {
-          throw ConstraintLayoutException(
-              'When setting anchors, width and height must be matchConstraint.');
-        }
-        if (element.calcSizeCallback == null ||
-            element.calcOffsetCallback == null) {
-          throw ConstraintLayoutException(
-              'When setting anchors, calcSizeCallback and calcOffsetCallback must provide.');
-        }
-        continue;
-      }
-
-      /// Check constraint integrity in the horizontal direction
-      if (element.width == wrapContent || element.width >= 0) {
-        if (element.leftConstraint == null && element.rightConstraint == null) {
-          throw ConstraintLayoutException(
-              'Need to set a left or right constraint for ${element.nodeId}.');
-        }
-      } else if (element.width == matchConstraint) {
-        if (element.widthHeightRatio == null) {
-          if (element.widthPercentageAnchor == PercentageAnchor.constraint) {
-            if (element.leftConstraint == null ||
-                element.rightConstraint == null) {
-              throw ConstraintLayoutException(
-                  'Need to set left and right constraints for ${element.nodeId}.');
-            }
-          } else {
-            if (element.leftConstraint == null &&
-                element.rightConstraint == null) {
-              throw ConstraintLayoutException(
-                  'Need to set a left or right constraint for ${element.nodeId}.');
-            }
-          }
-        } else {
-          if (element.leftConstraint == null &&
-              element.rightConstraint == null) {
-            throw ConstraintLayoutException(
-                'Need to set a left or right constraint for ${element.nodeId}.');
-          }
-        }
-      }
-
-      /// Check constraint integrity in the vertical direction
-      if (element.height == wrapContent || element.height >= 0) {
-        int verticalConstraintCount = (element.topConstraint == null ? 0 : 1) +
-            (element.bottomConstraint == null ? 0 : 1) +
-            (element.baselineConstraint == null ? 0 : 10);
-        if (verticalConstraintCount == 0) {
-          throw ConstraintLayoutException(
-              'Need to set a top or bottom or baseline constraint for ${element.nodeId}.');
-        } else if (verticalConstraintCount > 10) {
-          throw ConstraintLayoutException(
-              'When the baseline constraint is set, the top or bottom constraint can not be set for ${element.nodeId}.');
-        }
-      } else if (element.height == matchConstraint) {
-        if (element.baselineConstraint != null) {
-          throw ConstraintLayoutException(
-              'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
-        }
-        if (element.widthHeightRatio == null) {
-          if (element.heightPercentageAnchor == PercentageAnchor.constraint) {
-            if (element.topConstraint == null ||
-                element.bottomConstraint == null) {
-              throw ConstraintLayoutException(
-                  'Need to set both top and bottom constraints for ${element.nodeId}.');
-            }
-          } else {
-            if (element.topConstraint == null &&
-                element.bottomConstraint == null) {
-              throw ConstraintLayoutException(
-                  'Need to set a top or bottom constraints for ${element.nodeId}.');
-            }
-          }
-        } else {
-          if (element.topConstraint == null &&
-              element.bottomConstraint == null) {
-            throw ConstraintLayoutException(
-                'Need to set a top or bottom constraints for ${element.nodeId}.');
-          }
-        }
-      } else {
-        /// match_parent
-        if (element.baselineConstraint != null) {
-          throw ConstraintLayoutException(
-              'When setting a baseline constraint for ${element.nodeId}, its height must be fixed or wrap_content.');
-        }
-      }
-
-      if (element.widthHeightRatio != null) {
-        if (element.widthIsExact && element.heightIsExact) {
-          if (element.width == matchConstraint &&
-              element.height == matchConstraint) {
-            if (element.ratioBaseOnWidth == null) {
-              throw ConstraintLayoutException(
-                  'When setting widthHeightRatio for ${element.nodeId}, ratioBaseOnWidth is required.');
-            }
-          }
-        } else if (!element.widthIsExact && !element.heightIsExact) {
-          throw ConstraintLayoutException(
-              'When setting widthHeightRatio for ${element.nodeId}, one side needs full constraints.');
-        } else if (element.widthIsExact) {
-          if (element.height != matchConstraint) {
-            throw ConstraintLayoutException(
-                'When setting widthHeightRatio for ${element.nodeId}, width is exact, height must be matchConstraint.');
-          }
-        } else {
-          if (element.width != matchConstraint) {
-            throw ConstraintLayoutException(
-                'When setting widthHeightRatio for ${element.nodeId}, height is exact, width must be matchConstraint.');
-          }
-        }
-      }
     }
   }
 
@@ -2830,15 +2196,16 @@ class _ConstraintRenderBox extends RenderBox
 
       if (childParentData.pinnedInfo != null) {
         currentNode.pinnedConstraint = getConstrainedNodeForChild(
-            childParentData.pinnedInfo!._anchorId, childIndex);
+            childParentData.pinnedInfo!.targetId!, childIndex);
       }
 
       if (childParentData.translate is PinnedTranslate) {
-        currentNode.pinnedConstraint = getConstrainedNodeForChild(
-            (childParentData.translate as PinnedTranslate)
-                ._pinnedInfo
-                ._anchorId,
-            childIndex);
+        ConstraintId? targetId =
+            (childParentData.translate as PinnedTranslate)._pinnedInfo.targetId;
+        if (targetId != null) {
+          currentNode.pinnedConstraint =
+              getConstrainedNodeForChild(targetId, childIndex);
+        }
       }
 
       if (childParentData.anchors != null &&
@@ -2871,18 +2238,6 @@ class _ConstraintRenderBox extends RenderBox
     _needsRecalculateConstraints = true;
     _needsReorderPaintingOrder = true;
     _needsReorderEventOrder = true;
-  }
-
-  static void insertionSort<E>(List<E> a, int Function(E a, E b) compare) {
-    for (int i = 1, lastIndex = a.length - 1; i <= lastIndex; i++) {
-      var el = a[i];
-      int j = i;
-      while ((j > 0) && (compare(a[j - 1], el) > 0)) {
-        a[j] = a[j - 1];
-        j--;
-      }
-      a[j] = el;
-    }
   }
 
   @override
@@ -3021,7 +2376,7 @@ class _ConstraintRenderBox extends RenderBox
         if (_debugPrintConstraints) {
           debugPrint(
               'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
-                  jsonEncode(layoutOrderList.map((e) => e.toJson()).toList()));
+                  toJsonList(layoutOrderList));
         }
         return true;
       }());
@@ -3048,72 +2403,6 @@ class _ConstraintRenderBox extends RenderBox
         layoutTimeUsage.removeFirst();
       }
     }
-  }
-
-  static double getLeftInsets(
-    EdgeInsets insets, [
-    bool percentageMargin = false,
-    double anchorWidth = 0,
-  ]) {
-    if (percentageMargin) {
-      return anchorWidth * insets.left;
-    } else {
-      return insets.left;
-    }
-  }
-
-  static double getTopInsets(
-    EdgeInsets insets, [
-    bool percentageMargin = false,
-    double anchorHeight = 0,
-  ]) {
-    if (percentageMargin) {
-      return anchorHeight * insets.top;
-    } else {
-      return insets.top;
-    }
-  }
-
-  static double getRightInsets(
-    EdgeInsets insets, [
-    bool percentageMargin = false,
-    double anchorWidth = 0,
-  ]) {
-    if (percentageMargin) {
-      return anchorWidth * insets.right;
-    } else {
-      return insets.right;
-    }
-  }
-
-  static double getBottomInsets(
-    EdgeInsets insets, [
-    bool percentageMargin = false,
-    double anchorHeight = 0,
-  ]) {
-    if (percentageMargin) {
-      return anchorHeight * insets.bottom;
-    } else {
-      return insets.bottom;
-    }
-  }
-
-  static double getHorizontalInsets(
-    EdgeInsets insets, [
-    bool percentageMargin = false,
-    double anchorWidth = 0,
-  ]) {
-    return getLeftInsets(insets, percentageMargin, anchorWidth) +
-        getRightInsets(insets, percentageMargin, anchorWidth);
-  }
-
-  static double getVerticalInsets(
-    EdgeInsets insets, [
-    bool percentageMargin = false,
-    double anchorHeight = 0,
-  ]) {
-    return getTopInsets(insets, percentageMargin, anchorHeight) +
-        getBottomInsets(insets, percentageMargin, anchorHeight);
   }
 
   void layoutByConstrainedNodeTrees(
@@ -3383,18 +2672,18 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           if (node.widthPercentageAnchor == PercentageAnchor.constraint) {
             double left;
-            if (node.leftAlignType == AlignType.left) {
+            if (node.leftAlignType == ConstraintAlignType.left) {
               left = node.leftConstraint!.getX();
-            } else if (node.leftAlignType == AlignType.center) {
+            } else if (node.leftAlignType == ConstraintAlignType.center) {
               left = node.leftConstraint!
                   .getXPercent(node.parentData.left!._bias ?? 0.5, this);
             } else {
               left = node.leftConstraint!.getRight(this);
             }
             double right;
-            if (node.rightAlignType == AlignType.left) {
+            if (node.rightAlignType == ConstraintAlignType.left) {
               right = node.rightConstraint!.getX();
-            } else if (node.rightAlignType == AlignType.center) {
+            } else if (node.rightAlignType == ConstraintAlignType.center) {
               right = node.rightConstraint!
                   .getXPercent(node.parentData.right!._bias ?? 0.5, this);
             } else {
@@ -3481,18 +2770,18 @@ class _ConstraintRenderBox extends RenderBox
         } else {
           if (node.heightPercentageAnchor == PercentageAnchor.constraint) {
             double top;
-            if (node.topAlignType == AlignType.top) {
+            if (node.topAlignType == ConstraintAlignType.top) {
               top = node.topConstraint!.getY();
-            } else if (node.topAlignType == AlignType.center) {
+            } else if (node.topAlignType == ConstraintAlignType.center) {
               top = node.topConstraint!
                   .getYPercent(node.parentData.top!._bias ?? 0.5, this);
             } else {
               top = node.topConstraint!.getBottom(this);
             }
             double bottom;
-            if (node.bottomAlignType == AlignType.top) {
+            if (node.bottomAlignType == ConstraintAlignType.top) {
               bottom = node.bottomConstraint!.getY();
-            } else if (node.bottomAlignType == AlignType.center) {
+            } else if (node.bottomAlignType == ConstraintAlignType.center) {
               bottom = node.bottomConstraint!
                   .getYPercent(node.parentData.bottom!._bias ?? 0.5, this);
             } else {
@@ -3595,14 +2884,16 @@ class _ConstraintRenderBox extends RenderBox
       pinnedInfo = (node.translate as PinnedTranslate)._pinnedInfo;
     }
     if (pinnedInfo != null) {
-      Offset selfOffset = pinnedInfo._selfPos._resolve(node.getSize());
-      Offset targetOffset =
-          pinnedInfo._targetPos._resolve(node.pinnedConstraint!.getSize(this));
-      double offsetX =
-          node.pinnedConstraint!.getX() + targetOffset.dx - selfOffset.dx;
-      double offsetY =
-          node.pinnedConstraint!.getY() + targetOffset.dy - selfOffset.dy;
-      return Offset(offsetX, offsetY);
+      if (node.pinnedConstraint != null) {
+        Offset selfOffset = pinnedInfo.selfAnchor._resolve(node.getSize());
+        Offset targetOffset = pinnedInfo.targetAnchor!
+            ._resolve(node.pinnedConstraint!.getSize(this));
+        double offsetX =
+            node.pinnedConstraint!.getX() + targetOffset.dx - selfOffset.dx;
+        double offsetY =
+            node.pinnedConstraint!.getY() + targetOffset.dy - selfOffset.dy;
+        return Offset(offsetX, offsetY);
+      }
     }
 
     EdgeInsets margin = node.margin;
@@ -3650,18 +2941,18 @@ class _ConstraintRenderBox extends RenderBox
       /// Calculate child x offset
       if (node.leftConstraint != null && node.rightConstraint != null) {
         double left;
-        if (node.leftAlignType == AlignType.left) {
+        if (node.leftAlignType == ConstraintAlignType.left) {
           left = node.leftConstraint!.getX();
-        } else if (node.leftAlignType == AlignType.center) {
+        } else if (node.leftAlignType == ConstraintAlignType.center) {
           left = node.leftConstraint!
               .getXPercent(node.parentData.left!._bias ?? 0.5, this);
         } else {
           left = node.leftConstraint!.getRight(this);
         }
         double right;
-        if (node.rightAlignType == AlignType.left) {
+        if (node.rightAlignType == ConstraintAlignType.left) {
           right = node.rightConstraint!.getX();
-        } else if (node.rightAlignType == AlignType.center) {
+        } else if (node.rightAlignType == ConstraintAlignType.center) {
           right = node.rightConstraint!
               .getXPercent(node.parentData.right!._bias ?? 0.5, this);
         } else {
@@ -3693,9 +2984,9 @@ class _ConstraintRenderBox extends RenderBox
                 node.horizontalBias;
       } else if (node.leftConstraint != null) {
         double left;
-        if (node.leftAlignType == AlignType.left) {
+        if (node.leftAlignType == ConstraintAlignType.left) {
           left = node.leftConstraint!.getX();
-        } else if (node.leftAlignType == AlignType.center) {
+        } else if (node.leftAlignType == ConstraintAlignType.center) {
           left = node.leftConstraint!
               .getXPercent(node.parentData.left!._bias ?? 0.5, this);
         } else {
@@ -3709,9 +3000,9 @@ class _ConstraintRenderBox extends RenderBox
         offsetX = left;
       } else if (node.rightConstraint != null) {
         double right;
-        if (node.rightAlignType == AlignType.left) {
+        if (node.rightAlignType == ConstraintAlignType.left) {
           right = node.rightConstraint!.getX();
-        } else if (node.rightAlignType == AlignType.center) {
+        } else if (node.rightAlignType == ConstraintAlignType.center) {
           right = node.rightConstraint!
               .getXPercent(node.parentData.right!._bias ?? 0.5, this);
         } else {
@@ -3731,18 +3022,18 @@ class _ConstraintRenderBox extends RenderBox
       /// Calculate child y offset
       if (node.topConstraint != null && node.bottomConstraint != null) {
         double top;
-        if (node.topAlignType == AlignType.top) {
+        if (node.topAlignType == ConstraintAlignType.top) {
           top = node.topConstraint!.getY();
-        } else if (node.topAlignType == AlignType.center) {
+        } else if (node.topAlignType == ConstraintAlignType.center) {
           top = node.topConstraint!
               .getYPercent(node.parentData.top!._bias ?? 0.5, this);
         } else {
           top = node.topConstraint!.getBottom(this);
         }
         double bottom;
-        if (node.bottomAlignType == AlignType.top) {
+        if (node.bottomAlignType == ConstraintAlignType.top) {
           bottom = node.bottomConstraint!.getY();
-        } else if (node.bottomAlignType == AlignType.center) {
+        } else if (node.bottomAlignType == ConstraintAlignType.center) {
           bottom = node.bottomConstraint!
               .getYPercent(node.parentData.bottom!._bias ?? 0.5, this);
         } else {
@@ -3773,9 +3064,9 @@ class _ConstraintRenderBox extends RenderBox
                 node.verticalBias;
       } else if (node.topConstraint != null) {
         double top;
-        if (node.topAlignType == AlignType.top) {
+        if (node.topAlignType == ConstraintAlignType.top) {
           top = node.topConstraint!.getY();
-        } else if (node.topAlignType == AlignType.center) {
+        } else if (node.topAlignType == ConstraintAlignType.center) {
           top = node.topConstraint!
               .getYPercent(node.parentData.top!._bias ?? 0.5, this);
         } else {
@@ -3789,9 +3080,9 @@ class _ConstraintRenderBox extends RenderBox
         offsetY = top;
       } else if (node.bottomConstraint != null) {
         double bottom;
-        if (node.bottomAlignType == AlignType.top) {
+        if (node.bottomAlignType == ConstraintAlignType.top) {
           bottom = node.bottomConstraint!.getY();
-        } else if (node.bottomAlignType == AlignType.center) {
+        } else if (node.bottomAlignType == ConstraintAlignType.center) {
           bottom = node.bottomConstraint!
               .getYPercent(node.parentData.bottom!._bias ?? 0.5, this);
         } else {
@@ -3805,14 +3096,14 @@ class _ConstraintRenderBox extends RenderBox
         }
         offsetY = bottom - node.getMeasuredHeight();
       } else if (node.baselineConstraint != null) {
-        if (node.baselineAlignType == AlignType.top) {
+        if (node.baselineAlignType == ConstraintAlignType.top) {
           offsetY = node.baselineConstraint!.getY() -
               node.getDistanceToBaseline(node.textBaseline, false);
-        } else if (node.baselineAlignType == AlignType.center) {
+        } else if (node.baselineAlignType == ConstraintAlignType.center) {
           offsetY = node.baselineConstraint!
                   .getYPercent(node.parentData.baseline!._bias ?? 0.5) -
               node.getDistanceToBaseline(node.textBaseline, false);
-        } else if (node.baselineAlignType == AlignType.bottom) {
+        } else if (node.baselineAlignType == ConstraintAlignType.bottom) {
           offsetY = node.baselineConstraint!.getBottom(this) -
               node.getDistanceToBaseline(node.textBaseline, false);
         } else {
@@ -3951,23 +3242,26 @@ class _ConstraintRenderBox extends RenderBox
       } else if (element.translate is PinnedTranslate) {
         pinnedInfo = (element.translate as PinnedTranslate)._pinnedInfo;
         if (!element.translateConstraint) {
-          Offset selfOffset = pinnedInfo._selfPos._resolve(element.getSize());
-          Offset targetOffset = pinnedInfo._targetPos
-              ._resolve(element.pinnedConstraint!.getSize(this));
-          double offsetX = element.pinnedConstraint!.getX() +
-              targetOffset.dx -
-              selfOffset.dx -
-              element.getX();
-          double offsetY = element.pinnedConstraint!.getY() +
-              targetOffset.dy -
-              selfOffset.dy -
-              element.getY();
-          paintShift = Offset(offsetX, offsetY);
+          if (element.pinnedConstraint != null) {
+            Offset selfOffset =
+                pinnedInfo.selfAnchor._resolve(element.getSize());
+            Offset targetOffset = pinnedInfo.targetAnchor!
+                ._resolve(element.pinnedConstraint!.getSize(this));
+            double offsetX = element.pinnedConstraint!.getX() +
+                targetOffset.dx -
+                selfOffset.dx -
+                element.getX();
+            double offsetY = element.pinnedConstraint!.getY() +
+                targetOffset.dy -
+                selfOffset.dy -
+                element.getY();
+            paintShift = Offset(offsetX, offsetY);
+          }
         }
       }
       if (pinnedInfo != null) {
         context.canvas.save();
-        Offset anchorOffset = pinnedInfo._selfPos._resolve(element.getSize());
+        Offset anchorOffset = pinnedInfo.selfAnchor._resolve(element.getSize());
         context.canvas.translate(
             element.offset.dx + offset.dx + paintShift.dx + anchorOffset.dx,
             element.offset.dy + offset.dy + paintShift.dy + anchorOffset.dy);
@@ -3985,32 +3279,7 @@ class _ConstraintRenderBox extends RenderBox
       /// Draw child's click area
       assert(() {
         if (_debugShowClickArea) {
-          Paint paint = Paint();
-          paint.color = Colors.yellow.withAlpha(192);
-          EdgeInsets clickPadding = element.clickPadding;
-          Rect rect = Rect.fromLTRB(
-              element.getX() - getLeftInsets(clickPadding),
-              element.getY() - getTopInsets(clickPadding),
-              element.getX() +
-                  element.getMeasuredWidth() +
-                  getRightInsets(clickPadding),
-              element.getY() +
-                  element.getMeasuredHeight() +
-                  getBottomInsets(clickPadding));
-          rect = rect.shift(offset).shift(paintShift);
-          context.canvas.drawRect(rect, paint);
-          ui.ParagraphBuilder paragraphBuilder =
-              ui.ParagraphBuilder(ui.ParagraphStyle(
-            textAlign: TextAlign.center,
-            fontSize: 12,
-          ));
-          paragraphBuilder.addText("CLICK AREA");
-          ui.Paragraph paragraph = paragraphBuilder.build();
-          paragraph.layout(ui.ParagraphConstraints(
-            width: rect.width,
-          ));
-          context.canvas.drawParagraph(
-              paragraph, rect.centerLeft + Offset(0, -paragraph.height / 2));
+          drawClickArea(element, context, offset + paintShift);
         }
         return true;
       }());
@@ -4018,44 +3287,14 @@ class _ConstraintRenderBox extends RenderBox
       /// Draw child's z index
       assert(() {
         if (_debugShowZIndex) {
-          ui.ParagraphBuilder paragraphBuilder =
-              ui.ParagraphBuilder(ui.ParagraphStyle(
-            textAlign: TextAlign.center,
-            fontSize: 10,
-          ));
-          paragraphBuilder.addText("z-index ${element.zIndex}");
-          ui.Paragraph paragraph = paragraphBuilder.build();
-          paragraph.layout(ui.ParagraphConstraints(
-            width: element.getMeasuredWidth(),
-          ));
-          context.canvas
-              .drawParagraph(paragraph, element.offset + offset + paintShift);
+          drawZIndex(element, context, offset + paintShift);
         }
         return true;
       }());
 
       assert(() {
         if (_debugShowChildDepth) {
-          ui.ParagraphBuilder paragraphBuilder =
-              ui.ParagraphBuilder(ui.ParagraphStyle(
-            textAlign: TextAlign.center,
-            fontSize: 10,
-          ));
-          paragraphBuilder.pushStyle(ui.TextStyle(
-            color: Colors.black,
-          ));
-          paragraphBuilder
-              .addText("depth ${element.getDepth(null, null, null)}");
-          ui.Paragraph paragraph = paragraphBuilder.build();
-          paragraph.layout(ui.ParagraphConstraints(
-            width: element.getMeasuredWidth(),
-          ));
-          context.canvas.drawParagraph(
-              paragraph,
-              element.offset +
-                  offset +
-                  paintShift +
-                  Offset(0, element.getMeasuredHeight() - paragraph.height));
+          drawChildDepth(element, context, offset + paintShift);
         }
         return true;
       }());
@@ -4064,19 +3303,7 @@ class _ConstraintRenderBox extends RenderBox
     assert(() {
       if (_debugShowGuideline) {
         for (final element in paintingOrderList) {
-          if (element.isGuideline || element.isBarrier) {
-            Paint paint = Paint();
-            if (element.isGuideline) {
-              paint.color = Colors.green;
-            } else {
-              paint.color = Colors.purple;
-            }
-            paint.strokeWidth = 5;
-            context.canvas.drawLine(
-                element.offset + offset,
-                Offset(element.getRight(), element.getBottom()) + offset,
-                paint);
-          }
+          drawHelperNodes(element, context, offset);
         }
       }
       return true;
@@ -4087,120 +3314,9 @@ class _ConstraintRenderBox extends RenderBox
       if (paintTimeUsage.length > maxTimeUsage) {
         paintTimeUsage.removeFirst();
       }
-      debugShowPerformance(context, offset);
+      debugShowPerformance(context, offset, constraintCalculationTimeUsage,
+          layoutTimeUsage, paintTimeUsage);
     }
-  }
-
-  void debugShowPerformance(
-    PaintingContext context,
-    Offset offset,
-  ) {
-    Paint paint = Paint()..color = Colors.white;
-    Iterator<int> constraintCalculateIterator =
-        constraintCalculationTimeUsage.iterator;
-    double heightOffset = 0;
-    while (constraintCalculateIterator.moveNext()) {
-      int calculateTime = constraintCalculateIterator.current;
-      ui.ParagraphBuilder paragraphBuilder =
-          ui.ParagraphBuilder(ui.ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: 8,
-      ));
-      if (calculateTime > 1000) {
-        paragraphBuilder.pushStyle(ui.TextStyle(
-          color: Colors.red,
-          background: paint,
-        ));
-      } else {
-        paragraphBuilder.pushStyle(ui.TextStyle(
-          color: Colors.green,
-          background: paint,
-        ));
-      }
-      paragraphBuilder.addText("calculate $calculateTime us");
-      ui.Paragraph paragraph = paragraphBuilder.build();
-      paragraph.layout(const ui.ParagraphConstraints(
-        width: 80,
-      ));
-      context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
-      heightOffset += 10;
-    }
-
-    Iterator<int> layoutIterator = layoutTimeUsage.iterator;
-    heightOffset = 0;
-    while (layoutIterator.moveNext()) {
-      int layoutTime = layoutIterator.current;
-      ui.ParagraphBuilder paragraphBuilder =
-          ui.ParagraphBuilder(ui.ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: 8,
-      ));
-      if (layoutTime > 5000) {
-        paragraphBuilder.pushStyle(ui.TextStyle(
-          color: Colors.red,
-          background: paint,
-        ));
-      } else {
-        paragraphBuilder.pushStyle(ui.TextStyle(
-          color: Colors.green,
-          background: paint,
-        ));
-      }
-      paragraphBuilder.addText("layout $layoutTime us");
-      ui.Paragraph paragraph = paragraphBuilder.build();
-      paragraph.layout(const ui.ParagraphConstraints(
-        width: 80,
-      ));
-      context.canvas
-          .drawParagraph(paragraph, Offset(80, heightOffset) + offset);
-      heightOffset += 10;
-    }
-
-    Iterator<int> paintIterator = paintTimeUsage.iterator;
-    heightOffset = 0;
-    while (paintIterator.moveNext()) {
-      int paintTime = paintIterator.current;
-      ui.ParagraphBuilder paragraphBuilder =
-          ui.ParagraphBuilder(ui.ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: 8,
-      ));
-      if (paintTime > 5000) {
-        paragraphBuilder.pushStyle(ui.TextStyle(
-          color: Colors.red,
-          background: paint,
-        ));
-      } else {
-        paragraphBuilder.pushStyle(ui.TextStyle(
-          color: Colors.green,
-          background: paint,
-        ));
-      }
-      paragraphBuilder.addText("paint $paintTime us");
-      ui.Paragraph paragraph = paragraphBuilder.build();
-      paragraph.layout(const ui.ParagraphConstraints(
-        width: 80,
-      ));
-      context.canvas
-          .drawParagraph(paragraph, Offset(160, heightOffset) + offset);
-      heightOffset += 10;
-    }
-
-    ui.ParagraphBuilder paragraphBuilder =
-        ui.ParagraphBuilder(ui.ParagraphStyle(
-      textAlign: TextAlign.center,
-      fontSize: 8,
-    ));
-    paragraphBuilder.pushStyle(ui.TextStyle(
-      color: Colors.green,
-      background: paint,
-    ));
-    paragraphBuilder.addText('The bottom one is the latest');
-    ui.Paragraph paragraph = paragraphBuilder.build();
-    paragraph.layout(const ui.ParagraphConstraints(
-      width: 240,
-    ));
-    context.canvas.drawParagraph(paragraph, Offset(0, heightOffset) + offset);
   }
 }
 
@@ -4214,11 +3330,11 @@ class ConstrainedNode {
   ConstrainedNode? baselineConstraint;
   ConstrainedNode? pinnedConstraint;
   List<ConstrainedNode>? anchors;
-  AlignType? leftAlignType;
-  AlignType? topAlignType;
-  AlignType? rightAlignType;
-  AlignType? bottomAlignType;
-  AlignType? baselineAlignType;
+  ConstraintAlignType? leftAlignType;
+  ConstraintAlignType? topAlignType;
+  ConstraintAlignType? rightAlignType;
+  ConstraintAlignType? bottomAlignType;
+  ConstraintAlignType? baselineAlignType;
   int depth = -1;
   late bool notLaidOut;
   late ConstraintBoxData parentData;
@@ -4443,16 +3559,6 @@ class ConstrainedNode {
         parentSizeConfirmed, resolvedWidth, resolvedHeight);
   }
 
-  static int getMaxDepth(List<int> depths) {
-    int max = -1;
-    for (final element in depths) {
-      if (element > max) {
-        max = element;
-      }
-    }
-    return max;
-  }
-
   int getDepth(bool? parentSizeConfirmed, double? resolvedWidth,
       double? resolvedHeight) {
     if (depth < 0) {
@@ -4462,7 +3568,7 @@ class ConstrainedNode {
             parentData._constrainedNodeMap[id]!
                 .getDepth(parentSizeConfirmed, resolvedWidth, resolvedHeight)
         ];
-        depth = getMaxDepth(list) + 1;
+        depth = getMax(list) + 1;
       } else {
         List<int> list = [
           if (leftConstraint != null)
@@ -4488,108 +3594,10 @@ class ConstrainedNode {
               getDepthFor(
                   element, parentSizeConfirmed, resolvedWidth, resolvedHeight),
         ];
-        depth = getMaxDepth(list) + 1;
+        depth = getMax(list) + 1;
       }
     }
     return depth;
-  }
-
-  /// For debug message print
-  Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-    if (nodeId == parent) {
-      map['nodeId'] = 'parent';
-    } else {
-      map['nodeId'] = nodeId._id;
-      if (leftConstraint != null) {
-        if (leftAlignType == AlignType.left) {
-          map['leftAlignType'] = 'toLeft';
-        } else if (leftAlignType == AlignType.center) {
-          map['leftAlignType'] = 'toCenter';
-        } else {
-          map['leftAlignType'] = 'toRight';
-        }
-        if (leftConstraint!.isParent()) {
-          map['leftConstraint'] = 'parent';
-        } else {
-          map['leftConstraint'] = leftConstraint!.toJson();
-        }
-      }
-      if (topConstraint != null) {
-        if (topAlignType == AlignType.top) {
-          map['topAlignType'] = 'toTop';
-        } else if (topAlignType == AlignType.center) {
-          map['topAlignType'] = 'toCenter';
-        } else {
-          map['topAlignType'] = 'toBottom';
-        }
-        if (topConstraint!.isParent()) {
-          map['topConstraint'] = 'parent';
-        } else {
-          map['topConstraint'] = topConstraint!.toJson();
-        }
-      }
-      if (rightConstraint != null) {
-        if (rightAlignType == AlignType.left) {
-          map['rightAlignType'] = 'toLeft';
-        } else if (rightAlignType == AlignType.center) {
-          map['rightAlignType'] = 'toCenter';
-        } else {
-          map['rightAlignType'] = 'toRight';
-        }
-        if (rightConstraint!.isParent()) {
-          map['rightConstraint'] = 'parent';
-        } else {
-          map['rightConstraint'] = rightConstraint!.toJson();
-        }
-      }
-      if (bottomConstraint != null) {
-        if (bottomAlignType == AlignType.top) {
-          map['bottomAlignType'] = 'toTop';
-        } else if (bottomAlignType == AlignType.center) {
-          map['bottomAlignType'] = 'toCenter';
-        } else {
-          map['bottomAlignType'] = 'toBottom';
-        }
-        if (bottomConstraint!.isParent()) {
-          map['bottomConstraint'] = 'parent';
-        } else {
-          map['bottomConstraint'] = bottomConstraint!.toJson();
-        }
-      }
-      if (baselineConstraint != null) {
-        if (baselineAlignType == AlignType.top) {
-          map['baselineAlignType'] = 'toTop';
-        } else if (baselineAlignType == AlignType.center) {
-          map['baselineAlignType'] = 'toCenter';
-        } else if (baselineAlignType == AlignType.bottom) {
-          map['baselineAlignType'] = 'toBottom';
-        } else {
-          map['baselineAlignType'] = 'toBaseline';
-        }
-        if (baselineConstraint!.isParent()) {
-          map['baselineConstraint'] = 'parent';
-        } else {
-          map['baselineConstraint'] = baselineConstraint!.toJson();
-        }
-      }
-      if (pinnedConstraint != null) {
-        if (pinnedConstraint!.isParent()) {
-          map['pinnedConstraint'] = 'parent';
-        } else {
-          map['pinnedConstraint'] = pinnedConstraint!.toJson();
-        }
-      }
-      if (anchors != null) {
-        List<Map<String, dynamic>> anchorsJson = [];
-        for (final element in anchors!) {
-          anchorsJson.add(element.toJson());
-        }
-        map['anchors'] = anchorsJson;
-      }
-    }
-    map['depth'] = getDepth(null, null, null);
-    return map;
   }
 }
 
@@ -4707,7 +3715,7 @@ class Guideline extends LeafRenderObjectWidget {
           'Must set only one of guidelineBegin、guidelineEnd、guidelinePercent.');
     }
     if (guidelinePercent != null) {
-      _debugEnsurePercent('guidelinePercent', guidelinePercent);
+      debugEnsurePercent('guidelinePercent', guidelinePercent);
     }
     return true;
   }
@@ -4905,7 +3913,7 @@ class Barrier extends LeafRenderObjectWidget {
     required this.referencedIds,
   }) : super(key: key);
 
-  bool checkParam() {
+  bool _checkParam() {
     if (referencedIds.isEmpty) {
       throw ConstraintLayoutException('referencedIds can not be empty.');
     }
@@ -4917,7 +3925,7 @@ class Barrier extends LeafRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    assert(checkParam());
+    assert(_checkParam());
     return _BarrierRenderBox()
       .._id = id
       .._direction = direction
@@ -4927,7 +3935,7 @@ class Barrier extends LeafRenderObjectWidget {
   @override
   void updateRenderObject(
       BuildContext context, covariant RenderObject renderObject) {
-    assert(checkParam());
+    assert(_checkParam());
     (renderObject as _BarrierRenderBox)
       ..id = id
       ..direction = direction
@@ -5008,16 +4016,5 @@ class _BarrierRenderBox extends _HelperBox {
       constraintBoxData.top = parent.top;
       constraintBoxData.bottom = parent.bottom;
     }
-  }
-}
-
-class ConstraintLayoutException implements Exception {
-  final String msg;
-
-  ConstraintLayoutException(this.msg);
-
-  @override
-  String toString() {
-    return 'ConstraintLayoutException throw: $msg';
   }
 }

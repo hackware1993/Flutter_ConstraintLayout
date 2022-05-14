@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout.dart';
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 class OffPaintExample extends StatelessWidget {
   const OffPaintExample({Key? key}) : super(key: key);

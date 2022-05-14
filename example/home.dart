@@ -20,6 +20,7 @@ import 'relative_id.dart';
 import 'self_wrap_content.dart';
 import 'staggered_grid.dart';
 import 'summary.dart';
+import 'translate.dart';
 import 'vertical_list.dart';
 import 'wrapper_constraints.dart';
 
@@ -46,6 +47,7 @@ class ExampleHome extends StatelessWidget {
     'Constraint Version': const ConstraintVersionExample(),
     'Self wrapContent': const SelfWrapContentExample(),
     'Margin': const MarginExample(),
+    'Translate': const TranslateExample(),
     'Charts': const ChartsExample(),
     'Chain (Coming soon)': const ComingSoonWidget(),
   };
@@ -102,7 +104,7 @@ class ExampleHome extends StatelessWidget {
             margin: const EdgeInsets.only(
               bottom: 20,
             ),
-          ),
+          )
         ],
       ),
     );

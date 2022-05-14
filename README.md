@@ -6,6 +6,8 @@ A super powerful Stack, build flexible layouts with constraints. Similar to Cons
 Android and AutoLayout for iOS. But the code implementation is much more efficient, it has O(n)
 layout time complexity and no linear equation solving is required.
 
+**It is a layout and a more modern general layout framework.**
+
 # Greatly improve Flutter development experience and efficiency. Improve application performance
 
 No matter how complex the layout is and how deep the constraints are, it has almost the same
@@ -97,7 +99,7 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
 6. bias(when there are constraints left and right or top and bottom, horizontalBias and verticalBias
    can be used to adjust the offset. The default value is 0.5, which means centering)
 7. z-index(drawing order, default is child index)
-8. translate
+8. translate、rotate
 9. percentage layout(when size is set to matchConstraint, the percentage layout will take effect,
    the default percentage is 1 (100%). The relevant properties are widthPercent, heightPercent,
    widthPercentageAnchor, heightPercentageAnchor)
@@ -183,12 +185,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.3.0-stable'
+      ref: 'v1.4.0-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.3.0-stable
+  flutter_constraintlayout: ^1.4.0-stable
 ```
 
 ```dart
@@ -1026,6 +1028,96 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
 }
 ```
 
+9. translate [Flutter Web Online Example](https://constraintlayout.flutterfirst.cn)
+
+![translate.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/translate.gif?raw=true)
+
+```dart
+class TranslateExampleState extends State<TranslateExample> {
+  late Timer timer;
+  int angle = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      setState(() {
+        angle++;
+        angle %= 360;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ConstraintId anchor = ConstraintId('anchor');
+    return Scaffold(
+      appBar: const CustomAppBar(
+        title: 'Translate',
+        codePath: 'example/translate.dart',
+      ),
+      body: ConstraintLayout(
+        children: [
+          Container(
+            color: Colors.yellow,
+          ).applyConstraint(
+            id: anchor,
+            size: 150,
+            centerTo: parent,
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.red,
+            ),
+            child: const Text('pinned translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            centerTo: anchor,
+            translate: PinnedTranslate(
+              PinnedInfo(
+                null,
+                Anchor(0.5, AnchorType.percent, 0.5, AnchorType.percent),
+                null,
+                angle: angle,
+              ),
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: const Text('circle translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            centerTo: anchor,
+            translate: circleTranslate(
+              radius: 150,
+              angle: angle,
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+            ),
+            child: const Text('normal translate'),
+          ).applyConstraint(
+            size: wrapContent,
+            outBottomCenterTo: anchor,
+            translate: Offset(0, angle / 5),
+          )
+        ],
+      ),
+    );
+  }
+}
+```
+
 # Performance optimization
 
 1. When the layout is complex, if the child elements need to be repainted frequently, it is
@@ -1202,6 +1294,16 @@ class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
   }
 }
 ```
+
+# Extension
+
+ConstraintLayout's constraint-based layout algorithm is extremely powerful and flexible, and it
+seems that it can become a general layout framework. You just need to generate constraints and hand
+over the task of layout to ConstraintLayout. Some built-in features like circle position, staggered
+grid, grid, and list are available in extended form.
+
+The charts in the online example is a typical extension. Extensions for ConstraintLayout are
+welcome.
 
 # Support me
 

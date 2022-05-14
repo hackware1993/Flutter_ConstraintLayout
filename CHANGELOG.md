@@ -1,3 +1,8 @@
+# v1.4.0-stable
+
+1. code refactoring, extracting non-core functions.
+2. add rotate support.
+
 # v1.3.0-stable
 
 enhance base constraints.

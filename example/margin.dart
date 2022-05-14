@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_constraintlayout/src/constraint_layout.dart';
+import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 import 'custom_app_bar.dart';
 
@@ -43,7 +43,7 @@ class MarginExample extends StatelessWidget {
           ).applyConstraint(
             size: 50,
             outBottomCenterTo: sId(-2).topMargin(20),
-          ),
+          )
         ],
       ),
     );
