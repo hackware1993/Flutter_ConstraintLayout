@@ -12,6 +12,7 @@
 lib/main.dart
 lib/src/example
 buildweb.sh
+publish.sh
 
 # IntelliJ related
 *.iml
