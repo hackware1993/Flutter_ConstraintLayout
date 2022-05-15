@@ -1399,11 +1399,13 @@ ConstraintLayout 基于约束的布局算法极其强大和灵活，似乎可以
 
 感谢以下网友的赞助，我们一起让 Flutter 越来越好。
 
-1. 栢陶 12￥ 2022.05.15
+1. 栢陶 2022.05.15
 
 # 联系方式
 
 hackware1993@gmail.com
+![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
+订阅我的公众号以及时获取约束布局的最新动态。后续也会分享一些高质量的、独特的、有思想的 Flutter 技术文章。
 
 # 协议
 

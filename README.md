@@ -1436,11 +1436,14 @@ the driving force for me to continue to maintain.
 Thanks to the following netizens for their sponsorship, let's make Flutter better and better
 together.
 
-1. 栢陶 12￥ 2022.05.15
+1. 栢陶 2022.05.15
 
 # Contact
 
 hackware1993@gmail.com
+![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
+Subscribe to my wechat official account to get the latest news of ConstraintLayout. Follow-up will
+also share some high-quality, unique, and thoughtful Flutter technical articles.
 
 # License
 
