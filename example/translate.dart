@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:collection';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
@@ -12,10 +14,26 @@ class TranslateExample extends StatefulWidget {
   State createState() => TranslateExampleState();
 }
 
+class TrackPainter extends CustomPainter {
+  Queue<Offset> points = Queue();
+  Paint painter = Paint();
+
+  TrackPainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPoints(PointMode.polygon, points.toList(), painter);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
+}
+
 class TranslateExampleState extends State<TranslateExample> {
   late Timer timer;
   double angle = 0;
   double earthRevolutionAngle = 0;
+  Queue<Offset> points = Queue();
 
   @override
   void initState() {
@@ -44,6 +62,12 @@ class TranslateExampleState extends State<TranslateExample> {
       ),
       body: ConstraintLayout(
         children: [
+          CustomPaint(
+            painter: TrackPainter(points),
+          ).applyConstraint(
+            width: matchParent,
+            height: matchParent,
+          ),
           Container(
             decoration: const BoxDecoration(
               color: Colors.redAccent,
@@ -104,6 +128,12 @@ class TranslateExampleState extends State<TranslateExample> {
               angle: earthRevolutionAngle * 365 / 27.32,
             ),
             translateConstraint: true,
+            paintCallback: (_, __, ____, offset, ______) {
+              points.add(offset!);
+              if (points.length > 2000) {
+                points.removeFirst();
+              }
+            },
           ),
           Text('Sun rotates ${(earthRevolutionAngle * 365 / 25.4) ~/ 360} times')
               .applyConstraint(

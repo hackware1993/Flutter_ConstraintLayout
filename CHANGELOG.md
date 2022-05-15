@@ -1,3 +1,7 @@
+# v1.5.1-stable
+
+add paint callback support.
+
 # v1.5.0-stable
 
 1. refactor debug function.

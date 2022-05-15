@@ -61,7 +61,7 @@ class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
           ),
           item('centerTopRightTo').applyConstraint(
             centerTopRightTo: rId(0),
-            callback: (_, rect) {
+            layoutCallback: (_, rect) {
               leftX = rect.right;
             },
           ),
@@ -92,7 +92,7 @@ class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
           ),
           item('outTopLeftTo').applyConstraint(
             outTopLeftTo: rId(1),
-            callback: (_, rect) {
+            layoutCallback: (_, rect) {
               rightX = rect.left;
               WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                 setState(() {});

@@ -468,7 +468,10 @@ class ConstraintAlign {
   int get hashCode => _id.hashCode ^ _type.hashCode ^ _bias.hashCode;
 }
 
-typedef OnLayoutCallback = void Function(RenderObject renderObject, Rect rect);
+typedef OnLayoutCallback = void Function(RenderBox renderBox, Rect rect);
+
+typedef OnPaintCallback = void Function(RenderBox renderBox, Offset offset,
+    Size size, Offset? anchorPoint, double? angle);
 
 typedef CalcSizeCallback = BoxConstraints Function(
     RenderBox parent, List<ConstrainedNode> anchors);
@@ -792,7 +795,8 @@ class Constraint extends ConstraintDefine {
   @_wrapperConstraint
   final ConstraintId? centerBottomRightTo;
 
-  final OnLayoutCallback? callback;
+  final OnLayoutCallback? layoutCallback;
+  final OnPaintCallback? paintCallback;
 
   /// To offset relative to its own size
   final bool percentageTranslate;
@@ -880,7 +884,8 @@ class Constraint extends ConstraintDefine {
     @_wrapperConstraint this.centerBottomLeftTo,
     @_wrapperConstraint this.centerBottomCenterTo,
     @_wrapperConstraint this.centerBottomRightTo,
-    this.callback,
+    this.layoutCallback,
+    this.paintCallback,
     this.percentageTranslate = false,
     this.minWidth = 0,
     this.maxWidth = matchParent,
@@ -951,7 +956,8 @@ class Constraint extends ConstraintDefine {
           centerBottomLeftTo == other.centerBottomLeftTo &&
           centerBottomCenterTo == other.centerBottomCenterTo &&
           centerBottomRightTo == other.centerBottomRightTo &&
-          callback == other.callback &&
+          layoutCallback == other.layoutCallback &&
+          paintCallback == other.paintCallback &&
           percentageTranslate == other.percentageTranslate &&
           minWidth == other.minWidth &&
           maxWidth == other.maxWidth &&
@@ -1018,7 +1024,8 @@ class Constraint extends ConstraintDefine {
       centerBottomLeftTo.hashCode ^
       centerBottomCenterTo.hashCode ^
       centerBottomRightTo.hashCode ^
-      callback.hashCode ^
+      layoutCallback.hashCode ^
+      paintCallback.hashCode ^
       percentageTranslate.hashCode ^
       minWidth.hashCode ^
       maxWidth.hashCode ^
@@ -1361,7 +1368,8 @@ class Constraint extends ConstraintDefine {
     ConstraintBoxData parentData =
         renderObject.parentData! as ConstraintBoxData;
     parentData.clickPadding = clickPadding;
-    parentData.callback = callback;
+    parentData.layoutCallback = layoutCallback;
+    parentData.paintCallback = paintCallback;
 
     if ((renderObject.parent as _ConstraintRenderBox)._controller != null) {
       parentData.id = _id;
@@ -1716,7 +1724,8 @@ class ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   PercentageAnchor? heightPercentageAnchor;
   double? horizontalBias;
   double? verticalBias;
-  OnLayoutCallback? callback;
+  OnLayoutCallback? layoutCallback;
+  OnPaintCallback? paintCallback;
   bool? percentageTranslate;
   double? minWidth;
   double? maxWidth;
@@ -2539,8 +2548,8 @@ class _ConstraintRenderBox extends RenderBox
             }
             sizeConfirmedChild.offset =
                 calculateChildOffset(sizeConfirmedChild);
-            if (sizeConfirmedChild.callback != null) {
-              sizeConfirmedChild.callback!.call(
+            if (sizeConfirmedChild.layoutCallback != null) {
+              sizeConfirmedChild.layoutCallback!.call(
                   sizeConfirmedChild.renderBox!,
                   Rect.fromLTWH(
                       sizeConfirmedChild.getX(),
@@ -2630,8 +2639,8 @@ class _ConstraintRenderBox extends RenderBox
         }
 
         element.offset = calculateChildOffset(element);
-        if (element.callback != null) {
-          element.callback!.call(
+        if (element.layoutCallback != null) {
+          element.layoutCallback!.call(
               element.renderBox!,
               Rect.fromLTWH(element.getX(), element.getY(),
                   element.getMeasuredWidth(), element.getMeasuredHeight()));
@@ -3304,9 +3313,20 @@ class _ConstraintRenderBox extends RenderBox
         context.canvas.rotate(pinnedInfo.angle * pi / 180);
         context.paintChild(element.renderBox!, -anchorOffset);
         context.canvas.restore();
+        if (element.paintCallback != null) {
+          Offset paintOffset = Offset(element.offset.dx + paintShift.dx,
+              element.offset.dy + paintShift.dy);
+          element.paintCallback!.call(element.renderBox!, paintOffset,
+              element.getSize(), paintOffset + anchorOffset, pinnedInfo.angle);
+        }
       } else {
         context.paintChild(
             element.renderBox!, element.offset + offset + paintShift);
+        if (element.paintCallback != null) {
+          Offset paintOffset = element.offset + paintShift;
+          element.paintCallback!.call(
+              element.renderBox!, paintOffset, element.getSize(), null, null);
+        }
       }
 
       /// Draw child's click area
@@ -3421,7 +3441,9 @@ class ConstrainedNode {
   PercentageAnchor get heightPercentageAnchor =>
       parentData.heightPercentageAnchor!;
 
-  OnLayoutCallback? get callback => parentData.callback;
+  OnLayoutCallback? get layoutCallback => parentData.layoutCallback;
+
+  OnPaintCallback? get paintCallback => parentData.paintCallback;
 
   List<ConstraintId>? get referencedIds => parentData._referencedIds;
 
@@ -3647,7 +3669,8 @@ class _HelperBox extends RenderBox {
     constraintBoxData.heightPercentageAnchor = PercentageAnchor.constraint;
     constraintBoxData.horizontalBias = 0.5;
     constraintBoxData.verticalBias = 0.5;
-    constraintBoxData.callback = null;
+    constraintBoxData.layoutCallback = null;
+    constraintBoxData.paintCallback = null;
     constraintBoxData.percentageTranslate = false;
     constraintBoxData.minWidth = 0;
     constraintBoxData.maxWidth = matchParent;

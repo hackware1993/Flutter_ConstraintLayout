@@ -1,5 +1,5 @@
-import 'dart:collection';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
@@ -14,7 +14,7 @@ class ChartsExample extends StatefulWidget {
 }
 
 class PolylinePainter extends CustomPainter {
-  Map<int, Rect> polylineData;
+  List<Offset> polylineData;
 
   PolylinePainter(this.polylineData);
 
@@ -26,18 +26,7 @@ class PolylinePainter extends CustomPainter {
     Paint paint = Paint()
       ..strokeWidth = 1
       ..color = Colors.green;
-    List<Rect> rectList = polylineData.values.toList();
-    Rect last = rectList[0];
-    Rect current;
-    for (int i = 1; i < rectList.length; i++) {
-      current = rectList[i];
-      canvas.drawLine(
-          Offset(last.left + last.width / 2, last.top + last.height),
-          Offset(
-              current.left + current.width / 2, current.top + current.height),
-          paint);
-      last = current;
-    }
+    canvas.drawPoints(PointMode.polygon, polylineData, paint);
   }
 }
 
@@ -47,7 +36,7 @@ class ChartsState extends State<ChartsExample> {
   late List<int> compareData;
   late int maxValue;
   int current = 6;
-  Map<int, Rect> polylineData = HashMap();
+  late List<Offset> polylineData;
   ScrollController controller = ScrollController();
 
   @override
@@ -58,6 +47,7 @@ class ChartsState extends State<ChartsExample> {
     data = [for (int i = 0; i < xTitles.length; i++) 10 + random.nextInt(91)];
     compareData = data.toList()..shuffle();
     maxValue = data.reduce(max);
+    polylineData = List.filled(data.length, Offset.zero);
   }
 
   @override
@@ -179,8 +169,8 @@ class ChartsState extends State<ChartsExample> {
                       .bottomMargin((compareData[i] / maxValue) * 400),
                   translate: const Offset(0, 0.5),
                   percentageTranslate: true,
-                  callback: (_, rect) {
-                    polylineData[i] = rect;
+                  layoutCallback: (_, rect) {
+                    polylineData[i] = rect.bottomCenter;
                   },
                 ),
               Container(
