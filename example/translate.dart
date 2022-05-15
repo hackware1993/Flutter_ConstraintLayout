@@ -22,7 +22,15 @@ class TrackPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawPoints(PointMode.polygon, points.toList(), painter);
+    /// canvas.drawPoints crashes on the release version of Flutter Web.
+    /// Windows and Android are no problem.
+    /// debug version is no problem.
+
+    // canvas.drawPoints(PointMode.polygon,points.toList(), painter);
+
+    for (final element in points) {
+      canvas.drawCircle(element, 1 / window.devicePixelRatio, painter);
+    }
   }
 
   @override
