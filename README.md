@@ -1441,9 +1441,10 @@ together.
 # Contact
 
 hackware1993@gmail.com
-![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
+
 Subscribe to my wechat official account to get the latest news of ConstraintLayout. Follow-up will
 also share some high-quality, unique, and thoughtful Flutter technical articles.
+![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
 
 # License
 
