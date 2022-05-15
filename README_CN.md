@@ -135,6 +135,12 @@ build 耗时有时甚至超过渲染耗时。
     2. matchParent（default）
     3. wrapContent（暂不支持最大、最小设置）
 23. 布局调试
+    1. showHelperWidgets
+    2. showClickArea
+    3. showZIndex
+    4. showChildDepth
+    5. debugPrintConstraints
+    6. showLayoutPerformanceOverlay
 
 后续开发计划:
 

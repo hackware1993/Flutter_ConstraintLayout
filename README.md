@@ -161,6 +161,12 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
     2. matchParent(default)
     3. wrapContent(minimum and maximum are temporarily not supported)
 23. layout debugging
+    1. showHelperWidgets
+    2. showClickArea
+    3. showZIndex
+    4. showChildDepth
+    5. debugPrintConstraints
+    6. showLayoutPerformanceOverlay
 
 Follow-up development plan:
 
