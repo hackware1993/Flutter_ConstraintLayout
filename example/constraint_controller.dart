@@ -3,27 +3,28 @@ import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 
 import 'custom_app_bar.dart';
 
-class ConstraintVersionExample extends StatefulWidget {
-  const ConstraintVersionExample({Key? key}) : super(key: key);
+class ConstraintControllerExample extends StatefulWidget {
+  const ConstraintControllerExample({Key? key}) : super(key: key);
 
   @override
-  State createState() => ConstraintVersionExampleState();
+  State createState() => ConstraintControllerExampleState();
 }
 
-class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
+class ConstraintControllerExampleState
+    extends State<ConstraintControllerExample> {
   double x = 0;
   double y = 0;
-  ConstraintVersion constraintVersion = ConstraintVersion();
+  ConstraintLayoutController controller = ConstraintLayoutController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(
-        title: 'Constraint Version',
-        codePath: 'example/constraint_version.dart',
+        title: 'Constraint Controller',
+        codePath: 'example/constraint_controller.dart',
       ),
       body: ConstraintLayout(
-        constraintVersion: constraintVersion,
+        controller: controller,
         children: [
           GestureDetector(
             child: Container(
@@ -35,7 +36,7 @@ class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
               setState(() {
                 x += details.delta.dx;
                 y += details.delta.dy;
-                constraintVersion.incPaintVersion();
+                controller.markNeedsPaint();
               });
             },
           ).applyConstraint(

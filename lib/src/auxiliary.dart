@@ -82,14 +82,14 @@ bool debugEnsureNotEmptyString(String name, String? value) {
 
 bool debugEnsurePercent(String name, double? percent) {
   if (percent == null || percent < 0 || percent > 1) {
-    throw ConstraintLayoutException('$name is between [0,1].');
+    throw ConstraintLayoutException('$name is between [0.0,1.0].');
   }
   return true;
 }
 
 bool debugEnsureNegativePercent(String name, double? percent) {
   if (percent == null || percent < -1 || percent > 1) {
-    throw ConstraintLayoutException('$name is between [-1,1].');
+    throw ConstraintLayoutException('$name is between [-1.0,1.0].');
   }
   return true;
 }

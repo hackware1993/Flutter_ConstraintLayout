@@ -1,3 +1,10 @@
+# v1.5.0-stable
+
+1. refactor debug function.
+2. add a lot of comments.
+3. fix the click problem caused by pinned translate.
+4. optimize constraint version implementation.
+
 # v1.4.4-stable
 
 optimize rotate.

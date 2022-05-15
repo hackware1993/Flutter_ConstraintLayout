@@ -160,12 +160,14 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
     1. fixed size(>=0)
     2. matchParent(default)
     3. wrapContent(minimum and maximum are temporarily not supported)
+23. layout debugging
 
 Follow-up development plan:
 
 1. chain
 2. constraints visualization
-3. more...
+3. provides a visual editor to create layouts by dragging and dropping
+4. more...
 
 Support platform:
 
@@ -185,12 +187,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.4.4-stable'
+      ref: 'v1.5.0-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.4.4-stable
+  flutter_constraintlayout: ^1.5.0-stable
 ```
 
 ```dart
@@ -1335,24 +1337,24 @@ class BarrierExample extends StatelessWidget {
     5. Do you need to rearrange the order of event distribution?
 
 These comparisons will not be a performance bottleneck, but will increase CPU usage. If you know
-enough about the internals of ConstraintLayout, you can use ConstraintVersion to manually trigger
-these operations to stop parameter comparison.
+enough about the internals of ConstraintLayout, you can use ConstraintLayoutController to manually
+trigger these operations to stop parameter comparison.
 
 ```dart
-class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
+class ConstraintControllerExampleState extends State<ConstraintControllerExample> {
   double x = 0;
   double y = 0;
-  ConstraintVersion constraintVersion = ConstraintVersion();
+  ConstraintLayoutController controller = ConstraintLayoutController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(
-        title: 'Constraint Version',
-        codePath: 'example/constraint_version.dart',
+        title: 'Constraint Controller',
+        codePath: 'example/constraint_controller.dart',
       ),
       body: ConstraintLayout(
-        constraintVersion: constraintVersion,
+        controller: controller,
         children: [
           GestureDetector(
             child: Container(
@@ -1364,14 +1366,14 @@ class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
               setState(() {
                 x += details.delta.dx;
                 y += details.delta.dy;
-                constraintVersion.incPaintVersion();
+                controller.markNeedsPaint();
               });
             },
           ).applyConstraint(
             size: 200,
             centerTo: parent,
             translate: Offset(x, y),
-          ),
+          )
         ],
       ),
     );

@@ -134,12 +134,14 @@ build 耗时有时甚至超过渲染耗时。
     1. 固定大小（>=0）
     2. matchParent（default）
     3. wrapContent（暂不支持最大、最小设置）
+23. 布局调试
 
 后续开发计划:
 
 1. 链
 2. 约束可视化
-3. 更多...
+3. 提供可视化编辑器，通过拖拽创建布局
+4. 更多...
 
 支持的平台:
 
@@ -159,12 +161,12 @@ dependencies:
   flutter_constraintlayout:
     git:
       url: 'https://github.com/hackware1993/Flutter-ConstraintLayout.git'
-      ref: 'v1.4.4-stable'
+      ref: 'v1.5.0-stable'
 ```
 
 ```yaml
 dependencies:
-  flutter_constraintlayout: ^1.4.4-stable
+  flutter_constraintlayout: ^1.5.0-stable
 ```
 
 ```dart
@@ -1302,23 +1304,24 @@ class BarrierExample extends StatelessWidget {
     4. 是否需要重排绘制顺序？
     5. 是否需要重排事件分发顺序？
 
-这些比对不会成为性能瓶颈，但会提高 CPU 占用率。如果你对 ConstraintLayout 内部原理足够了解，你可以使用 ConstraintVersion 来手动触发这些操作，停止参数比对。
+这些比对不会成为性能瓶颈，但会提高 CPU 占用率。如果你对 ConstraintLayout 内部原理足够了解，你可以使用 ConstraintLayoutController
+来手动触发这些操作，停止参数比对。
 
 ```dart
-class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
+class ConstraintControllerExampleState extends State<ConstraintControllerExample> {
   double x = 0;
   double y = 0;
-  ConstraintVersion constraintVersion = ConstraintVersion();
+  ConstraintLayoutController controller = ConstraintLayoutController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(
-        title: 'Constraint Version',
-        codePath: 'example/constraint_version.dart',
+        title: 'Constraint Controller',
+        codePath: 'example/constraint_controller.dart',
       ),
       body: ConstraintLayout(
-        constraintVersion: constraintVersion,
+        controller: controller,
         children: [
           GestureDetector(
             child: Container(
@@ -1330,14 +1333,14 @@ class ConstraintVersionExampleState extends State<ConstraintVersionExample> {
               setState(() {
                 x += details.delta.dx;
                 y += details.delta.dy;
-                constraintVersion.incPaintVersion();
+                controller.markNeedsPaint();
               });
             },
           ).applyConstraint(
             size: 200,
             centerTo: parent,
             translate: Offset(x, y),
-          ),
+          )
         ],
       ),
     );

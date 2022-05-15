@@ -5,8 +5,39 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import 'utils.dart';
+import 'auxiliary.dart';
 
+/// A super powerful Stack, build flexible layouts with constraints.
+/// Similar to ConstraintLayout for Android and AutoLayout for iOS.
+/// But the code implementation is much more efficient, it has O(n)
+/// layout time complexity and no linear equation solving is required.
+///
+/// It is a layout and a more modern general layout framework.
+///
+/// No matter how complex the layout is and how deep the constraints are
+/// it has almost the same performance as a single Flex or Stack.
+/// When facing complex layouts, it provides better performance, flexibility
+/// and a very flat code hierarchy than Flex and Stack. Say no to 'nested hell'.
+///
+/// Flutter ConstraintLayout has extremely high layout performance.
+/// It does not require linear equations to solve. At any time, each
+/// child element will only be laid out once. When its own width or
+/// height is set to wrapContent, some child elements may calculate
+/// the offset twice.
+///
+/// ConstraintLayout itself can be arbitrarily nested without performance
+/// issues, each child element in the render tree is only laid out once, and
+/// the time complexity is O(n) instead of O(2n) or worse.
+///
+/// Warning: For layout performance considerations, constraints are always
+/// one-way, and there should be no two child elements directly or indirectly
+/// restrain each other(for example, the right side of A is constrained to the
+/// left side of B, and the left side of B is in turn constrained to A right). Each
+/// constraint should describe exactly where the child elements are located. Although
+/// constraints can only be one-way, you can still better handle things that were
+/// previously (Android ConstraintLayout) two-way constraints, such as
+/// chains(not yet supported, please use with Flex).
+///
 /// author: hackware
 /// home page: https:///github.com/hackware1993
 /// email: hackware1993@gmail.com
@@ -14,15 +45,22 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// Constraints can be separated from widgets
   final List<ConstraintDefine>? childConstraints;
 
-  final bool debugShowGuideline;
-  final bool debugShowClickArea;
+  /// It will display the time-consuming of constraint calculation, layout, and drawing
+  final bool showLayoutPerformanceOverlay;
+
+  /// Guideline and Barrier will be displayed
+  final bool showHelperWidgets;
+
+  /// Will show the click area of each child element
+  final bool showClickArea;
+
+  /// Will show the z-index of each child element
+  final bool showZIndex;
+
+  /// Will show the constraint depth (layout priority) of each child element
+  final bool showChildDepth;
+
   final bool debugPrintConstraints;
-  final bool debugPrintLayoutTime;
-  final bool debugCheckConstraints;
-  final bool releasePrintLayoutTime;
-  final String? debugName;
-  final bool debugShowZIndex;
-  final bool debugShowChildDepth;
 
   // fixed size、matchParent、wrapContent
   final double width;
@@ -31,25 +69,31 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   /// When size is non-null, both width and height are set to size
   final double? size;
 
-  final ConstraintVersion? constraintVersion;
+  /// Every frame, ConstraintLayout compares the parameters and decides the following things:
+  ///    1. Does the constraint need to be recalculated?
+  ///    2. Does it need to be relayout?
+  ///    3. Does it need to be redrawn?
+  ///    4. Do you need to rearrange the drawing order?
+  ///    5. Do you need to rearrange the order of event distribution?
+  ///These comparisons will not be a performance bottleneck, but will increase CPU usage. If you know
+  ///enough about the internals of ConstraintLayout, you can use ConstraintLayoutController to manually trigger
+  ///these operations to stop parameter comparison.
+  final ConstraintLayoutController? controller;
 
   ConstraintLayout({
     Key? key,
     this.childConstraints,
     required List<Widget> children,
-    this.debugShowGuideline = false,
-    this.debugShowClickArea = false,
+    this.showLayoutPerformanceOverlay = false,
+    this.showHelperWidgets = false,
+    this.showClickArea = false,
+    this.showZIndex = false,
+    this.showChildDepth = false,
     this.debugPrintConstraints = false,
-    this.debugPrintLayoutTime = false,
-    this.debugCheckConstraints = true,
-    this.releasePrintLayoutTime = false,
-    this.debugName,
-    this.debugShowZIndex = false,
-    this.debugShowChildDepth = false,
     this.width = matchParent,
     this.height = matchParent,
     this.size,
-    this.constraintVersion,
+    this.controller,
   }) : super(
           key: key,
           children: children,
@@ -57,7 +101,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    assert(debugEnsureNotEmptyString('debugName', debugName));
     assert(width >= 0 || width == matchParent || width == wrapContent);
     assert(height >= 0 || height == matchParent || height == wrapContent);
     assert(size == null ||
@@ -70,18 +113,15 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     }
     return _ConstraintRenderBox()
       ..childConstraints = childConstraints
-      .._debugShowGuideline = debugShowGuideline
-      .._debugShowClickArea = debugShowClickArea
+      .._showLayoutPerformanceOverlay = showLayoutPerformanceOverlay
+      .._showHelperWidgets = showHelperWidgets
+      .._showClickArea = showClickArea
+      .._showZIndex = showZIndex
+      .._showChildDepth = showChildDepth
       .._debugPrintConstraints = debugPrintConstraints
-      .._debugPrintLayoutTime = debugPrintLayoutTime
-      .._debugCheckConstraints = debugCheckConstraints
-      .._releasePrintLayoutTime = releasePrintLayoutTime
-      .._debugName = debugName
-      .._debugShowZIndex = debugShowZIndex
-      .._debugShowChildDepth = debugShowChildDepth
       .._width = selfWidth
       .._height = selfHeight
-      .._constraintVersion = constraintVersion?._copy();
+      .._controller = controller?._copy();
   }
 
   @override
@@ -89,7 +129,6 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     BuildContext context,
     covariant RenderObject renderObject,
   ) {
-    assert(debugEnsureNotEmptyString('debugName', debugName));
     assert(width >= 0 || width == matchParent || width == wrapContent);
     assert(height >= 0 || height == matchParent || height == wrapContent);
     assert(size == null ||
@@ -102,18 +141,15 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     }
     (renderObject as _ConstraintRenderBox)
       ..childConstraints = childConstraints
-      ..debugShowGuideline = debugShowGuideline
-      ..debugShowClickArea = debugShowClickArea
+      ..showLayoutPerformanceOverlay = showLayoutPerformanceOverlay
+      ..showHelperWidgets = showHelperWidgets
+      ..showClickArea = showClickArea
+      ..showZIndex = showZIndex
+      ..showChildDepth = showChildDepth
       ..debugPrintConstraints = debugPrintConstraints
-      ..debugPrintLayoutTime = debugPrintLayoutTime
-      ..debugCheckConstraints = debugCheckConstraints
-      ..releasePrintLayoutTime = releasePrintLayoutTime
-      ..debugName = debugName
-      ..debugShowZIndex = debugShowZIndex
-      ..debugShowChildDepth = debugShowChildDepth
       ..width = selfWidth
       ..height = selfHeight
-      ..constraintVersion = constraintVersion?._copy();
+      ..controller = controller?._copy();
   }
 }
 
@@ -151,10 +187,16 @@ enum PercentageAnchor {
   parent,
 }
 
+/// Each child element can be set with an id so that they can be referenced
+/// by other child elements. If not set, other child elements can be referenced
+/// by relative id. But once an id is defined, it cannot be referenced using
+/// a relative id.
 class ConstraintId {
+  /// Uniqueness must be guaranteed
   final String id;
 
   /// To simplify the setting of margins
+  /// margin can be negative
   double? _leftMargin;
   double? _topMargin;
   double? _rightMargin;
@@ -343,7 +385,9 @@ class ConstraintId {
   }
 }
 
+/// A relative id type that refers to a child element by its index
 class IndexConstraintId extends ConstraintId {
+  /// [0, childCount-1]
   final int _siblingIndex;
 
   IndexConstraintId(this._siblingIndex)
@@ -355,7 +399,10 @@ class IndexConstraintId extends ConstraintId {
   }
 }
 
+/// A relative id type that is referenced by index offsets between child elements
 class RelativeConstraintId extends ConstraintId {
+  /// [-childCount+1),childCount-1]
+  /// cannot be 0 because it cannot refer to itself
   final int _siblingIndexOffset;
 
   RelativeConstraintId(this._siblingIndexOffset)
@@ -370,8 +417,13 @@ class RelativeConstraintId extends ConstraintId {
 class ConstraintAlign {
   final ConstraintId _id;
   final ConstraintAlignType _type;
+
+  /// margin can be negative
   double? _margin;
   double? _goneMargin;
+
+  /// [0.0,1.0]
+  /// The default value is 0.5, which means centering
   double? _bias;
 
   ConstraintAlign(this._id, this._type);
@@ -444,6 +496,7 @@ class ConstraintDefine {
   int get hashCode => _id.hashCode;
 }
 
+/// For pinned position and translate
 enum AnchorType {
   absolute,
   percent,
@@ -493,6 +546,8 @@ class Anchor {
       _xOffset.hashCode ^ _xType.hashCode ^ _yOffset.hashCode ^ _yType.hashCode;
 }
 
+/// Has no effect in pinned position layout mode.
+/// You can use it to do the rotation of child elements.
 class PinnedTranslate extends Offset {
   final PinnedInfo _pinnedInfo;
 
@@ -518,16 +573,23 @@ class PinnedTranslate extends Offset {
 
 class PinnedInfo {
   /// [0.0,360.0]
+  /// Exceeding the range will be automatically converted
   double angle;
+
+  /// Nullable when used in pinned translate, representing a rotation
+  /// relative to itself
   final ConstraintId? targetId;
+
   final Anchor selfAnchor;
+
+  /// Nullable when used in pinned translate, provided targetId is empty
   final Anchor? targetAnchor;
 
   PinnedInfo(
     this.targetId,
     this.selfAnchor,
     this.targetAnchor, {
-    this.angle = 0,
+    this.angle = 0.0,
   });
 
   @override
@@ -548,41 +610,46 @@ class PinnedInfo {
       targetAnchor.hashCode;
 }
 
-class ConstraintVersion {
+class ConstraintLayoutController {
   int _constraintsVersion = 1;
   int _layoutVersion = 1;
   int _paintVersion = 1;
   int _paintingOrderVersion = 1;
   int _eventOrderVersion = 1;
 
-  ConstraintVersion incConstraintsVersion() {
+  ConstraintLayoutController markNeedsRecalculateConstraints() {
     _constraintsVersion++;
-    return this;
-  }
-
-  ConstraintVersion incLayoutVersion() {
     _layoutVersion++;
-    return this;
-  }
-
-  ConstraintVersion incPaintVersion() {
     _paintVersion++;
-    return this;
-  }
-
-  ConstraintVersion incPaintingOrderVersion() {
     _paintingOrderVersion++;
     _eventOrderVersion++;
     return this;
   }
 
-  ConstraintVersion incEventOrderVersion() {
+  ConstraintLayoutController markNeedsLayout() {
+    _layoutVersion++;
+    _paintVersion++;
+    return this;
+  }
+
+  ConstraintLayoutController markNeedsPaint() {
+    _paintVersion++;
+    return this;
+  }
+
+  ConstraintLayoutController markNeedsReorderPaintingOrder() {
+    _paintingOrderVersion++;
     _eventOrderVersion++;
     return this;
   }
 
-  ConstraintVersion _copy() {
-    return ConstraintVersion()
+  ConstraintLayoutController markNeedsReorderEventOrder() {
+    _eventOrderVersion++;
+    return this;
+  }
+
+  ConstraintLayoutController _copy() {
+    return ConstraintLayoutController()
       .._constraintsVersion = _constraintsVersion
       .._layoutVersion = _layoutVersion
       .._paintVersion = _paintVersion
@@ -593,7 +660,7 @@ class ConstraintVersion {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ConstraintVersion &&
+      other is ConstraintLayoutController &&
           runtimeType == other.runtimeType &&
           _constraintsVersion == other._constraintsVersion &&
           _layoutVersion == other._layoutVersion &&
@@ -726,6 +793,8 @@ class Constraint extends ConstraintDefine {
   final ConstraintId? centerBottomRightTo;
 
   final OnLayoutCallback? callback;
+
+  /// To offset relative to its own size
   final bool percentageTranslate;
 
   /// Only takes effect when width is wrapContent
@@ -746,14 +815,17 @@ class Constraint extends ConstraintDefine {
   /// to specify the ratioBaseOnWidth parameter. The default value of null means automatically decide
   final bool? ratioBaseOnWidth;
 
+  /// When the click areas of child elements overlap, the larger the eIndex, the
+  /// priority to respond to the event
   final int? eIndex;
 
+  /// pinned position and traditional layout are mutually exclusive
+  /// pinned translate doesn't work when using pinned position
   final PinnedInfo? pinnedInfo;
 
+  /// For arbitrary position
   final List<ConstraintId>? anchors;
-
   final CalcSizeCallback? calcSizeCallback;
-
   final CalcOffsetCallback? calcOffsetCallback;
 
   Constraint({
@@ -1005,10 +1077,6 @@ class Constraint extends ConstraintDefine {
         debugEnsureNegativePercent('rightGoneMargin', goneMargin.right));
     assert(!percentageMargin ||
         debugEnsureNegativePercent('bottomGoneMargin', goneMargin.bottom));
-    assert(!percentageTranslate ||
-        debugEnsureNegativePercent('xTranslate', translate.dx));
-    assert(!percentageTranslate ||
-        debugEnsureNegativePercent('yTranslate', translate.dy));
     assert(minWidth >= 0);
     assert(maxWidth == matchParent || maxWidth >= minWidth);
     assert(minHeight >= 0);
@@ -1295,8 +1363,7 @@ class Constraint extends ConstraintDefine {
     parentData.clickPadding = clickPadding;
     parentData.callback = callback;
 
-    if ((renderObject.parent as _ConstraintRenderBox)._constraintVersion !=
-        null) {
+    if ((renderObject.parent as _ConstraintRenderBox)._controller != null) {
       parentData.id = _id;
       parentData.width = width;
       parentData.height = height;
@@ -1672,6 +1739,7 @@ class ConstraintBoxData extends ContainerBoxParentData<RenderBox> {
   Size? _helperSize;
 }
 
+/// Each child element needs to be wrapped with Constrained to declare constraint information
 class Constrained extends ParentDataWidget<ConstraintBoxData> {
   final Constraint constraint;
 
@@ -1705,6 +1773,7 @@ class Constrained extends ParentDataWidget<ConstraintBoxData> {
   }
 }
 
+/// For constraints and widgets separation
 class UnConstrained extends ParentDataWidget<ConstraintBoxData> {
   final ConstraintId id;
 
@@ -1754,25 +1823,23 @@ class _ConstraintRenderBox extends RenderBox
         ContainerRenderObjectMixin<RenderBox, ConstraintBoxData>,
         RenderBoxContainerDefaultsMixin<RenderBox, ConstraintBoxData> {
   List<ConstraintDefine>? _childConstraints;
-  late bool _debugShowGuideline;
-  late bool _debugShowClickArea;
+  late bool _showLayoutPerformanceOverlay;
+  late bool _showHelperWidgets;
+  late bool _showClickArea;
+  late bool _showZIndex;
+  late bool _showChildDepth;
   late bool _debugPrintConstraints;
-  late bool _debugPrintLayoutTime;
-  late bool _debugCheckConstraints;
-  late bool _releasePrintLayoutTime;
-  String? _debugName;
-  late bool _debugShowZIndex;
-  late bool _debugShowChildDepth;
 
   late double _width;
   late double _height;
-  ConstraintVersion? _constraintVersion;
+  ConstraintLayoutController? _controller;
 
   bool _needsRecalculateConstraints = true;
   bool _needsReorderPaintingOrder = true;
   bool _needsReorderEventOrder = true;
 
   int buildNodeTreesCount = 0;
+
   final Map<ConstraintId, ConstrainedNode> helperNodeMap = HashMap();
 
   /// For layout
@@ -1832,16 +1899,40 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  set debugShowGuideline(bool value) {
-    if (_debugShowGuideline != value) {
-      _debugShowGuideline = value;
+  set showLayoutPerformanceOverlay(bool value) {
+    if (_showLayoutPerformanceOverlay != value) {
+      _showLayoutPerformanceOverlay = value;
+      if (value) {
+        markNeedsRecalculateConstraints();
+        markNeedsLayout();
+      }
+    }
+  }
+
+  set showHelperWidgets(bool value) {
+    if (_showHelperWidgets != value) {
+      _showHelperWidgets = value;
       markNeedsPaint();
     }
   }
 
-  set debugShowClickArea(bool value) {
-    if (_debugShowClickArea != value) {
-      _debugShowClickArea = value;
+  set showClickArea(bool value) {
+    if (_showClickArea != value) {
+      _showClickArea = value;
+      markNeedsPaint();
+    }
+  }
+
+  set showZIndex(bool value) {
+    if (_showZIndex != value) {
+      _showZIndex = value;
+      markNeedsPaint();
+    }
+  }
+
+  set showChildDepth(bool value) {
+    if (_showChildDepth != value) {
+      _showChildDepth = value;
       markNeedsPaint();
     }
   }
@@ -1853,60 +1944,6 @@ class _ConstraintRenderBox extends RenderBox
         markNeedsRecalculateConstraints();
         markNeedsLayout();
       }
-    }
-  }
-
-  set debugPrintLayoutTime(bool value) {
-    if (_debugPrintLayoutTime != value) {
-      _debugPrintLayoutTime = value;
-      if (value) {
-        markNeedsRecalculateConstraints();
-        markNeedsLayout();
-      }
-    }
-  }
-
-  set debugCheckConstraints(bool value) {
-    if (_debugCheckConstraints != value) {
-      _debugCheckConstraints = value;
-      if (value) {
-        markNeedsRecalculateConstraints();
-        markNeedsLayout();
-      }
-    }
-  }
-
-  set releasePrintLayoutTime(bool value) {
-    if (_releasePrintLayoutTime != value) {
-      _releasePrintLayoutTime = value;
-      if (value) {
-        markNeedsRecalculateConstraints();
-        markNeedsLayout();
-      }
-    }
-  }
-
-  set debugName(String? value) {
-    if (_debugName != value) {
-      _debugName = value;
-      if (value != null) {
-        markNeedsRecalculateConstraints();
-        markNeedsLayout();
-      }
-    }
-  }
-
-  set debugShowZIndex(bool value) {
-    if (_debugShowZIndex != value) {
-      _debugShowZIndex = value;
-      markNeedsPaint();
-    }
-  }
-
-  set debugShowChildDepth(bool value) {
-    if (_debugShowChildDepth != value) {
-      _debugShowChildDepth = value;
-      markNeedsPaint();
     }
   }
 
@@ -1943,35 +1980,35 @@ class _ConstraintRenderBox extends RenderBox
     }
   }
 
-  set constraintVersion(ConstraintVersion? value) {
-    if (_constraintVersion == null && value == null) {
+  set controller(ConstraintLayoutController? value) {
+    if (_controller == null && value == null) {
       // Do nothing
-    } else if (_constraintVersion == null || value == null) {
-      _constraintVersion = value;
+    } else if (_controller == null || value == null) {
+      _controller = value;
       markNeedsRecalculateConstraints();
       markNeedsLayout();
     } else {
-      if (_constraintVersion!._constraintsVersion !=
-          value._constraintsVersion) {
+      if (_controller!._constraintsVersion != value._constraintsVersion) {
         markNeedsRecalculateConstraints();
         markNeedsLayout();
       } else {
-        if (_constraintVersion!._layoutVersion != value._layoutVersion) {
-          markNeedsLayout();
-        }
-        if (_constraintVersion!._paintingOrderVersion !=
-            value._paintingOrderVersion) {
+        if (_controller!._paintingOrderVersion != value._paintingOrderVersion) {
           needsReorderPaintingOrder = true;
-        }
-        if (_constraintVersion!._paintVersion != value._paintVersion) {
-          markNeedsPaint();
-        }
-        if (_constraintVersion!._eventOrderVersion !=
-            value._eventOrderVersion) {
           needsReorderEventOrder = true;
+        } else {
+          if (_controller!._eventOrderVersion != value._eventOrderVersion) {
+            needsReorderEventOrder = true;
+          }
+        }
+        if (_controller!._layoutVersion != value._layoutVersion) {
+          markNeedsLayout();
+        } else {
+          if (_controller!._paintVersion != value._paintVersion) {
+            markNeedsPaint();
+          }
         }
       }
-      _constraintVersion = value;
+      _controller = value;
     }
   }
 
@@ -1994,6 +2031,7 @@ class _ConstraintRenderBox extends RenderBox
     RenderBox? child = firstChild;
     Set<ConstraintId> declaredIdSet = HashSet();
     declaredIdSet.add(parent);
+
     if (helperNodeMap.isNotEmpty) {
       for (final element in helperNodeMap.keys) {
         if (!declaredIdSet.add(element)) {
@@ -2255,15 +2293,9 @@ class _ConstraintRenderBox extends RenderBox
   @override
   void performLayout() {
     Stopwatch? stopwatch;
-    if (_releasePrintLayoutTime && kReleaseMode) {
+    if (_showLayoutPerformanceOverlay) {
       stopwatch = Stopwatch()..start();
     }
-    assert(() {
-      if (_debugPrintLayoutTime) {
-        stopwatch = Stopwatch()..start();
-      }
-      return true;
-    }());
 
     double resolvedWidth;
     if (_width >= 0) {
@@ -2312,9 +2344,7 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       assert(() {
-        if (_debugCheckConstraints) {
-          debugCheckIds();
-        }
+        debugCheckIds();
         return true;
       }());
 
@@ -2324,12 +2354,10 @@ class _ConstraintRenderBox extends RenderBox
       ConstrainedNode? parentNode = nodesMap.remove(parent);
 
       assert(() {
-        if (_debugCheckConstraints) {
-          List<ConstrainedNode> nodeList = nodesMap.values.toList();
-          debugCheckConstraintsIntegrity(nodeList);
-          debugCheckLoopConstraints(
-              nodeList, selfSizeConfirmed, resolvedWidth, resolvedHeight);
-        }
+        List<ConstrainedNode> nodeList = nodesMap.values.toList();
+        debugCheckConstraintsIntegrity(nodeList);
+        debugCheckLoopConstraints(
+            nodeList, selfSizeConfirmed, resolvedWidth, resolvedHeight);
         return true;
       }());
 
@@ -2386,9 +2414,8 @@ class _ConstraintRenderBox extends RenderBox
       assert(() {
         /// Print constraints
         if (_debugPrintConstraints) {
-          debugPrint(
-              'ConstraintLayout@${_debugName ?? hashCode} constraints: ' +
-                  toJsonList(layoutOrderList));
+          debugPrint('ConstraintLayout@$hashCode constraints: ' +
+              toJsonList(layoutOrderList));
         }
         return true;
       }());
@@ -2410,7 +2437,7 @@ class _ConstraintRenderBox extends RenderBox
         selfSizeConfirmed, resolvedWidth, resolvedHeight);
 
     if (stopwatch != null) {
-      layoutTimeUsage.add(stopwatch!.elapsedMicroseconds);
+      layoutTimeUsage.add(stopwatch.elapsedMicroseconds);
       if (layoutTimeUsage.length > maxTimeUsage) {
         layoutTimeUsage.removeFirst();
       }
@@ -2664,11 +2691,9 @@ class _ConstraintRenderBox extends RenderBox
         minWidth = size.width -
             getHorizontalInsets(margin, node.percentageMargin, size.width);
         assert(() {
-          if (_debugCheckConstraints) {
-            if (minWidth < 0) {
-              debugPrint(
-                  'Warning: The child element with id ${node.nodeId} has a negative width');
-            }
+          if (minWidth < 0) {
+            debugPrint(
+                'Warning: The child element with id ${node.nodeId} has a negative width');
           }
           return true;
         }());
@@ -2726,11 +2751,9 @@ class _ConstraintRenderBox extends RenderBox
                 node.widthPercent;
           }
           assert(() {
-            if (_debugCheckConstraints) {
-              if (minWidth < 0) {
-                debugPrint(
-                    'Warning: The child element with id ${node.nodeId} has a negative width');
-              }
+            if (minWidth < 0) {
+              debugPrint(
+                  'Warning: The child element with id ${node.nodeId} has a negative width');
             }
             return true;
           }());
@@ -2762,11 +2785,9 @@ class _ConstraintRenderBox extends RenderBox
         minHeight = size.height -
             getVerticalInsets(margin, node.percentageMargin, size.height);
         assert(() {
-          if (_debugCheckConstraints) {
-            if (minHeight < 0) {
-              debugPrint(
-                  'Warning: The child element with id ${node.nodeId} has a negative height');
-            }
+          if (minHeight < 0) {
+            debugPrint(
+                'Warning: The child element with id ${node.nodeId} has a negative height');
           }
           return true;
         }());
@@ -2824,11 +2845,9 @@ class _ConstraintRenderBox extends RenderBox
                 node.heightPercent;
           }
           assert(() {
-            if (_debugCheckConstraints) {
-              if (minHeight < 0) {
-                debugPrint(
-                    'Warning: The child element with id ${node.nodeId} has a negative height');
-              }
+            if (minHeight < 0) {
+              debugPrint(
+                  'Warning: The child element with id ${node.nodeId} has a negative height');
             }
             return true;
           }());
@@ -2859,12 +2878,9 @@ class _ConstraintRenderBox extends RenderBox
         maxHeight = 0;
       }
       assert(() {
-        if (_debugCheckConstraints) {
-          if ((!node.isGuideline && !node.isBarrier) &&
-              node.visibility != gone) {
-            debugPrint(
-                'Warning: The child element with id ${node.nodeId} has a negative size, will not be laid out and paint.');
-          }
+        if ((!node.isGuideline && !node.isBarrier) && node.visibility != gone) {
+          debugPrint(
+              'Warning: The child element with id ${node.nodeId} has a negative size, will not be laid out and paint.');
         }
         return true;
       }());
@@ -3167,6 +3183,26 @@ class _ConstraintRenderBox extends RenderBox
         clickShift = element.translate;
       }
 
+      if (element.translate is PinnedTranslate &&
+          !element.translateConstraint) {
+        if (element.pinnedConstraint != null) {
+          PinnedInfo pinnedInfo =
+              (element.translate as PinnedTranslate)._pinnedInfo;
+          Offset selfOffset = pinnedInfo.selfAnchor._resolve(element.getSize());
+          Offset targetOffset = pinnedInfo.targetAnchor!
+              ._resolve(element.pinnedConstraint!.getSize(this));
+          double offsetX = element.pinnedConstraint!.getX() +
+              targetOffset.dx -
+              selfOffset.dx -
+              element.getX();
+          double offsetY = element.pinnedConstraint!.getY() +
+              targetOffset.dy -
+              selfOffset.dy -
+              element.getY();
+          clickShift = Offset(offsetX, offsetY);
+        }
+      }
+
       /// Expand the click area without changing the actual size
       Offset offsetPos = Offset(position.dx, position.dy);
       EdgeInsets clickPadding = element.clickPadding;
@@ -3211,15 +3247,9 @@ class _ConstraintRenderBox extends RenderBox
     Offset offset,
   ) {
     Stopwatch? stopwatch;
-    if (_releasePrintLayoutTime && kReleaseMode) {
+    if (_showLayoutPerformanceOverlay) {
       stopwatch = Stopwatch()..start();
     }
-    assert(() {
-      if (_debugPrintLayoutTime) {
-        stopwatch = Stopwatch()..start();
-      }
-      return true;
-    }());
 
     if (_needsReorderPaintingOrder) {
       insertionSort<ConstrainedNode>(paintingOrderList, (left, right) {
@@ -3280,40 +3310,28 @@ class _ConstraintRenderBox extends RenderBox
       }
 
       /// Draw child's click area
-      assert(() {
-        if (_debugShowClickArea) {
-          drawClickArea(element, context, offset + paintShift);
-        }
-        return true;
-      }());
+      if (_showClickArea) {
+        drawClickArea(element, context, offset + paintShift);
+      }
 
       /// Draw child's z index
-      assert(() {
-        if (_debugShowZIndex) {
-          drawZIndex(element, context, offset + paintShift);
-        }
-        return true;
-      }());
+      if (_showZIndex) {
+        drawZIndex(element, context, offset + paintShift);
+      }
 
-      assert(() {
-        if (_debugShowChildDepth) {
-          drawChildDepth(element, context, offset + paintShift);
-        }
-        return true;
-      }());
+      if (_showChildDepth) {
+        drawChildDepth(element, context, offset + paintShift);
+      }
     }
 
-    assert(() {
-      if (_debugShowGuideline) {
-        for (final element in paintingOrderList) {
-          drawHelperNodes(element, context, offset);
-        }
+    if (_showHelperWidgets) {
+      for (final element in paintingOrderList) {
+        drawHelperNodes(element, context, offset);
       }
-      return true;
-    }());
+    }
 
     if (stopwatch != null) {
-      paintTimeUsage.add(stopwatch!.elapsedMicroseconds);
+      paintTimeUsage.add(stopwatch.elapsedMicroseconds);
       if (paintTimeUsage.length > maxTimeUsage) {
         paintTimeUsage.removeFirst();
       }
@@ -3323,6 +3341,7 @@ class _ConstraintRenderBox extends RenderBox
   }
 }
 
+/// All child elements and helper widgets will be converted to ConstrainedNode before layout
 class ConstrainedNode {
   late ConstraintId nodeId;
   RenderBox? renderBox;
