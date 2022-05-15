@@ -47,7 +47,7 @@ build 耗时有时甚至超过渲染耗时。
 1. 基本约束
     1. left
         1. toLeft
-        2. toCenter(默认值为)
+        2. toCenter(默认偏移量为 0.5，代表中心)
         3. toRight
     2. right
         1. toLeft
