@@ -47,23 +47,23 @@ build 耗时有时甚至超过渲染耗时。
 1. 基本约束
     1. left
         1. toLeft
-        2. toCenter(with bias, the default value is 0.5)
+        2. toCenter(默认值为)
         3. toRight
     2. right
         1. toLeft
-        2. toCenter(with bias, the default value is 0.5)
+        2. toCenter(默认偏移量为 0.5，代表中心)
         3. toRight
     3. top
         1. toTop
-        2. toCenter(with bias, the default value is 0.5)
+        2. toCenter(默认偏移量为 0.5，代表中心)
         3. toBottom
     4. bottom
         1. toTop
-        2. toCenter(with bias, the default value is 0.5)
+        2. toCenter(默认偏移量为 0.5，代表中心)
         3. toBottom
     5. baseline
         1. toTop
-        2. toCenter(with bias, the default value is 0.5)
+        2. toCenter(默认偏移量为 0.5，代表中心)
         3. toBaseline
         4. toBottom
 2. margin and goneMargin（当依赖的元素的可见性为 gone 或者其某一边的实际大小为 0 时，goneMargin 就会生效，否则 margin 会生效，即便其自身的可见性为
