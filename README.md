@@ -7,7 +7,7 @@ Android and AutoLayout for iOS. But the code implementation is much more efficie
 layout time complexity and no linear equation solving is required.
 
 **It surpasses traditional nested writing in terms of performance, flexibility, development speed,
-and maintainability.**
+and maintainability. It pretty much negates the O(2n) layout algorithm of Intrinsic Measurement.**
 
 **It is a layout and a more modern general layout framework.**
 
