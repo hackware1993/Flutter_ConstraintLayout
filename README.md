@@ -178,6 +178,10 @@ Follow-up development plan:
 3. provides a visual editor to create layouts by dragging and dropping
 4. more...
 
+Subscribe to my wechat official account to get the latest news of ConstraintLayout. Follow-up will
+also share some high-quality, unique, and thoughtful Flutter technical articles.
+![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
+
 Support platform:
 
 1. Android
