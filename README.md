@@ -6,6 +6,9 @@ A super powerful Stack, build flexible layouts with constraints. Similar to Cons
 Android and AutoLayout for iOS. But the code implementation is much more efficient, it has O(n)
 layout time complexity and no linear equation solving is required.
 
+**It surpasses traditional nested writing in terms of performance, flexibility, development speed,
+and maintainability.**
+
 **It is a layout and a more modern general layout framework.**
 
 # Greatly improve Flutter development experience and efficiency. Improve application performance
