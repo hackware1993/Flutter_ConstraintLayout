@@ -1,3 +1,7 @@
+# Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=hackware1993/Flutter_ConstraintLayout&type=Date)](https://star-history.com/#hackware1993/Flutter_ConstraintLayout)
+
 # Flutter ConstraintLayout
 
 [简体中文](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README_CN.md)
