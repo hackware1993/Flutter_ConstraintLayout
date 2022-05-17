@@ -159,7 +159,7 @@ build 耗时有时甚至超过渲染耗时。
 订阅我的微信公众号以及时获取约束布局的最新动态。后续也会分享一些高质量的、独特的、有思想的 Flutter 技术文章。
 ![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
 
-当下，我正在基于 View 系统为 Android 开发一款全新的声明式 UI 框架 weiV。它具有以下优势：
+当下，我正在基于 View 系统为 Android 开发一款全新的声明式 UI 框架 weiV（发音同 wave）。它具有以下优势：
 
 1. 声明式的 UI 写法让原生开发效率翻倍
 2. 达到或超越 View 系统的性能

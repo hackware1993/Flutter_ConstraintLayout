@@ -187,8 +187,8 @@ Subscribe to my WeChat official account to get the latest news of ConstraintLayo
 also share some high-quality, unique, and thoughtful Flutter technical articles.
 ![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
 
-Currently, I am developing a new declarative UI framework weiV for Android based on the View system.
-It has the following advantages:
+Currently, I am developing a new declarative UI framework weiV(pronounced the same as wave) for
+Android based on the View system. It has the following advantages:
 
 1. Declarative UI writing doubles the efficiency of native development
 2. Meets or exceeds the performance of the View system
