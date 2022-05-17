@@ -1,3 +1,7 @@
+# v1.5.2-stable
+
+remove dead code.
+
 # v1.5.1-stable
 
 add paint callback support.
