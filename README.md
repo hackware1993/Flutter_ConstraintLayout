@@ -187,6 +187,22 @@ Subscribe to my wechat official account to get the latest news of ConstraintLayo
 also share some high-quality, unique, and thoughtful Flutter technical articles.
 ![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
 
+Currently, I am developing a new declarative UI framework weiV for Android based on the View system.
+It has the following advantages:
+
+1. Declarative UI writing doubles the efficiency of native development
+2. Meets or exceeds the performance of the View system
+    1. I ported my Flutter ConstraintLayout to Android, relying on its advanced layout algorithm,
+       without introducing inherent characteristic measurement, so that the child elements in the
+       View tree will only be used in any case. layout once so that arbitrary nesting won't cause
+       performance issues. Even if each level in the View tree is a mix of wrap_content and
+       match_parent
+    2. xml will be discarded
+3. All your existing View system experience will be retained
+4. All existing UI components will be reused
+
+Subscribe to my WeChat official account to get the latest news of weiV.
+
 Support platform:
 
 1. Android

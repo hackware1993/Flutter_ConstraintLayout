@@ -159,6 +159,18 @@ build 耗时有时甚至超过渲染耗时。
 订阅我的微信公众号以及时获取约束布局的最新动态。后续也会分享一些高质量的、独特的、有思想的 Flutter 技术文章。
 ![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
 
+当下，我正在基于 View 系统为 Android 开发一款全新的声明式 UI 框架 weiV。它具有以下优势：
+
+1. 声明式的 UI 写法让原生开发效率翻倍
+2. 达到或超越 View 系统的性能
+    1. 我将我的 Flutter ConstraintLayout 移植到 Android，依托它先进的布局算法，在不引入固有特性测量的情况下，让 View 树中的子元素在任何情况都只会被
+       layout 一次，使得任意嵌套不会引起性能问题。即便 View 树中的每个层级宽高都是 wrap_content 和 match_parent 混用
+    2. xml 将被抛弃
+3. 你所有的现有 View 系统的经验都将得到保留
+4. 所有的现有 UI 组件都将得以复用
+
+订阅我的微信公众号以及时获取 weiV 的最新动态。
+
 支持的平台:
 
 1. Android
