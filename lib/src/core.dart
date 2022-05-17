@@ -2572,44 +2572,6 @@ class _ConstraintRenderBox extends RenderBox
           element.laidOutLater = true;
           continue;
         }
-
-        if ((element.width < 0 && element.width != wrapContent) ||
-            (element.height < 0 && element.height != wrapContent)) {
-          if (element.leftConstraint != null) {
-            if (element.leftConstraint!.laidOutLater) {
-              element.laidOutLater = true;
-              continue;
-            }
-          }
-
-          if (element.topConstraint != null) {
-            if (element.topConstraint!.laidOutLater) {
-              element.laidOutLater = true;
-              continue;
-            }
-          }
-
-          if (element.rightConstraint != null) {
-            if (element.rightConstraint!.laidOutLater) {
-              element.laidOutLater = true;
-              continue;
-            }
-          }
-
-          if (element.bottomConstraint != null) {
-            if (element.bottomConstraint!.laidOutLater) {
-              element.laidOutLater = true;
-              continue;
-            }
-          }
-
-          if (element.baselineConstraint != null) {
-            if (element.baselineConstraint!.laidOutLater) {
-              element.laidOutLater = true;
-              continue;
-            }
-          }
-        }
       }
 
       BoxConstraints childConstraints =
