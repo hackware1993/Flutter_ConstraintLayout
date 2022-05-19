@@ -168,6 +168,11 @@ build 耗时有时甚至超过渲染耗时。
     2. xml 将被抛弃
 3. 你所有的现有 View 系统的经验都将得到保留
 4. 所有的现有 UI 组件都将得以复用
+5. 它使用 Kotlin 编写，但友好的支持 Java
+
+**没有人愿意推翻自己过去在 View 系统的经验，Compose 的设计太过糟糕。**
+
+[weiV GitHub 主页](https://github.com/hackware1993/weiV/blob/master/README_CN.md)
 
 订阅我的微信公众号以及时获取 weiV 的最新动态。
 
