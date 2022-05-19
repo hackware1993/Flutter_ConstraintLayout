@@ -199,8 +199,14 @@ Android based on the View system. It has the following advantages:
     2. xml will be discarded
 3. All your existing View system experience will be retained
 4. All existing UI components will be reused
+5. It is written in Kotlin but supports Java friendly
 
-Subscribe to my WeChat official account to get the latest news of weiV
+**No one wants to overturn their past experience with the View system, Compose's design is too
+bad.**
+
+[weiV GitHub Home Page](https://github.com/hackware1993/weiV)
+
+Subscribe to my WeChat official account to get the latest news of weiV.
 
 Support platform:
 
