@@ -83,7 +83,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   ConstraintLayout({
     Key? key,
     this.childConstraints,
-    required List<Widget> children,
+    List<Widget>? children,
     this.showLayoutPerformanceOverlay = false,
     this.showHelperWidgets = false,
     this.showClickArea = false,
@@ -96,7 +96,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.controller,
   }) : super(
           key: key,
-          children: children,
+          children: children ?? [],
         );
 
   @override

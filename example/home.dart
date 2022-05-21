@@ -14,6 +14,7 @@ import 'grid.dart';
 import 'guideline.dart';
 import 'horizontal_list.dart';
 import 'margin.dart';
+import 'open_grammar.dart';
 import 'percentage_layout.dart';
 import 'pinned_position.dart';
 import 'relative_id.dart';
@@ -29,6 +30,7 @@ class ExampleHome extends StatelessWidget {
 
   final Map<String, Widget?> exampleMap = {
     'Summary': const SummaryExample(),
+    'Open Grammar': const OpenGrammarExample(),
     'Guideline': const GuidelineExample(),
     'Barrier': const BarrierExample(),
     'Complex List': const ComplexListExample(),

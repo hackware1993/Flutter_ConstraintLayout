@@ -43,3 +43,4 @@ flutter:
     - example/arbitrary_position.dart
     - example/constraint_controller.dart
     - example/translate.dart
+    - example/open_grammar.dart

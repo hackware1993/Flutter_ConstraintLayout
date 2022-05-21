@@ -48,9 +48,67 @@ class OffBuildWidget extends StatelessWidget {
   int get hashCode => id.hashCode;
 }
 
+class MultiChildWidgetContext {
+  static MultiChildWidgetContext? currentContext;
+  List<Widget> contextChildren = [];
+}
+
+extension MultiChildWidgetChildExt on Widget {
+  Widget enter() {
+    MultiChildWidgetContext.currentContext?.contextChildren.add(this);
+    return this;
+  }
+}
+
+extension ConstraintLayoutExt on MultiChildRenderObjectWidget {
+  Widget open(void Function() block) {
+    MultiChildWidgetContext? temp = MultiChildWidgetContext.currentContext;
+    MultiChildWidgetContext context = MultiChildWidgetContext();
+    MultiChildWidgetContext.currentContext = context;
+    block();
+    MultiChildWidgetContext.currentContext = temp;
+    if (this is ConstraintLayout) {
+      (this as ConstraintLayout).children.addAll(context.contextChildren);
+    } else if (this is Row) {
+      Row row = (this as Row);
+      return Row(
+          key: key,
+          mainAxisAlignment: row.mainAxisAlignment,
+          mainAxisSize: row.mainAxisSize,
+          crossAxisAlignment: row.crossAxisAlignment,
+          textDirection: row.textDirection,
+          verticalDirection: row.verticalDirection,
+          textBaseline: row.textBaseline,
+          children: context.contextChildren);
+    } else if (this is Column) {
+      Column column = (this as Column);
+      return Column(
+          key: key,
+          mainAxisAlignment: column.mainAxisAlignment,
+          mainAxisSize: column.mainAxisSize,
+          crossAxisAlignment: column.crossAxisAlignment,
+          textDirection: column.textDirection,
+          verticalDirection: column.verticalDirection,
+          textBaseline: column.textBaseline,
+          children: context.contextChildren);
+    } else if (this is Stack) {
+      Stack stack = (this as Stack);
+      return Stack(
+          key: key,
+          alignment: stack.alignment,
+          textDirection: stack.textDirection,
+          fit: stack.fit,
+          overflow: stack.overflow,
+          clipBehavior: stack.clipBehavior,
+          children: context.contextChildren);
+    }
+    return this;
+  }
+}
+
 /// For easy use
-extension ConstrainedWidgetsExt on Widget {
-  Constrained applyConstraint({
+extension ConstrainedWidgetExt on Widget {
+  Widget applyConstraint({
     ConstraintId? id,
     double width = wrapContent,
     double height = wrapContent,
@@ -188,27 +246,27 @@ extension ConstrainedWidgetsExt on Widget {
         calcOffsetCallback: calcOffsetCallback,
       ),
       child: this,
-    );
+    ).enter();
   }
 
-  Constrained apply({
+  Widget apply({
     required Constraint constraint,
   }) {
     return Constrained(
       key: key,
       constraint: constraint,
       child: this,
-    );
+    ).enter();
   }
 
-  UnConstrained applyConstraintId({
+  Widget applyConstraintId({
     required ConstraintId id,
   }) {
     return UnConstrained(
       key: key,
       id: id,
       child: this,
-    );
+    ).enter();
   }
 
   /// When the layout is complex, if the child elements need to be repainted frequently, it
