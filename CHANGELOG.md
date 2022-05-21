@@ -1,3 +1,7 @@
+# v1.6.0-stable
+
+add open grammar support.
+
 # v1.5.2-stable
 
 remove dead code.
