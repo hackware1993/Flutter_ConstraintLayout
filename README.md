@@ -200,6 +200,41 @@ Android based on the View system. It has the following advantages:
 3. All your existing View system experience will be retained
 4. All existing UI components will be reused
 5. It is written in Kotlin but supports Java friendly
+6. At present, the initial support for real-time effective dynamization has begun. You can issue JS,
+   use JS to write page logic, and generate JSON describing the Widget tree and pass it to the
+   native, and the native uses a non-reflection method to convert it into a real Widget tree and
+   render. I might consider implementing a declarative API in JS later
+7. In the future, the same stateful hot reload as Flutter will be implemented
+
+The sample code is as follows:
+
+```kotlin
+class WeiVCounterKotlinActivity : WeiVActivity() {
+    private var count = 0
+    private val maxCount = 10
+    private val minCount = 0
+
+    override fun build() = WeiV {
+        Flex {
+            it.orientation = FlexDirection.VERTICAL
+
+            Button(text = "Add count", enable = count < maxCount, onClick = {
+                setState {
+                    count++
+                }
+            })
+
+            Button(text = "Sub count", enable = count > minCount, onClick = {
+                setState {
+                    count--
+                }
+            })
+
+            Text(text = "count = $count")
+        }
+    }
+}
+```
 
 **No one wants to overturn their past experience with the View system, Compose's design is too
 bad.**

@@ -169,6 +169,39 @@ build 耗时有时甚至超过渲染耗时。
 3. 你所有的现有 View 系统的经验都将得到保留
 4. 所有的现有 UI 组件都将得以复用
 5. 它使用 Kotlin 编写，但友好的支持 Java
+6. 目前已经开始初步支持实时生效的动态化。你可以下发 JS，使用 JS 来写页面逻辑，并生成描述 Widget 树的 JSON 传递给原生，原生使用非反射的方式将其转为真正的 Widget
+   树并渲染。后面可能会考虑在 JS 中实现声明式 API
+7. 后续会实现跟 Flutter 一样的带状态的热重载
+
+示例代码如下：
+
+```kotlin
+class WeiVCounterKotlinActivity : WeiVActivity() {
+    private var count = 0
+    private val maxCount = 10
+    private val minCount = 0
+
+    override fun build() = WeiV {
+        Flex {
+            it.orientation = FlexDirection.VERTICAL
+
+            Button(text = "Add count", enable = count < maxCount, onClick = {
+                setState {
+                    count++
+                }
+            })
+
+            Button(text = "Sub count", enable = count > minCount, onClick = {
+                setState {
+                    count--
+                }
+            })
+
+            Text(text = "count = $count")
+        }
+    }
+}
+```
 
 **没有人愿意推翻自己过去在 View 系统的经验，Compose 的设计太过糟糕。**
 
