@@ -1,3 +1,7 @@
+# v1.6.1-stable
+
+fix pub analysis error.
+
 # v1.6.0-stable
 
 add open grammar support.

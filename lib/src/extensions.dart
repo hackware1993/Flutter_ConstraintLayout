@@ -48,11 +48,13 @@ class OffBuildWidget extends StatelessWidget {
   int get hashCode => id.hashCode;
 }
 
+/// Provide open grammar
 class MultiChildWidgetContext {
   static MultiChildWidgetContext? currentContext;
   List<Widget> contextChildren = [];
 }
 
+/// Provide open grammar
 extension MultiChildWidgetChildExt on Widget {
   Widget enter() {
     MultiChildWidgetContext.currentContext?.contextChildren.add(this);
@@ -60,6 +62,7 @@ extension MultiChildWidgetChildExt on Widget {
   }
 }
 
+/// Provide open grammar
 extension ConstraintLayoutExt on MultiChildRenderObjectWidget {
   Widget open(void Function() block) {
     MultiChildWidgetContext? temp = MultiChildWidgetContext.currentContext;
@@ -98,7 +101,6 @@ extension ConstraintLayoutExt on MultiChildRenderObjectWidget {
           alignment: stack.alignment,
           textDirection: stack.textDirection,
           fit: stack.fit,
-          overflow: stack.overflow,
           clipBehavior: stack.clipBehavior,
           children: context.contextChildren);
     }
