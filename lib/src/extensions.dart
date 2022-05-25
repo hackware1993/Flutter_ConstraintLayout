@@ -9,7 +9,6 @@ ConstraintId cId(String id) {
 }
 
 ConstraintId rId(int childIndex) {
-  assert(childIndex >= 0);
   return IndexConstraintId(childIndex);
 }
 

@@ -388,6 +388,8 @@ class ConstraintId {
 /// A relative id type that refers to a child element by its index
 class IndexConstraintId extends ConstraintId {
   /// [0, childCount-1]
+  /// -1 represents the last element
+  /// -2 represents the second to last element, and so on
   final int _siblingIndex;
 
   IndexConstraintId(this._siblingIndex)
@@ -2151,6 +2153,10 @@ class _ConstraintRenderBox extends RenderBox
       if (id is RelativeConstraintId) {
         int targetIndex = childIndex! + id._siblingIndexOffset;
         id = IndexConstraintId(targetIndex);
+      } else if (id is IndexConstraintId) {
+        if (id._siblingIndex < 0) {
+          id = IndexConstraintId(childCount + id._siblingIndex);
+        }
       }
 
       ConstrainedNode? node;
