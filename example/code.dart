@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 
 import 'custom_app_bar.dart';
 
