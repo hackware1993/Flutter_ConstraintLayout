@@ -214,7 +214,7 @@ class OpenGrammarExample extends StatelessWidget {
 4. 自动将设计稿转成代码
 5. 更多...
 
-订阅我的微信公众号以及时获取约束布局的最新动态。后续也会分享一些高质量的、独特的、有思想的 Flutter 技术文章。
+订阅我的微信公众号以及时获取约束布局的最新动态（完全指南、最佳实践、原理分析）。后续也会分享一些高质量的、独特的、有思想的 Flutter 技术文章。
 ![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
 
 当下，我正在基于 View 系统为 Android 开发一款全新的声明式 UI 框架 weiV（发音同 wave）。它具有以下优势：
