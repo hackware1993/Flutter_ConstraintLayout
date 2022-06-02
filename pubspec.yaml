@@ -44,3 +44,4 @@ flutter:
     - example/constraint_controller.dart
     - example/translate.dart
     - example/open_grammar.dart
+    - example/chen_sort.dart

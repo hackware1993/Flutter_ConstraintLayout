@@ -5,6 +5,7 @@ import 'arbitrary_position.dart';
 import 'badge.dart';
 import 'barrier.dart';
 import 'charts.dart';
+import 'chen_sort.dart';
 import 'circle_position.dart';
 import 'coming_soon.dart';
 import 'complex_list.dart';
@@ -29,6 +30,8 @@ class ExampleHome extends StatelessWidget {
   ExampleHome({Key? key}) : super(key: key);
 
   final Map<String, Widget?> exampleMap = {
+    'Chen sort(The fastest sorting algorithm in the world, 60% faster than Quicksort)':
+        const ChenSortExample(),
     'Summary': const SummaryExample(),
     'Open Grammar': const OpenGrammarExample(),
     'Guideline': const GuidelineExample(),
