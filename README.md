@@ -122,8 +122,10 @@ two-way constraints, such as chains(not yet supported, please use with Flex).
 14. relative id(if an id is defined for a child element, it cannot be referenced using a relative
     id)
     1. rId(3) represents the 3th child element, and so on
-    2. sId(-1) represents the previous sibling element, and so on
-    3. sId(1) represents the next sibling element, and so on
+    2. rId(-1) represents the last child element
+    3. rId(-2) represents the penultimate child element, and so on
+    4. sId(-1) represents the previous sibling element, and so on
+    5. sId(1) represents the next sibling element, and so on
 15. wrapper constraints
     1. topLeftTo
     2. topCenterTo
