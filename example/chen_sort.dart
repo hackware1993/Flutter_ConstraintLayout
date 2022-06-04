@@ -15,7 +15,7 @@ class ChenSortExample extends StatefulWidget {
 }
 
 class ChenSortExampleState extends State<ChenSortExample> {
-  int defaultNumberCount = 10000;
+  int defaultNumberCount = 100000;
   late TextEditingController numberCountController =
       TextEditingController(text: '$defaultNumberCount');
   List<String> sortResult = [];
@@ -31,11 +31,12 @@ class ChenSortExampleState extends State<ChenSortExample> {
       ),
       body: ConstraintLayout().open(() {
         const Text(
-          'The time complexity is O(n), the space complexity is O(n), and it is stable',
+          'The time complexity is O(n) at best and O(nlog2n) at worst, the space complexity is O(n), and it is stable',
           style: TextStyle(
             fontSize: 30,
           ),
         ).applyConstraint(
+          maxWidth: 800,
           topCenterTo: parent,
         );
         TextField(
@@ -45,7 +46,7 @@ class ChenSortExampleState extends State<ChenSortExample> {
           ),
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ).applyConstraint(
-          width: 500,
+          width: 800,
           outBottomCenterTo: sId(-1).topMargin(20),
         );
         ElevatedButton(
@@ -98,9 +99,12 @@ class ChenSortExampleState extends State<ChenSortExample> {
 
 String compareSort(int numbers) {
   Random random = Random();
-  var arr = [for (int i = 0; i < numbers; i++) random.nextInt(4294967296)];
+  var arr = [
+    for (int i = 0; i < numbers; i++) -2 ^ 63 + random.nextInt(2 ^ 63)
+  ];
   List copy = List.of(arr);
   Stopwatch stopwatch = Stopwatch()..start();
+  stopwatch.reset();
   chenSort(arr);
   int chenSortTimeUsage = stopwatch.elapsedMicroseconds;
   stopwatch.reset();
@@ -108,26 +112,80 @@ String compareSort(int numbers) {
   int quickSortTimeUsage = stopwatch.elapsedMicroseconds;
   double percent =
       ((quickSortTimeUsage - chenSortTimeUsage) / quickSortTimeUsage) * 100;
-  return 'chen sort time usage = $chenSortTimeUsage us, quick sort time usage = $quickSortTimeUsage us, ${percent.toStringAsFixed(2)}% faster';
+  return 'Are the sorted results equal? ${listEquals(arr, copy)}, chen sort: $chenSortTimeUsage us, quick sort: $quickSortTimeUsage us, ${percent.toStringAsFixed(2)}%(${(quickSortTimeUsage / chenSortTimeUsage).toStringAsFixed(1)}x) faster';
 }
 
+/// The essence of Chen Sort is an improved bucket sort
 void chenSort(List<int> list) {
-  int max = -2 ^ 63;
-  for (final element in list) {
-    if (element > max) {
-      max = element;
+  if (list.length < 2) {
+    return;
+  }
+
+  int maxValue = list[0];
+  int minValue = maxValue;
+  for (final element in list.skip(1)) {
+    if (element > maxValue) {
+      maxValue = element;
+    }
+    if (element < minValue) {
+      minValue = element;
     }
   }
+
+  /// All elements are the same and do not need to be sorted.
+  if (maxValue == minValue) {
+    return;
+  }
+
+  /// Limit the maximum size of the bucket to ensure the performance of long list
+  /// sorting, which can be adjusted according to the actual situation.
+  ///
+  /// The essential difference between this and bucket sorting is that the size of
+  /// the bucket is only related to the length of the list, not the range of element values.
+  int bucketSize = min(list.length, 50000);
+  int maxBucketIndex = bucketSize - 1;
+
+  List<List<int>?> buckets = List.filled(bucketSize, null);
   int slot;
-  List<List<int>?> buckets = List.filled(list.length + 1, null);
-  double factor = list.length / max;
-  for (final element in list) {
-    slot = (element * factor).toInt();
-    if (buckets[slot] == null) {
-      buckets[slot] = [];
+
+  /// Calculate the bucket in which the element is located based on the value of the element
+  /// and the maximum and minimum values.
+
+  /// Overflow detection
+  BigInt range = BigInt.from(maxValue - minValue);
+  if (BigInt.from(range.toInt()) == range) {
+    int range = maxValue - minValue;
+    double factor = maxBucketIndex / range;
+    for (final element in list) {
+      // slot = (((element - minValue) / range) * maxBucketIndex).toInt();
+      slot = ((element - minValue) * factor).toInt();
+      if (buckets[slot] == null) {
+        buckets[slot] = [];
+      }
+      buckets[slot]!.add(element);
     }
-    buckets[slot]!.add(element);
+  } else {
+    /// Overflowed(positive minus negative)
+    int positiveRange = maxValue;
+    int negativeRange = -minValue - 1;
+    int positiveStartBucketIndex = maxBucketIndex ~/ 2 + 1;
+    int positiveBucketLength = maxBucketIndex - positiveStartBucketIndex;
+    int negativeBucketLength = positiveStartBucketIndex - 1;
+    for (final element in list) {
+      if (element < 0) {
+        slot = (((element - minValue) / negativeRange) * negativeBucketLength)
+            .toInt();
+      } else {
+        slot = positiveStartBucketIndex +
+            ((element / positiveRange) * positiveBucketLength).toInt();
+      }
+      if (buckets[slot] == null) {
+        buckets[slot] = [];
+      }
+      buckets[slot]!.add(element);
+    }
   }
+
   int compare(int left, int right) {
     return left - right;
   }
@@ -136,10 +194,13 @@ void chenSort(List<int> list) {
   for (final bucket in buckets) {
     if (bucket != null) {
       if (bucket.length > 1) {
+        /// The sort method here represents the fastest comparison-type algorithm (Quick sort, Tim sort, etc.)
         bucket.sort(compare);
-      }
-      for (final element in bucket) {
-        list[index++] = element;
+        for (final element in bucket) {
+          list[index++] = element;
+        }
+      } else {
+        list[index++] = bucket[0];
       }
     }
   }
