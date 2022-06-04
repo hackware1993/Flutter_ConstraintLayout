@@ -69,6 +69,7 @@ class ChenSortExampleState extends State<ChenSortExample> {
               if (numberCount <= 0) {
                 numberCount = defaultNumberCount;
               }
+              setState(() {});
               while (isSorting) {
                 sortResult.add(await compute(compareSort, numberCount));
                 setState(() {
