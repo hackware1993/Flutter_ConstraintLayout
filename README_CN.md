@@ -6,6 +6,8 @@
 
 [English](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README.md)
 
+我开发了世界上最快的通用排序算法，它平均比快速排序快 3 倍，最多快 20 倍，[ChenSort](https://github.com/hackware1993/ChenSort)
+
 一个超级强大的 Stack，使用约束构建极为灵活的布局，和 Android 下的 ConstraintLayout 和 iOS 下的 AutoLayout 类似。但代码实现却高效得多，它具有 O(n)
 的布局时间复杂度，无需线性方程求解。
 
