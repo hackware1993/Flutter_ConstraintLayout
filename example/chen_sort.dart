@@ -14,6 +14,9 @@ class ChenSortExample extends StatefulWidget {
   State createState() => ChenSortExampleState();
 }
 
+int intMaxValue = 9223372036854775807;
+int intMinValue = -9223372036854775808;
+
 class ChenSortExampleState extends State<ChenSortExample> {
   int defaultNumberCount = 100000;
   late TextEditingController numberCountController =
@@ -99,9 +102,14 @@ class ChenSortExampleState extends State<ChenSortExample> {
 
 String compareSort(int numbers) {
   Random random = Random();
-  var arr = [
-    for (int i = 0; i < numbers; i++) -2 ^ 63 + random.nextInt(2 ^ 63)
-  ];
+  List<int> arr = [];
+  for (int i = 0; i < numbers; i++) {
+    if (random.nextBool()) {
+      arr.add(random.nextInt(1 << 32));
+    } else {
+      arr.add(-random.nextInt(1 << 32));
+    }
+  }
   List copy = List.of(arr);
   Stopwatch stopwatch = Stopwatch()..start();
   stopwatch.reset();
@@ -152,7 +160,7 @@ void chenSort(List<int> list) {
   /// and the maximum and minimum values.
 
   /// Overflow detection
-  BigInt range = BigInt.from(maxValue - minValue);
+  BigInt range = BigInt.from(maxValue) - BigInt.from(minValue);
   if (BigInt.from(range.toInt()) == range) {
     int range = maxValue - minValue;
     double factor = maxBucketIndex / range;
@@ -167,7 +175,7 @@ void chenSort(List<int> list) {
   } else {
     /// Overflowed(positive minus negative)
     int positiveRange = maxValue;
-    int negativeRange = -minValue - 1;
+    int negativeRange = -1 - minValue;
     int positiveStartBucketIndex = maxBucketIndex ~/ 2 + 1;
     int positiveBucketLength = maxBucketIndex - positiveStartBucketIndex;
     int negativeBucketLength = positiveStartBucketIndex - 1;
