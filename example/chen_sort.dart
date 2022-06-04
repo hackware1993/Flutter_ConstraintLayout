@@ -194,8 +194,12 @@ void chenSort(List<int> list) {
   for (final bucket in buckets) {
     if (bucket != null) {
       if (bucket.length > 1) {
-        /// The sort method here represents the fastest comparison-type algorithm (Quick sort, Tim sort, etc.)
-        bucket.sort(compare);
+        if (bucket.length >= 1000) {
+          chenSort(bucket);
+        } else {
+          /// The sort method here represents the fastest comparison-type algorithm (Quick sort, Tim sort, etc.)
+          bucket.sort(compare);
+        }
         for (final element in bucket) {
           list[index++] = element;
         }
