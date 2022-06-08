@@ -1514,7 +1514,9 @@ ConstraintLayout 基于约束的布局算法极其强大和灵活，似乎可以
 # 支持我
 
 如果它对你帮助很大，可以考虑赞助我一杯奶茶，或者给个 star。你的支持是我继续维护的动力。
+
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
+
 ![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
 
 感谢以下网友的赞助，我们一起让 Flutter 越来越好。

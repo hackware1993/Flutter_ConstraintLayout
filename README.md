@@ -6,7 +6,9 @@
 
 [简体中文](https://github.com/hackware1993/flutter-constraintlayout/blob/master/README_CN.md)
 
-**I have developed the world's fastest general purpose sorting algorithm, which is on average 3 times faster than Quicksort and up to 20 times faster**, [ChenSort](https://github.com/hackware1993/ChenSort)
+**I have developed the world's fastest general purpose sorting algorithm, which is on average 3
+times faster than Quicksort and up to 20 times faster**
+, [ChenSort](https://github.com/hackware1993/ChenSort)
 
 A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for
 Android and AutoLayout for iOS. But the code implementation is much more efficient, it has O(n)
@@ -1560,7 +1562,9 @@ Extensions for ConstraintLayout are welcome.
 
 If it helps you a lot, consider sponsoring me a cup of milk tea, or giving a star. Your support is
 the driving force for me to continue to maintain.
+
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
+
 ![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/support.webp?raw=true)
 
 Thanks to the following netizens for their sponsorship, let's make Flutter better and better
