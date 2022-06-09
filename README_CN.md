@@ -1508,7 +1508,9 @@ ConstraintLayout 基于约束的布局算法极其强大和灵活，似乎可以
 即可。部分内置功能比如圆形定位、瀑布流、网格、列表以扩展的形式提供。
 
 在线示例中的图表就是一个典型的扩展：
+
 ![charts.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/charts.gif?raw=true)
+
 欢迎为 ConstraintLayout 开发扩展。
 
 # 支持我
@@ -1517,7 +1519,7 @@ ConstraintLayout 基于约束的布局算法极其强大和灵活，似乎可以
 
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
 
-![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/sponsorship.webp?raw=true)
+![sponsorship.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/sponsorship.webp?raw=true)
 
 感谢以下网友的赞助，我们一起让 Flutter 越来越好。
 

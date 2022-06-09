@@ -1555,7 +1555,9 @@ over the task of layout to ConstraintLayout. Some built-in features like circle 
 grid, grid, and list are available in extended form.
 
 The charts in the online example is a typical extension:
+
 ![charts.gif](https://github.com/hackware1993/flutter-constraintlayout/blob/master/charts.gif?raw=true)
+
 Extensions for ConstraintLayout are welcome.
 
 # Support me
@@ -1565,7 +1567,7 @@ the driving force for me to continue to maintain.
 
 [Paypal](https://www.paypal.com/paypalme/hackware1993)
 
-![support.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/sponsorship.webp?raw=true)
+![sponsorship.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/sponsorship.webp?raw=true)
 
 Thanks to the following netizens for their sponsorship, let's make Flutter better and better
 together.
