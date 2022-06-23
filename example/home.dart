@@ -5,7 +5,6 @@ import 'arbitrary_position.dart';
 import 'badge.dart';
 import 'barrier.dart';
 import 'charts.dart';
-import 'chen_sort.dart';
 import 'circle_position.dart';
 import 'coming_soon.dart';
 import 'complex_list.dart';
@@ -30,8 +29,6 @@ class ExampleHome extends StatelessWidget {
   ExampleHome({Key? key}) : super(key: key);
 
   final Map<String, Widget?> exampleMap = {
-    'Chen sort(The fastest sorting algorithm in the world, 60% faster than Quicksort)':
-        const ChenSortExample(),
     'Summary': const SummaryExample(),
     'Open Grammar': const OpenGrammarExample(),
     'Guideline': const GuidelineExample(),
@@ -109,7 +106,37 @@ class ExampleHome extends StatelessWidget {
             margin: const EdgeInsets.only(
               bottom: 20,
             ),
-          )
+          ),
+          Image.asset(
+            'assets/official_account.webp',
+          ).applyConstraint(
+            centerLeftTo: parent.leftMargin(200),
+          ),
+          const Text(
+            '扫码关注微信公众号 FlutterFirst，带你起飞',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              height: 1.5,
+            ),
+          ).applyConstraint(
+            outBottomCenterTo: sId(-1).topMargin(16),
+          ),
+          Image.asset(
+            'assets/communication.webp',
+          ).applyConstraint(
+            centerRightTo: parent.rightMargin(200),
+          ),
+          const Text(
+            '扫码添加我的个人微信，拉你进 Flutter 交流群，请备注【加群】',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              height: 1.5,
+            ),
+          ).applyConstraint(
+            outBottomCenterTo: sId(-1).topMargin(16),
+          ),
         ],
       ),
     );
