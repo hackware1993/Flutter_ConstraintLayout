@@ -1,6 +1,6 @@
 name: flutter_constraintlayout
 description: A super powerful Stack, build flexible layouts with constraints. Similar to ConstraintLayout for Android and AutoLayout for iOS.
-version: 1.6.2-stable
+version: 1.6.3-stable
 anthor: hackware
 homepage: https://github.com/hackware1993/Flutter-ConstraintLayout
 
@@ -18,31 +18,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: false
-  assets:
-    - assets/test.webp
-    - assets/test2.webp
-    - assets/icon_back.webp
-    - example/badge.dart
-    - example/barrier.dart
-    - example/complex_list.dart
-    - example/guideline.dart
-    - example/summary.dart
-    - example/percentage_layout.dart
-    - example/dimension_ratio.dart
-    - example/relative_id.dart
-    - example/wrapper_constraints.dart
-    - example/grid.dart
-    - example/horizontal_list.dart
-    - example/vertical_list.dart
-    - example/staggered_grid.dart
-    - example/circle_position.dart
-    - example/self_wrap_content.dart
-    - example/margin.dart
-    - example/charts.dart
-    - example/pinned_position.dart
-    - example/arbitrary_position.dart
-    - example/constraint_controller.dart
-    - example/translate.dart
-    - example/open_grammar.dart
-    - assets/official_account.webp
-    - assets/communication.webp
