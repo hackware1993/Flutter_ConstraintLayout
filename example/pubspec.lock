@@ -68,7 +68,7 @@ packages:
       name: flutter_constraintlayout
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.6.2-stable"
+    version: "1.6.3-stable"
   flutter_lints:
     dependency: "direct dev"
     description:
