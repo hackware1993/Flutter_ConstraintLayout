@@ -25,7 +25,7 @@ class StaggeredGridExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Staggered Grid',
-        codePath: 'example/staggered_grid.dart',
+        codePath: 'lib/staggered_grid.dart',
       ),
       body: ConstraintLayout(
         children: [

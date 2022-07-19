@@ -11,7 +11,7 @@ class SelfWrapContentExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Self wrapContent',
-        codePath: 'example/self_wrap_content.dart',
+        codePath: 'lib/self_wrap_content.dart',
       ),
       body: Center(
         child: ConstraintLayout(

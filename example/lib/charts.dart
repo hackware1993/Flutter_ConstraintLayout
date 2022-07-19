@@ -55,7 +55,7 @@ class ChartsState extends State<ChartsExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Charts',
-        codePath: 'example/charts.dart',
+        codePath: 'lib/charts.dart',
       ),
       body: Scrollbar(
         isAlwaysShown: true,

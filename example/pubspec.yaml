@@ -31,10 +31,6 @@ dependencies:
     sdk: flutter
   flutter_constraintlayout: ^1.6.3-stable
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -55,7 +51,7 @@ flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
-  uses-material-design: true
+  uses-material-design: false
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -116,4 +112,3 @@ flutter:
     - lib/constraint_controller.dart
     - lib/translate.dart
     - lib/open_grammar.dart
-

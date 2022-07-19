@@ -20,7 +20,7 @@ class GridExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Grid',
-        codePath: 'example/grid.dart',
+        codePath: 'lib/grid.dart',
       ),
       body: ConstraintLayout(
         children: [

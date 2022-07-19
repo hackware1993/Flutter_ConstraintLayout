@@ -20,7 +20,7 @@ class VerticalListExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Vertical List',
-        codePath: 'example/vertical_list.dart',
+        codePath: 'lib/vertical_list.dart',
       ),
       body: ConstraintLayout(
         children: [

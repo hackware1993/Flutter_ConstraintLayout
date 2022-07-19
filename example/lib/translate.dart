@@ -66,7 +66,7 @@ class TranslateExampleState extends State<TranslateExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Translate',
-        codePath: 'example/translate.dart',
+        codePath: 'lib/translate.dart',
       ),
       body: ConstraintLayout(
         children: [

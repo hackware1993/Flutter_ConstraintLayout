@@ -12,7 +12,7 @@ class GuidelineExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Guideline',
-        codePath: 'example/guideline.dart',
+        codePath: 'lib/guideline.dart',
       ),
       body: ConstraintLayout(
         children: [

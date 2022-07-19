@@ -11,7 +11,7 @@ class RelativeIdExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Relative Id',
-        codePath: 'example/relative_id.dart',
+        codePath: 'lib/relative_id.dart',
       ),
       body: ConstraintLayout(
         children: [

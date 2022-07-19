@@ -14,7 +14,7 @@ class BarrierExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Barrier',
-        codePath: 'example/barrier.dart',
+        codePath: 'lib/barrier.dart',
       ),
       body: ConstraintLayout(
         children: [

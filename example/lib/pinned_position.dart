@@ -38,7 +38,7 @@ class PinnedPositionExampleState extends State<PinnedPositionExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Pinned Position',
-        codePath: 'example/pinned_position.dart',
+        codePath: 'lib/pinned_position.dart',
       ),
       body: ConstraintLayout(
         children: [

@@ -18,7 +18,7 @@ class ArbitraryPositionExampleState extends State<ArbitraryPositionExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Arbitrary Position',
-        codePath: 'example/arbitrary_position.dart',
+        codePath: 'lib/arbitrary_position.dart',
       ),
       body: ConstraintLayout(
         children: [

@@ -21,7 +21,7 @@ class ConstraintControllerExampleState
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Constraint Controller',
-        codePath: 'example/constraint_controller.dart',
+        codePath: 'lib/constraint_controller.dart',
       ),
       body: ConstraintLayout(
         controller: controller,

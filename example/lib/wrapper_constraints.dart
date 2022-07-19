@@ -31,7 +31,7 @@ class WrapperConstraintsExampleState extends State<WrapperConstraintsExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Wrapper Constraints',
-        codePath: 'example/wrapper_constraints.dart',
+        codePath: 'lib/wrapper_constraints.dart',
       ),
       body: ConstraintLayout(
         children: [

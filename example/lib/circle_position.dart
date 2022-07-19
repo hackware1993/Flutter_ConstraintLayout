@@ -51,7 +51,7 @@ class CirclePositionExampleState extends State<CirclePositionExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Circle Position',
-        codePath: 'example/circle_position.dart',
+        codePath: 'lib/circle_position.dart',
       ),
       body: ConstraintLayout(
         children: [

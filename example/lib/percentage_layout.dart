@@ -11,7 +11,7 @@ class PercentageLayoutExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Percentage Layout',
-        codePath: 'example/percentage_layout.dart',
+        codePath: 'lib/percentage_layout.dart',
       ),
       body: ConstraintLayout(
         children: [

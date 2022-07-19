@@ -12,7 +12,7 @@ class BadgeExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Badge',
-        codePath: 'example/badge.dart',
+        codePath: 'lib/badge.dart',
       ),
       body: ConstraintLayout(
         children: [

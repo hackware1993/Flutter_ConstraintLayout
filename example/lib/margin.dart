@@ -11,7 +11,7 @@ class MarginExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Margin',
-        codePath: 'example/margin.dart',
+        codePath: 'lib/margin.dart',
       ),
       body: ConstraintLayout(
         children: [

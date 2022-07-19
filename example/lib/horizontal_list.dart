@@ -20,7 +20,7 @@ class HorizontalListExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Horizontal List',
-        codePath: 'example/horizontal_list.dart',
+        codePath: 'lib/horizontal_list.dart',
       ),
       body: ConstraintLayout(
         children: [

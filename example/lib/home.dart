@@ -113,7 +113,7 @@ class ExampleHome extends StatelessWidget {
             centerLeftTo: parent.leftMargin(200),
           ),
           const Text(
-            '扫码关注微信公众号 FlutterFirst，带你起飞',
+            '扫码关注微信公众号 FlutterFirst，一起成长！',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,

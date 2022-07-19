@@ -33,7 +33,7 @@ class SummaryExampleState extends State<SummaryExample> {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Summary',
-        codePath: 'example/summary.dart',
+        codePath: 'lib/summary.dart',
       ),
       backgroundColor: Colors.black,
       body: ConstraintLayout(

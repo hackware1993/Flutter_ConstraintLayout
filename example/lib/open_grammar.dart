@@ -11,7 +11,7 @@ class OpenGrammarExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Open Grammar',
-        codePath: 'example/open_grammar.dart',
+        codePath: 'lib/open_grammar.dart',
       ),
       body: ConstraintLayout().open(() {
         if (DateTime.now().millisecond % 2 == 0) {

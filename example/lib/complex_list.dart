@@ -24,7 +24,7 @@ class ComplexListExample extends StatelessWidget {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Complex List',
-        codePath: 'example/complex_list.dart',
+        codePath: 'lib/complex_list.dart',
       ),
       body: ListView.builder(
         itemBuilder: (context, index) {
