@@ -96,7 +96,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.height = matchParent,
     this.size,
     this.controller,
-    this.rtl = true,
+    this.rtl = false,
   }) : super(
           key: key,
           children: children ?? [],
