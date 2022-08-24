@@ -29,7 +29,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_constraintlayout: ^1.6.3-stable
+  flutter_constraintlayout:
+    path: ../
 
 dev_dependencies:
   flutter_test:

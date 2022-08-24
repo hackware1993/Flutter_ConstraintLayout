@@ -80,6 +80,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   ///these operations to stop parameter comparison.
   final ConstraintLayoutController? controller;
 
+  final bool rtl;
+
   ConstraintLayout({
     Key? key,
     this.childConstraints,
@@ -94,6 +96,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.height = matchParent,
     this.size,
     this.controller,
+    this.rtl = true,
   }) : super(
           key: key,
           children: children ?? [],
@@ -121,7 +124,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugPrintConstraints = debugPrintConstraints
       .._width = selfWidth
       .._height = selfHeight
-      .._controller = controller?._copy();
+      .._controller = controller?._copy()
+      .._rtl = rtl;
   }
 
   @override
@@ -149,7 +153,8 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugPrintConstraints = debugPrintConstraints
       ..width = selfWidth
       ..height = selfHeight
-      ..controller = controller?._copy();
+      ..controller = controller?._copy()
+      ..rtl = rtl;
   }
 }
 
@@ -704,15 +709,15 @@ class Constraint extends ConstraintDefine {
   /// These are the base constraints constraint on sibling id or parent
   /// The essence of constraints is alignment
   @_baseConstraint
-  ConstraintAlign? left;
+  final ConstraintAlign? left;
   @_baseConstraint
-  ConstraintAlign? top;
+  final ConstraintAlign? top;
   @_baseConstraint
-  ConstraintAlign? right;
+  final ConstraintAlign? right;
   @_baseConstraint
-  ConstraintAlign? bottom;
+  final ConstraintAlign? bottom;
   @_baseConstraint
-  ConstraintAlign? baseline;
+  final ConstraintAlign? baseline;
 
   /// When setting baseline alignment, height must be wrap_content or fixed size, other vertical constraints will be illegal.
   /// Warning: Due to a bug in the flutter framework, baseline alignment may not take effect in debug mode
@@ -1095,6 +1100,9 @@ class Constraint extends ConstraintDefine {
   }
 
   void _applyTo(RenderObject renderObject) {
+    _ConstraintRenderBox constraintRenderBox =
+        (renderObject.parent as _ConstraintRenderBox);
+
     ConstraintAlign? left = this.left;
     ConstraintAlign? top = this.top;
     ConstraintAlign? right = this.right;
@@ -1271,8 +1279,57 @@ class Constraint extends ConstraintDefine {
       bottom = centerBottomRightTo!.bottom;
     }
 
+    double horizontalBias = this.horizontalBias;
+
     EdgeInsets margin = this.margin;
     EdgeInsets goneMargin = this.goneMargin;
+
+    if (constraintRenderBox._rtl) {
+      ConstraintAlign? convertedLeft;
+      ConstraintAlign? convertedRight;
+      if (left != null) {
+        /// left: box.right -> right: box.left
+        ConstraintAlignType type;
+        if (left._type == ConstraintAlignType.left) {
+          type = ConstraintAlignType.right;
+        } else if (left._type == ConstraintAlignType.right) {
+          type = ConstraintAlignType.left;
+        } else {
+          type = ConstraintAlignType.center;
+        }
+        convertedRight = ConstraintAlign(left._id, type);
+        convertedRight._margin = left._margin;
+        convertedRight._goneMargin = left._goneMargin;
+        if (left._bias != null) {
+          convertedRight._bias = 1 - left._bias!;
+        }
+      }
+      if (right != null) {
+        /// right: box.left -> left: box.right
+        ConstraintAlignType type;
+        if (right._type == ConstraintAlignType.left) {
+          type = ConstraintAlignType.right;
+        } else if (right._type == ConstraintAlignType.right) {
+          type = ConstraintAlignType.left;
+        } else {
+          type = ConstraintAlignType.center;
+        }
+        convertedLeft = ConstraintAlign(right._id, type);
+        convertedLeft._margin = right._margin;
+        convertedLeft._goneMargin = right._goneMargin;
+        if (right._bias != null) {
+          convertedLeft._bias = 1 - right._bias!;
+        }
+      }
+      left = convertedLeft;
+      right = convertedRight;
+
+      horizontalBias = 1 - horizontalBias;
+
+      margin = margin.copyWith(left: margin.right, right: margin.left);
+      goneMargin =
+          goneMargin.copyWith(left: goneMargin.right, right: goneMargin.left);
+    }
 
     if (left != null) {
       if (left._margin != null) {
@@ -1373,7 +1430,7 @@ class Constraint extends ConstraintDefine {
     parentData.layoutCallback = layoutCallback;
     parentData.paintCallback = paintCallback;
 
-    if ((renderObject.parent as _ConstraintRenderBox)._controller != null) {
+    if (constraintRenderBox._controller != null) {
       parentData.id = _id;
       parentData.width = width;
       parentData.height = height;
@@ -1840,6 +1897,7 @@ class _ConstraintRenderBox extends RenderBox
   late bool _showZIndex;
   late bool _showChildDepth;
   late bool _debugPrintConstraints;
+  late bool _rtl;
 
   late double _width;
   late double _height;
@@ -2020,6 +2078,14 @@ class _ConstraintRenderBox extends RenderBox
         }
       }
       _controller = value;
+    }
+  }
+
+  set rtl(bool value) {
+    if (_rtl != value) {
+      _rtl = value;
+      markNeedsRecalculateConstraints();
+      markNeedsLayout();
     }
   }
 
