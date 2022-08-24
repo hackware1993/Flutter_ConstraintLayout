@@ -1284,6 +1284,8 @@ class Constraint extends ConstraintDefine {
     EdgeInsets margin = this.margin;
     EdgeInsets goneMargin = this.goneMargin;
 
+    EdgeInsets clickPadding = this.clickPadding;
+
     if (constraintRenderBox._rtl) {
       ConstraintAlign? convertedLeft;
       ConstraintAlign? convertedRight;
@@ -1329,6 +1331,9 @@ class Constraint extends ConstraintDefine {
       margin = margin.copyWith(left: margin.right, right: margin.left);
       goneMargin =
           goneMargin.copyWith(left: goneMargin.right, right: goneMargin.left);
+
+      clickPadding = clickPadding.copyWith(
+          left: clickPadding.right, right: clickPadding.left);
     }
 
     if (left != null) {
