@@ -115,6 +115,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       selfHeight = size!;
     }
     return _ConstraintRenderBox()
+      .._rtl = rtl
       ..childConstraints = childConstraints
       .._showLayoutPerformanceOverlay = showLayoutPerformanceOverlay
       .._showHelperWidgets = showHelperWidgets
@@ -124,8 +125,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       .._debugPrintConstraints = debugPrintConstraints
       .._width = selfWidth
       .._height = selfHeight
-      .._controller = controller?._copy()
-      .._rtl = rtl;
+      .._controller = controller?._copy();
   }
 
   @override
@@ -144,6 +144,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       selfHeight = size!;
     }
     (renderObject as _ConstraintRenderBox)
+      ..rtl = rtl
       ..childConstraints = childConstraints
       ..showLayoutPerformanceOverlay = showLayoutPerformanceOverlay
       ..showHelperWidgets = showHelperWidgets
@@ -153,8 +154,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       ..debugPrintConstraints = debugPrintConstraints
       ..width = selfWidth
       ..height = selfHeight
-      ..controller = controller?._copy()
-      ..rtl = rtl;
+      ..controller = controller?._copy();
   }
 }
 
