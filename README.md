@@ -246,7 +246,7 @@ Follow-up development plan:
 4. automatically convert design drafts into code
 5. more…
 
-Subscribe to my WeChat official account to get the latest news of ConstraintLayout(Full Guide, Best
+Subscribe to my WeChat official account to get the latest news of ConstraintLayout([Full Guide](https://mp.weixin.qq.com/s/yTpp7TtLagOeWzX2URKOIQ), Best
 Practices, Principle Analysis). Follow-up will also share some high-quality, unique, and thoughtful
 Flutter technical articles.
 ![official_account.webp](https://github.com/hackware1993/flutter-constraintlayout/blob/master/official_account.webp?raw=true)
