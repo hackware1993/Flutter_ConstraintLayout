@@ -80,7 +80,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
   ///these operations to stop parameter comparison.
   final ConstraintLayoutController? controller;
 
-  final bool rtl;
+  final bool? rtl;
 
   ConstraintLayout({
     Key? key,
@@ -96,7 +96,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
     this.height = matchParent,
     this.size,
     this.controller,
-    this.rtl = false,
+    this.rtl,
   }) : super(
           key: key,
           children: children ?? [],
@@ -115,7 +115,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       selfHeight = size!;
     }
     return _ConstraintRenderBox()
-      .._rtl = rtl
+      .._rtl = rtl ?? Directionality.of(context) == TextDirection.rtl
       ..childConstraints = childConstraints
       .._showLayoutPerformanceOverlay = showLayoutPerformanceOverlay
       .._showHelperWidgets = showHelperWidgets
@@ -144,7 +144,7 @@ class ConstraintLayout extends MultiChildRenderObjectWidget {
       selfHeight = size!;
     }
     (renderObject as _ConstraintRenderBox)
-      ..rtl = rtl
+      ..rtl = rtl ?? Directionality.of(context) == TextDirection.rtl
       ..childConstraints = childConstraints
       ..showLayoutPerformanceOverlay = showLayoutPerformanceOverlay
       ..showHelperWidgets = showHelperWidgets
