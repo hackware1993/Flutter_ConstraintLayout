@@ -1723,7 +1723,7 @@ class Constraint extends ConstraintDefine {
     }
 
     if (needsLayout) {
-      AbstractNode? targetParent = renderObject.parent;
+      RenderObject? targetParent = renderObject.parent;
       if (needsRecalculateConstraints) {
         if (targetParent is _ConstraintRenderBox) {
           targetParent.markNeedsRecalculateConstraints();
@@ -1734,19 +1734,19 @@ class Constraint extends ConstraintDefine {
       }
     } else {
       if (needsReorderPaintingOrder) {
-        AbstractNode? targetParent = renderObject.parent;
+        RenderObject? targetParent = renderObject.parent;
         if (targetParent is _ConstraintRenderBox) {
           targetParent.needsReorderPaintingOrder = true;
         }
       }
       if (needsReorderEventOrder) {
-        AbstractNode? targetParent = renderObject.parent;
+        RenderObject? targetParent = renderObject.parent;
         if (targetParent is _ConstraintRenderBox) {
           targetParent.needsReorderEventOrder = true;
         }
       }
       if (needsPaint) {
-        AbstractNode? targetParent = renderObject.parent;
+        RenderObject? targetParent = renderObject.parent;
         if (targetParent is RenderObject) {
           targetParent.markNeedsPaint();
         }

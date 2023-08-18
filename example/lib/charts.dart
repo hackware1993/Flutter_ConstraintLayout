@@ -58,7 +58,6 @@ class ChartsState extends State<ChartsExample> {
         codePath: 'lib/charts.dart',
       ),
       body: Scrollbar(
-        isAlwaysShown: true,
         controller: controller,
         child: SingleChildScrollView(
           controller: controller,
