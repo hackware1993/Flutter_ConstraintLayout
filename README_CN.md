@@ -8,10 +8,6 @@
 
 **我开发了世界上最快的通用排序算法，它平均比快速排序快 3 倍，最多快 20 倍**，[ChenSort](https://github.com/hackware1993/ChenSort)
 
-下文《家有三孩的农村独子该如何面对父母双瘫？》
-https://mp.weixin.qq.com/s/lUYAa6IvGOLdwrTnsTpIPg?token=549085630&lang=zh_CN
-是我公众号的原创文章。我正在为当事人筹款，但我没有影响力，所以倍感艰难，希望大家多多支持。数以十万计的 App 从我的代码受益，希望大家也能帮帮我。
-
 一个超级强大的 Stack，使用约束构建极为灵活的布局，和 Android 下的 ConstraintLayout 和 iOS 下的 AutoLayout 类似。但代码实现却高效得多，它具有 O(n)
 的布局时间复杂度，无需线性方程求解。
 
